@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bandbul - Müzik için her şey
 
-## Getting Started
+Bandbul.com sitesinin modern ve minimalist tasarımla shadcn/ui kullanılarak restore edilmiş versiyonu.
 
-First, run the development server:
+## 🎵 Özellikler
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Modern Tasarım**: shadcn/ui component'leri ile oluşturulmuş temiz ve minimalist arayüz
+- **Responsive**: Tüm cihazlarda mükemmel görünüm
+- **Dark/Light Mode**: Sistem teması desteği ile otomatik tema değişimi
+- **Türkçe**: Tamamen Türkçe içerik ve arayüz
+- **Performans**: Next.js 15 ve Turbopack ile optimize edilmiş performans
+
+## 🚀 Teknolojiler
+
+- **Framework**: Next.js 15
+- **Styling**: Tailwind CSS
+- **Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Theme**: next-themes
+- **Language**: TypeScript
+
+## 📁 Proje Yapısı
+
+```
+bandbul/
+├── app/
+│   ├── globals.css          # Global stiller
+│   ├── layout.tsx           # Ana layout
+│   └── page.tsx             # Ana sayfa
+├── components/
+│   ├── ui/                  # shadcn/ui component'leri
+│   ├── sections/            # Sayfa bölümleri
+│   │   ├── Header.tsx       # Navigasyon
+│   │   ├── HeroSection.tsx  # Ana banner
+│   │   ├── SearchSection.tsx # Arama/filtreleme
+│   │   ├── LatestListings.tsx # En yeni ilanlar
+│   │   ├── BlogSection.tsx  # Blog yazıları
+│   │   ├── SupportSection.tsx # Destek formu
+│   │   └── Footer.tsx       # Alt bilgiler
+│   ├── ThemeProvider.tsx    # Tema provider
+│   └── ThemeToggle.tsx      # Tema değiştirici
+└── lib/
+    └── utils.ts             # Yardımcı fonksiyonlar
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Bölümler
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Header (Navigasyon)
+- Logo ve marka kimliği
+- Ana menü linkleri
+- Arama butonu
+- Tema değiştirici
+- Giriş/Kayıt butonları
+- Mobil responsive menü
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. Hero Section (Ana Banner)
+- "YENİ BİR İLAN VER" ana başlığı
+- Açıklayıcı metin
+- İlan ver butonu
+- Özellik kartları (Müzik İlanları, Topluluk, Eğitim)
 
-## Learn More
+### 3. Search Section (Arama/Filtreleme)
+- İlan türü seçimi (Grup Arıyorum, Müzisyen Arıyorum, Ders Almak İstiyorum)
+- Enstrüman seçimi (Gitar, Bas Gitar, Davul, Piano, vb.)
+- Şehir seçimi (Türkiye'nin tüm şehirleri)
+- Filtrele butonu
+- Hızlı filtre badge'leri
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Latest Listings (En Yeni İlanlar)
+- Kategori tab'ları (Tüm İlanlar, Grup Arıyorum, Müzisyen Arıyorum, Ders Almak İstiyorum)
+- İlan kartları (başlık, şehir, tür, enstrüman)
+- Hover efektleri
+- "Hepsini Gör" butonu
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. Blog Section (Blog Yazıları)
+- Müzik ile ilgili blog yazıları
+- Kategori badge'leri
+- Okuma süresi
+- Tarih bilgisi
+- "Tüm Yazıları Gör" butonu
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 6. Support Section (Destek Birimi)
+- İletişim formu (Ad Soyad, E-posta, Konu, Mesaj)
+- Gönder butonu
+- Ek bilgiler (Hızlı Yanıt, Uzman Destek, Güvenli İletişim)
 
-## Deploy on Vercel
+### 7. Footer (Alt Bilgiler)
+- Marka bilgisi ve sosyal medya linkleri
+- Ana sayfa linkleri
+- İlan kategorileri
+- Destek linkleri
+- İletişim bilgileri
+- Telif hakkı bilgisi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠️ Kurulum
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Projeyi klonlayın:**
+```bash
+git clone <repository-url>
+cd bandbul
+```
+
+2. **Bağımlılıkları yükleyin:**
+```bash
+npm install
+```
+
+3. **Geliştirme sunucusunu başlatın:**
+```bash
+npm run dev
+```
+
+4. **Tarayıcıda açın:**
+```
+http://localhost:3000
+```
+
+## 📱 Responsive Tasarım
+
+- **Desktop**: Tam özellikli arayüz
+- **Tablet**: Orta boyut ekranlar için optimize edilmiş
+- **Mobile**: Mobil cihazlar için özel düzenlemeler
+
+## 🎨 Tema Desteği
+
+- **Light Mode**: Açık tema
+- **Dark Mode**: Koyu tema
+- **System**: Sistem temasına göre otomatik değişim
+
+## 🔧 Geliştirme
+
+### Yeni Component Ekleme
+```bash
+npx shadcn@latest add <component-name>
+```
+
+### Yeni Section Ekleme
+1. `components/sections/` klasöründe yeni component oluşturun
+2. `app/page.tsx` dosyasına import edin
+3. Ana sayfaya ekleyin
+
+## 📄 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır.
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Değişikliklerinizi commit edin (`git commit -m 'Add some amazing feature'`)
+4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📞 İletişim
+
+- **Website**: [bandbul.com](https://bandbul.com)
+- **Email**: info@bandbul.com
+- **Phone**: +90 212 123 45 67
+
+---
+
+**Bandbul** - Müzik için her şey 🎵
