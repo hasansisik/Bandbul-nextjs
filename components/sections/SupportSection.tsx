@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Send, HelpCircle } from "lucide-react";
+import {  Send, HelpCircle } from "lucide-react";
 import { useState } from "react";
 
 const SupportSection = () => {
@@ -13,7 +13,6 @@ const SupportSection = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle message submission
-    console.log("Message sent:", message);
     setMessage("");
   };
 

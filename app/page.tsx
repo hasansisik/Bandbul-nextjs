@@ -1,6 +1,5 @@
 import Header from "@/components/sections/Header";
 import HeroSection from "@/components/sections/HeroSection";
-import SearchSection from "@/components/sections/SearchSection";
 import LatestListings from "@/components/sections/LatestListings";
 import BlogSection from "@/components/sections/BlogSection";
 import SupportSection from "@/components/sections/SupportSection";
@@ -11,7 +10,6 @@ export default function Home() {
     <main className="min-h-screen">
       <Header />
       <HeroSection />
-      <SearchSection />
       <LatestListings />
       <BlogSection />
       <SupportSection />

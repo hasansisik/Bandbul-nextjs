@@ -91,7 +91,7 @@ const HeroSection = () => {
                   ))}
                   
                   {/* Filter Button */}
-                  <Button className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <Button className="bg-black hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
                     <Filter className="h-3 w-3" />
                     Filtrele
                   </Button>
