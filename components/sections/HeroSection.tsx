@@ -1,61 +1,103 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Music, Users, BookOpen } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter } from "lucide-react";
+import Image from "next/image";
 
 const HeroSection = () => {
-  const features = [
+  const searchOptions = [
     {
-      icon: <Music className="h-6 w-6" />,
-      title: "Müzik İlanları",
-      description: "Müzisyen ve grup arayışlarınız için"
+      id: "find-talent",
+      label: "Müzisyen Bul",
+      icon: <Music className="h-4 w-4" />,
+      active: true
     },
     {
-      icon: <Users className="h-6 w-6" />,
-      title: "Topluluk",
-      description: "Müzikseverlerle buluşun"
+      id: "browse-jobs",
+      label: "İlanları Görüntüle",
+      icon: <Users className="h-4 w-4" />,
+      active: false
+    }
+  ];
+
+  const filterOptions = [
+    {
+      id: "search-type",
+      label: "NE ARIYORSUN",
+      icon: <Briefcase className="h-4 w-4 text-gray-600" />,
+      placeholder: "NE ARIYORSUN"
     },
     {
-      icon: <BookOpen className="h-6 w-6" />,
-      title: "Eğitim",
-      description: "Müzik dersleri ve eğitimler"
+      id: "instrument",
+      label: "ENSTRÜMAN",
+      icon: <Clipboard className="h-4 w-4 text-gray-600" />,
+      placeholder: "ENSTRÜMAN"
+    },
+    {
+      id: "city",
+      label: "ŞEHİR",
+      icon: <MapPin className="h-4 w-4 text-gray-600" />,
+      placeholder: "ŞEHİR"
     }
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Main Heading */}
-          <div className="mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              YENİ BİR İLAN VER
+    <section className="relative flex items-center mt-8 h-[500px]">
+      {/* Background with padding only */}
+      <div className="container mx-auto relative z-10 rounded-3xl overflow-hidden h-full">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/hero.jpg"
+            alt="Hero Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto h-full flex flex-col justify-center">
+          {/* Text Content */}
+          <div className="text-white mb-12 relative z-10 ">
+            <h1 className="text-6xl md:text-6xl font-bold leading-tight">
+              Yeni Bir İlan Ver
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Yeni bir ilan verirken kendini en iyi şekilde ifade etmeyi unutma
-            </p>
+            <p className="text-2xl text-gray-200 mb-8 max-w-2xl">
+              Yeni bir ilan verirken
+              Kendini en iyi şekilde ifade etmeyi unutma            </p>
           </div>
 
-          {/* CTA Button */}
-          <div className="mb-16">
-            <Button size="lg" className="text-lg px-8 py-6">
-              <Plus className="h-5 w-5 mr-2" />
-              İlan Ver
-            </Button>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg bg-background/50 backdrop-blur">
-                <CardContent className="p-6 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Search Card - Below text, centered */}
+          <div className="max-w-4xl relative z-10">
+            <Card className="bg-white/30 backdrop-blur border-white/20 rounded-3xl p-8 shadow-2xl">
+              <CardContent className="p-0">
+                {/* Filter Options */}
+                <div className="flex gap-4">
+                  {filterOptions.map((option) => (
+                    <div
+                      key={option.id}
+                      className="flex-1 bg-white/90 backdrop-blur rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10"
+                    >
+                      <div className="flex items-center gap-3">
+                        {option.icon}
+                        <div className="text-sm text-gray-900 font-medium">{option.placeholder}</div>
+                      </div>
+                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  ))}
+                  
+                  {/* Filter Button */}
+                  <Button className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                    <Filter className="h-3 w-3" />
+                    Filtrele
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
