@@ -13,7 +13,9 @@ import {
   Star
 } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { listingsData, type ListingItem, searchListings, getListingsByCategory, getListingsByType } from "@/lib/listingsData";
+import { generateSlug } from "@/lib/utils";
 
 interface ListingsGridProps {
   searchQuery?: string;
@@ -134,72 +136,79 @@ const ListingsGrid = ({
 
   const renderListingCard = (listing: ListingItem) => (
     <div key={listing.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
-      {/* Image */}
-      <div className="relative aspect-video overflow-hidden">
-        <img 
-          src={listing.image} 
-          alt={listing.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        <div className="absolute top-3 left-3">
-          <Badge className={`text-xs border ${getCategoryColor(listing.category)}`}>
-            {listing.category}
-          </Badge>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
-          onClick={() => toggleFavorite(listing.id)}
-        >
-          <Heart 
-            className={`h-4 w-4 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+      <Link href={`/ilan-detay/${generateSlug(listing.title)}`} className="block">
+        {/* Image */}
+        <div className="relative aspect-video overflow-hidden">
+          <img 
+            src={listing.image} 
+            alt={listing.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-        </Button>
-      </div>
-
-      {/* Content */}
-      <div className="p-5">
-        {/* Title and Rating */}
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1 mr-2 leading-tight">
-            {listing.title}
-          </h3>
-          <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
+          <div className="absolute top-3 left-3">
+            <Badge className={`text-xs border ${getCategoryColor(listing.category)}`}>
+              {listing.category}
+            </Badge>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleFavorite(listing.id);
+            }}
+          >
+            <Heart 
+              className={`h-4 w-4 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+            />
+          </Button>
         </div>
 
-        {/* Description */}
-        <p className="text-gray-600 text-xs mb-4 line-clamp-2 leading-relaxed">
-          {listing.description}
-        </p>
-
-        {/* Location and Date */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <MapPin className="h-3 w-3" />
-            {listing.location}
+        {/* Content */}
+        <div className="p-5">
+          {/* Title and Rating */}
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1 mr-2 leading-tight">
+              {listing.title}
+            </h3>
+            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Calendar className="h-3 w-3" />
-            {listing.postedDate}
+
+          {/* Description */}
+          <p className="text-gray-600 text-xs mb-4 line-clamp-2 leading-relaxed">
+            {listing.description}
+          </p>
+
+          {/* Location and Date */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <MapPin className="h-3 w-3" />
+              {listing.location}
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Calendar className="h-3 w-3" />
+              {listing.postedDate}
+            </div>
+          </div>
+
+          {/* Author and Experience */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <User className="h-3 w-3" />
+              {listing.author}
+            </div>
+            <Badge variant="outline" className="text-xs border-gray-200">
+              {listing.experience}
+            </Badge>
           </div>
         </div>
+      </Link>
 
-        {/* Author and Experience */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <User className="h-3 w-3" />
-            {listing.author}
-          </div>
-          <Badge variant="outline" className="text-xs border-gray-200">
-            {listing.experience}
-          </Badge>
-        </div>
-
-        {/* Actions */}
+      {/* Actions */}
+      <div className="px-5 pb-5">
         <div className="flex items-center justify-end">
           {isLoggedIn && (
             <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800">
@@ -214,74 +223,85 @@ const ListingsGrid = ({
 
   const renderListingRow = (listing: ListingItem) => (
     <div key={listing.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
-      <div className="flex">
-        {/* Image */}
-        <div className="relative w-48 h-32 overflow-hidden flex-shrink-0">
-          <img 
-            src={listing.image} 
-            alt={listing.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <div className="absolute top-2 left-2">
-            <Badge className={`text-xs border ${getCategoryColor(listing.category)}`}>
-              {listing.category}
-            </Badge>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-7 w-7 p-0 bg-white/90 hover:bg-white shadow-sm"
-            onClick={() => toggleFavorite(listing.id)}
-          >
-            <Heart 
-              className={`h-3 w-3 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+      <Link href={`/ilan-detay/${generateSlug(listing.title)}`} className="block">
+        <div className="flex">
+          {/* Image */}
+          <div className="relative w-48 h-32 overflow-hidden flex-shrink-0">
+            <img 
+              src={listing.image} 
+              alt={listing.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-5">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-gray-900 text-base flex-1 mr-4">
-              {listing.title}
-            </h3>
-            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
-            </div>
-          </div>
-
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {listing.description}
-          </p>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {listing.location}
-              </div>
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {listing.author}
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {listing.postedDate}
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-xs border-gray-200">
-                {listing.experience}
+            <div className="absolute top-2 left-2">
+              <Badge className={`text-xs border ${getCategoryColor(listing.category)}`}>
+                {listing.category}
               </Badge>
-              {isLoggedIn && (
-                <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800">
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  İletişim
-                </Button>
-              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-7 w-7 p-0 bg-white/90 hover:bg-white shadow-sm"
+              onClick={(e) => {
+                e.preventDefault();
+                toggleFavorite(listing.id);
+              }}
+            >
+              <Heart 
+                className={`h-3 w-3 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+              />
+            </Button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 p-5">
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-semibold text-gray-900 text-base flex-1 mr-4">
+                {listing.title}
+              </h3>
+              <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
+              </div>
+            </div>
+
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+              {listing.description}
+            </p>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {listing.location}
+                </div>
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {listing.author}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {listing.postedDate}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="text-xs border-gray-200">
+                  {listing.experience}
+                </Badge>
+              </div>
             </div>
           </div>
+        </div>
+      </Link>
+
+      {/* Actions */}
+      <div className="px-5 pb-5">
+        <div className="flex items-center justify-end">
+          {isLoggedIn && (
+            <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800">
+              <MessageCircle className="h-3 w-3 mr-1" />
+              İletişim
+            </Button>
+          )}
         </div>
       </div>
     </div>

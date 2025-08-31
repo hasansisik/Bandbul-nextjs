@@ -1,26 +1,26 @@
 import { Separator } from "@/components/ui/separator";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Footer = () => {
   const footerLinks = {
     main: [
       { name: "Hakkımızda", href: "#" },
-      { name: "İletişim", href: "#" },
+      { name: "İletişim", href: "/iletisim" },
       { name: "Prodüksiyon", href: "#" },
       { name: "2. El Enstrüman", href: "#" }
     ],
     listings: [
-      { name: "Grup Arıyorum", href: "#" },
-      { name: "Müzisyen Arıyorum", href: "#" },
-      { name: "Ders Almak İstiyorum", href: "#" }
+      { name: "Grup Arıyorum", href: "/ilanlar" },
+      { name: "Müzisyen Arıyorum", href: "/ilanlar" },
+      { name: "Ders Almak İstiyorum", href: "/ilanlar" }
     ],
     support: [
-      { name: "S.S.S.", href: "#" },
-      { name: "İlan Kuralları", href: "#" },
-      { name: "Destek Birimi", href: "#" },
-      { name: "Gizlilik Sözleşmesi", href: "#" },
-      { name: "KVKK", href: "#" }
+      { name: "S.S.S.", href: "/sss" },
+      { name: "İlan Kuralları", href: "/ilan-kurallari" },
+      { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
+      { name: "KVKK", href: "/kvkk" }
     ]
   };
 
@@ -39,13 +39,15 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <div className="mb-4">
-              <Image
-                src="/bandbul-logo.png"
-                alt="Bandbul Logo"
-                width={100}
-                height={32}
-                className="h-8 w-auto"
-              />
+              <Link href="/">
+                <Image
+                  src="/bandbul-logo.png"
+                  alt="Bandbul Logo"
+                  width={100}
+                  height={32}
+                  className="h-8 w-auto"
+                />
+              </Link>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-xs">
               Müzik tutkunları için tasarlanmış platform. Grup bulma, enstrüman alım-satım ve müzik prodüksiyonu için tek adres.
@@ -70,12 +72,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.main.map((link, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-gray-500 hover:text-gray-700 transition-colors text-sm block"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -87,12 +89,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.listings.map((link, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-gray-500 hover:text-gray-700 transition-colors text-sm block"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -104,12 +106,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.support.map((link, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-gray-500 hover:text-gray-700 transition-colors text-sm block"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -166,15 +168,15 @@ const Footer = () => {
           </div>
           
           <div className="flex items-center space-x-6 text-sm text-gray-400">
-            <a href="#" className="hover:text-gray-600 transition-colors">
+            <Link href="/gizlilik-sozlesmesi" className="hover:text-gray-600 transition-colors">
               Gizlilik Politikası
-            </a>
-            <a href="#" className="hover:text-gray-600 transition-colors">
+            </Link>
+            <Link href="/ilan-kurallari" className="hover:text-gray-600 transition-colors">
               Kullanım Şartları
-            </a>
-            <a href="#" className="hover:text-gray-600 transition-colors">
+            </Link>
+            <Link href="/kvkk" className="hover:text-gray-600 transition-colors">
               KVKK
-            </a>
+            </Link>
           </div>
         </div>
       </div>
