@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 
-export function LoginForm({
+export function RegistrationForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -15,11 +16,32 @@ export function LoginForm({
           <form className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold">Tekrar Hoş Geldiniz</h1>
+                <h1 className="text-2xl font-bold">Hesap Oluştur</h1>
                 <p className="text-muted-foreground text-balance">
-                  Bandbul hesabınıza giriş yapın
+                  Bandbul'a katıl ve ilanlarını paylaş
                 </p>
               </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="firstName">Ad</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="Adınız"
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="lastName">Soyad</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Soyadınız"
+                  required
+                />
+              </div>
+              
               <div className="grid gap-3">
                 <Label htmlFor="email">E-posta</Label>
                 <Input
@@ -29,26 +51,49 @@ export function LoginForm({
                   required
                 />
               </div>
+              
               <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Parola</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Parolanızı mı unuttunuz?
-                  </a>
-                </div>
-                <Input id="password" type="password" required />
+                <Label htmlFor="password">Parola</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Parolanızı girin"
+                  required 
+                />
               </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="confirmPassword">Parola Tekrar</Label>
+                <Input 
+                  id="confirmPassword" 
+                  type="password" 
+                  placeholder="Parolanızı tekrar girin"
+                  required 
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox id="kvkk" required />
+                <Label 
+                  htmlFor="kvkk" 
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  <a href="/kvkk" className="underline underline-offset-4 hover:text-primary">
+                    KVKK Aydınlatma Metni
+                  </a>'ni okudum ve kabul ediyorum.
+                </Label>
+              </div>
+              
               <Button type="submit" className="w-full">
-                Giriş Yap
+                Hesap Oluştur
               </Button>
+              
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                 <span className="bg-card text-muted-foreground relative z-10 px-2">
                   Veya şununla devam et
                 </span>
               </div>
+              
               <div className="grid grid-cols-3 gap-4">
                 <Button variant="outline" type="button" className="w-full">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -57,7 +102,7 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Apple ile giriş yap</span>
+                  <span className="sr-only">Apple ile kayıt ol</span>
                 </Button>
                 <Button variant="outline" type="button" className="w-full">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -66,7 +111,7 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Google ile giriş yap</span>
+                  <span className="sr-only">Google ile kayıt ol</span>
                 </Button>
                 <Button variant="outline" type="button" className="w-full">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -75,13 +120,14 @@ export function LoginForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Meta ile giriş yap</span>
+                  <span className="sr-only">Meta ile kayıt ol</span>
                 </Button>
               </div>
+              
               <div className="text-center text-sm">
-                Hesabınız yok mu?{" "}
-                <a href="/kayitol" className="underline underline-offset-4">
-                  Kayıt ol
+                Zaten hesabınız var mı?{" "}
+                <a href="/giris" className="underline underline-offset-4">
+                  Giriş yap
                 </a>
               </div>
             </div>
