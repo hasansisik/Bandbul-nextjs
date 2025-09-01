@@ -108,7 +108,7 @@ const BlogSection = () => {
                   <div key={post.id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
                     <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
                       <div className="aspect-[4/3] overflow-hidden relative">
-                        <Link href={`/blog/${post.slug}`}>
+                        <Link href={`/${post.slug}`}>
                           <img 
                             src={post.image} 
                             alt={post.title}
@@ -136,7 +136,7 @@ const BlogSection = () => {
                           </Link>
                         </div>
                         
-                        <Link href={`/blog/${post.slug}`}>
+                        <Link href={`/${post.slug}`}>
                           <h3 className="font-semibold text-lg leading-tight mb-3 line-clamp-2 text-foreground">
                             {post.title}
                           </h3>

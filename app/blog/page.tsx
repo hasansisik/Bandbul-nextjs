@@ -170,7 +170,7 @@ export default function BlogPage() {
               {displayedPosts.map((post) => (
                 <article key={post.id} className="bg-card border border-border rounded-lg overflow-hidden">
                   <div className="aspect-[4/3] overflow-hidden relative">
-                    <Link href={`/blog/${post.slug}`}>
+                    <Link href={`/${post.slug}`}>
                       <img
                         src={post.image}
                         alt={post.title}
@@ -202,7 +202,7 @@ export default function BlogPage() {
                       )}
                     </div>
                     
-                    <Link href={`/blog/${post.slug}`}>
+                    <Link href={`/${post.slug}`}>
                       <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
                         {post.title}
                       </h2>

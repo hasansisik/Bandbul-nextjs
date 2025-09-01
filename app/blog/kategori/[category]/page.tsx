@@ -107,7 +107,7 @@ export default function BlogCategoryPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {posts.map((post) => (
                 <article key={post.id} className="group">
-                  <Link href={`/blog/${post.slug}`}>
+                  <Link href={`/${post.slug}`}>
                     <div className="bg-card/50 backdrop-blur border border-border/50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
                       <div className="aspect-[4/3] overflow-hidden">
                         <img

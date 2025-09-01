@@ -169,7 +169,7 @@ export default function BlogDetailPage() {
                 {recentPosts.map((relatedPost) => (
                   <article key={relatedPost.id} className="bg-card border border-border rounded-lg overflow-hidden">
                     <div className="aspect-[4/3] overflow-hidden relative">
-                      <Link href={`/blog/${relatedPost.slug}`}>
+                      <Link href={`/${relatedPost.slug}`}>
                         <img
                           src={relatedPost.image}
                           alt={relatedPost.title}
@@ -193,7 +193,7 @@ export default function BlogDetailPage() {
                         </Link>
                       </div>
                       
-                      <Link href={`/blog/${relatedPost.slug}`} className="block">
+                      <Link href={`/${relatedPost.slug}`} className="block">
                         <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2 hover:text-primary transition-colors leading-tight">
                           {relatedPost.title}
                         </h3>
