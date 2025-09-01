@@ -16,7 +16,7 @@ const SupportSection = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+    <section className="py-20 bg-gradient-to-br from-muted/20 to-background">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -25,20 +25,20 @@ const SupportSection = () => {
               <MessageCircle className="h-8 w-8" />
             </div>
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold text-gray-900">Destek Birimi</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <h2 className="text-3xl font-bold text-foreground">Destek Birimi</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Müzik yolculuğunuzda size yardımcı olmak için buradayız
               </p>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <p className="text-sm text-muted-foreground/70 max-w-md mx-auto">
                 Sorularınız, önerileriniz veya teknik destek için bizimle iletişime geçin
               </p>
             </div>
           </div>
 
           {/* Contact Form */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 lg:p-10">
+          <div className="bg-card/50 backdrop-blur rounded-2xl shadow-sm border border-border/50 p-8 lg:p-10">
             <div className="mb-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Mesaj Gönder</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Mesaj Gönder</h3>
               <p className="text-sm text-muted-foreground">
                 Aşağıdaki formu doldurarak bize ulaşabilirsiniz
               </p>
@@ -47,41 +47,41 @@ const SupportSection = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-foreground">
                     Ad Soyad *
                   </label>
                   <Input 
                     placeholder="Adınız ve soyadınız" 
-                    className="border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 h-11"
+                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-foreground">
                     E-posta *
                   </label>
                   <Input 
                     type="email" 
                     placeholder="ornek@email.com"
-                    className="border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 h-11"
+                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   Konu *
                 </label>
                 <Input 
                   placeholder="Mesajınızın konusu"
-                  className="border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 h-11"
+                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   Mesajınız *
                 </label>
                 <Textarea 
@@ -89,7 +89,7 @@ const SupportSection = () => {
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"
+                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 resize-none bg-background/50 backdrop-blur"
                   required
                 />
               </div>
@@ -98,53 +98,45 @@ const SupportSection = () => {
                 <Button 
                   type="submit" 
                   size="lg" 
-                  className="px-10 h-12 bg-primary hover:bg-primary/90 transition-colors duration-200 text-base font-medium"
+                  className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
                 >
                   <Send className="h-5 w-5 mr-2" />
-                  Mesajı Gönder
+                  Mesaj Gönder
                 </Button>
               </div>
             </form>
           </div>
 
-          {/* Features */}
-          <div className="mt-16 grid md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mb-4 group-hover:bg-blue-100 transition-colors duration-200">
+          {/* Support Features */}
+          <div className="grid md:grid-cols-3 gap-6 mt-16">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
                 <Clock className="h-6 w-6" />
               </div>
-              <h4 className="font-semibold text-base mb-2 text-gray-900">Hızlı Yanıt</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                24 saat içinde detaylı yanıt alırsınız
+              <h3 className="text-lg font-semibold text-foreground mb-2">Hızlı Yanıt</h3>
+              <p className="text-sm text-muted-foreground">
+                24 saat içinde yanıt alın
               </p>
             </div>
             
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-50 text-green-600 mb-4 group-hover:bg-green-100 transition-colors duration-200">
-                <Users className="h-6 w-6" />
-              </div>
-              <h4 className="font-semibold text-base mb-2 text-gray-900">Uzman Destek</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Deneyimli müzik uzmanlarından profesyonel destek
-              </p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-50 text-purple-600 mb-4 group-hover:bg-purple-100 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
                 <Shield className="h-6 w-6" />
               </div>
-              <h4 className="font-semibold text-base mb-2 text-gray-900">Güvenli İletişim</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Kişisel bilgileriniz tamamen güvende ve korunur
+              <h3 className="text-lg font-semibold text-foreground mb-2">Güvenli İletişim</h3>
+              <p className="text-sm text-muted-foreground">
+                Verileriniz güvende
               </p>
             </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <HelpCircle className="h-4 w-4" />
-              <span>Başka bir sorunuz mu var? Bize ulaşın</span>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
+                <Users className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Uzman Destek</h3>
+              <p className="text-sm text-muted-foreground">
+                Deneyimli ekibimiz
+              </p>
             </div>
           </div>
         </div>

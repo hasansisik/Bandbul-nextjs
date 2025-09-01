@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Header from "@/components/sections/Header";
-import Footer from "@/components/sections/Footer";
 import ListingsHeader from "@/components/listings/ListingsHeader";
 import ListingsFilter from "@/components/listings/ListingsFilter";
 import ListingsGrid from "@/components/listings/ListingsGrid";
@@ -11,7 +9,7 @@ import ListingsPagination from "@/components/listings/ListingsPagination";
 export default function ListingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     categories: [] as string[],
     locations: [] as string[],
@@ -39,7 +37,6 @@ export default function ListingsPage() {
   }, []);
 
   const clearAllFilters = useCallback(() => {
-    setSearchQuery("");
     setActiveFilters({
       categories: [],
       locations: [],
@@ -48,33 +45,39 @@ export default function ListingsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white">
-      <Header />
+    <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <div className="container mx-auto px-4 py-8">
-        <ListingsHeader 
+        <ListingsHeader
           viewMode={viewMode}
           onSearch={handleSearch}
           onViewModeChange={handleViewModeChange}
           onFilterClick={handleFilterClick}
         />
-        <div className="grid lg:grid-cols-4 gap-8 mt-8">
-          <div className={`lg:col-span-1 ${showFilters ? 'block' : 'hidden'}`}>
-            <ListingsFilter onFiltersChange={handleFiltersChange} />
-          </div>
-          <div className={`${showFilters ? 'lg:col-span-3' : 'lg:col-span-4'}`}>
-            <ListingsGrid 
-              viewMode={viewMode}
+
+        <div className="flex gap-8 mt-8">
+          {/* Sidebar */}
+          {showFilters && (
+            <div className="w-80 flex-shrink-0">
+              <ListingsFilter
+                onFiltersChange={handleFiltersChange}
+              />
+            </div>
+          )}
+
+          {/* Main Content */}
+          <div className="flex-1">
+            <ListingsGrid
               searchQuery={searchQuery}
               selectedCategories={activeFilters.categories}
               selectedLocations={activeFilters.locations}
               selectedExperience={activeFilters.experience}
+              viewMode={viewMode}
               onClearFilters={clearAllFilters}
             />
             <ListingsPagination />
           </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

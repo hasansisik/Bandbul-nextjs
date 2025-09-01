@@ -29,12 +29,12 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
   };
 
   return (
-    <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+    <div className="bg-card/50 backdrop-blur rounded-xl p-8 border border-border/50 shadow-sm">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Title and Description */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Müzik İlanları</h1>
-          <p className="text-gray-600 text-base">
+          <h1 className="text-3xl font-bold text-foreground mb-3">Müzik İlanları</h1>
+          <p className="text-muted-foreground text-base">
             Grup arayanlar, müzisyen arayanlar ve ders verenler için ilanlar
           </p>
         </div>
@@ -48,11 +48,11 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="pr-12 h-12 bg-gray-50 border-gray-200 focus:border-gray-400"
+              className="pr-12 h-12 bg-background/50 backdrop-blur border-border focus:border-ring"
             />
             <Button
               size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-black hover:bg-gray-800"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
               onClick={handleSearch}
             >
               <Search className="h-4 w-4" />
@@ -63,7 +63,7 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
           <Button 
             variant="outline" 
             size="sm" 
-            className="hidden md:flex h-12 px-6 border-gray-200 hover:bg-gray-50"
+            className="hidden md:flex h-12 px-6 border-border hover:bg-accent"
             onClick={handleFilterClick}
           >
             <Filter className="h-4 w-4 mr-2" />
@@ -71,11 +71,11 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
           </Button>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50">
+          <div className="flex items-center border border-border rounded-lg bg-muted/50">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-10 w-10 p-0 rounded-r-none ${viewMode === 'grid' ? 'bg-black hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+              className={`h-10 w-10 p-0 rounded-r-none ${viewMode === 'grid' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
               onClick={() => handleViewModeChange('grid')}
             >
               <Grid3X3 className="h-4 w-4" />
@@ -83,7 +83,7 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
             <Button
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-10 w-10 p-0 rounded-l-none ${viewMode === 'list' ? 'bg-black hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+              className={`h-10 w-10 p-0 rounded-l-none ${viewMode === 'list' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
               onClick={() => handleViewModeChange('list')}
             >
               <List className="h-4 w-4" />
@@ -93,21 +93,21 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-8 mt-8 pt-6 border-t border-gray-100">
+      <div className="flex items-center gap-8 mt-8 pt-6 border-t border-border/50">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <span className="text-sm text-gray-600">Toplam:</span>
-          <span className="text-sm font-semibold text-gray-900">1,247 ilan</span>
+          <div className="w-2 h-2 bg-muted-foreground/50 rounded-full"></div>
+          <span className="text-sm text-muted-foreground">Toplam:</span>
+          <span className="text-sm font-semibold text-foreground">1,247 ilan</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <span className="text-sm text-gray-600">Aktif:</span>
-          <span className="text-sm font-semibold text-gray-900">892 ilan</span>
+          <div className="w-2 h-2 bg-primary rounded-full"></div>
+          <span className="text-sm text-muted-foreground">Aktif:</span>
+          <span className="text-sm font-semibold text-foreground">892 ilan</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <span className="text-sm text-gray-600">Bugün:</span>
-          <span className="text-sm font-semibold text-gray-900">23 yeni</span>
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span className="text-sm text-muted-foreground">Bugün:</span>
+          <span className="text-sm font-semibold text-foreground">23 yeni ilan</span>
         </div>
       </div>
     </div>

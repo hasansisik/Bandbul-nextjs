@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Header from "@/components/sections/Header";
-import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { faqData } from "@/lib/staticData";
@@ -28,40 +26,39 @@ export default function FAQPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
-      <Header />
-      <div className="container mx-auto px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="container mx-auto px-4 py-12">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <HelpCircle className="h-8 w-8 text-gray-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Sıkça Sorulan Sorular</h1>
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <HelpCircle className="h-8 w-8 text-primary" />
+            <h1 className="text-5xl font-bold text-foreground">Sıkça Sorulan Sorular</h1>
           </div>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Bandbul platformu hakkında en çok sorulan sorular ve cevapları
           </p>
         </div>
 
         {/* FAQ Items */}
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-4 mb-12">
           {faqData.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div key={item.id} className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 overflow-hidden shadow-sm">
               <button
                 onClick={() => toggleItem(item.id)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-accent/50 transition-colors"
               >
-                <h3 className="font-semibold text-gray-900 text-lg">
+                <h3 className="font-semibold text-foreground text-lg">
                   {item.question}
                 </h3>
                 {openItems.includes(item.id) ? (
-                  <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 )}
               </button>
               {openItems.includes(item.id) && (
-                <div className="px-6 pb-4 border-t border-gray-100">
-                  <p className="text-gray-700 leading-relaxed pt-4">
+                <div className="px-8 pb-6 border-t border-border/50">
+                  <p className="text-muted-foreground leading-relaxed pt-6">
                     {item.answer}
                   </p>
                 </div>
@@ -71,25 +68,25 @@ export default function FAQPage() {
         </div>
 
         {/* Contact Section */}
-        <div className="max-w-4xl mx-auto mt-12">
-          <div className="bg-gray-50 rounded-xl p-8 text-center border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card/50 backdrop-blur rounded-2xl p-8 text-center border border-border/50 shadow-sm">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
               Sorunuzu Bulamadınız mı?
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-lg text-muted-foreground mb-8">
               Aradığınız cevabı bulamadıysanız, destek ekibimizle iletişime geçebilirsiniz.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 onClick={handleSupportContact}
-                className="bg-black hover:bg-gray-800"
+                className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
               >
                 İletişim Sayfasına Git
               </Button>
               <Button 
                 onClick={handleEmailContact}
                 variant="outline" 
-                className="border-gray-200 hover:bg-gray-50"
+                className="border-border hover:bg-accent px-8 py-3 text-lg rounded-xl"
               >
                 E-posta Gönder
               </Button>
@@ -97,7 +94,6 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }
