@@ -117,7 +117,7 @@ const HeroSection = () => {
   return (
     <section className="relative flex items-center mt-8 h-[500px] md:h-[500px] px-4">
       {/* Background with padding only */}
-      <div className="container mx-auto relative z-10 rounded-3xl overflow-hidden h-full">
+      <div className="container mx-auto relative z-10 rounded-3xl overflow-visible h-full">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -144,7 +144,7 @@ const HeroSection = () => {
           </div>
 
           {/* Search Card - Below text, centered */}
-          <div className="max-w-4xl relative z-10">
+          <div className="max-w-4xl relative z-50">
             <Card className="bg-white/30 backdrop-blur border-white/20 rounded-3xl p-6 md:p-8 shadow-2xl">
               <CardContent className="p-0">
                 {/* Filter Options */}
@@ -168,19 +168,21 @@ const HeroSection = () => {
                     
                     {/* Category Dropdown */}
                     {showCategoryDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
-                        {categories.map((category) => (
-                          <div
-                            key={category.value}
-                            onClick={() => {
-                              setSelectedCategory(category.label);
-                              setShowCategoryDropdown(false);
-                            }}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                          >
-                            {category.label}
-                          </div>
-                        ))}
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                          {categories.map((category) => (
+                            <div
+                              key={category.value}
+                              onClick={() => {
+                                setSelectedCategory(category.label);
+                                setShowCategoryDropdown(false);
+                              }}
+                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                            >
+                              {category.label}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -204,19 +206,21 @@ const HeroSection = () => {
                     
                     {/* Instrument Dropdown */}
                     {showInstrumentDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
-                        {instruments.map((instrument) => (
-                          <div
-                            key={instrument}
-                            onClick={() => {
-                              setSelectedInstrument(instrument || '');
-                              setShowInstrumentDropdown(false);
-                            }}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                          >
-                            {instrument}
-                          </div>
-                        ))}
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                          {instruments.map((instrument) => (
+                            <div
+                              key={instrument}
+                              onClick={() => {
+                                setSelectedInstrument(instrument || '');
+                                setShowInstrumentDropdown(false);
+                              }}
+                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                            >
+                              {instrument}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -240,19 +244,21 @@ const HeroSection = () => {
                     
                     {/* Location Dropdown */}
                     {showLocationDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
-                        {locations.map((location) => (
-                          <div
-                            key={location}
-                            onClick={() => {
-                              setSelectedLocation(location);
-                              setShowLocationDropdown(false);
-                            }}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                          >
-                            {location}
-                          </div>
-                        ))}
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                          {locations.map((location) => (
+                            <div
+                              key={location}
+                              onClick={() => {
+                                setSelectedLocation(location);
+                                setShowLocationDropdown(false);
+                              }}
+                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                            >
+                              {location}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
