@@ -8,6 +8,7 @@ export interface BlogPost {
   publishedDate: string;
   readTime: string;
   category: string;
+  categorySlug: string; // Add categorySlug for URL-safe category names
   tags: string[];
   image: string;
   featured?: boolean;
@@ -16,374 +17,215 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     id: 1,
-    title: "Müzik Prodüksiyonunda Yeni Teknolojiler",
-    slug: "muzik-produksiyonunda-yeni-teknolojiler",
-    excerpt: "Günümüzde müzik prodüksiyonu alanında kullanılan en son teknolojiler ve bunların müzisyenlere sağladığı avantajlar hakkında detaylı bir rehber.",
+    title: "Müzik Prodüksiyonunda Temel Teknikler",
+    slug: "muzik-produksiyonunda-temel-teknikler",
+    excerpt: "Modern müzik prodüksiyonunda kullanılan temel teknikler ve yazılımlar hakkında detaylı bir rehber.",
     content: `
-      <p>Müzik prodüksiyonu alanında teknoloji her geçen gün daha da gelişiyor. Artık ev stüdyolarında bile profesyonel kalitede kayıtlar yapmak mümkün. Bu yazımızda müzik prodüksiyonunda kullanılan en son teknolojileri ve bunların avantajlarını ele alacağız.</p>
+      <p>Müzik prodüksiyonu, günümüzde teknolojinin gelişmesiyle birlikte çok daha erişilebilir hale geldi. Bu yazımızda temel prodüksiyon tekniklerini ele alacağız.</p>
       
-      <h2>Dijital Ses İşleme (DSP) Teknolojileri</h2>
-      <p>Modern dijital ses işleme teknolojileri, müzisyenlere daha önce hiç olmadığı kadar esneklik sağlıyor. Yapay zeka destekli eklentiler, otomatik mastering araçları ve gerçek zamanlı ses işleme yazılımları artık standart hale geldi.</p>
-      
-      <h3>Yapay Zeka Destekli Eklentiler</h3>
-      <p>Yapay zeka teknolojisi, müzik prodüksiyonunda devrim yaratıyor. AI destekli eklentiler şunları yapabiliyor:</p>
+      <h2>DAW Seçimi</h2>
+      <p>Digital Audio Workstation (DAW) seçimi prodüksiyon sürecinin en önemli adımlarından biridir. Popüler seçenekler:</p>
       <ul>
-        <li>Otomatik ses temizleme</li>
-        <li>Akıllı kompresyon</li>
-        <li>Dinamik dengeleme</li>
-        <li>Otomatik mastering</li>
+        <li>Ableton Live - Canlı performans ve elektronik müzik için ideal</li>
+        <li>Logic Pro - Mac kullanıcıları için kapsamlı çözüm</li>
+        <li>Pro Tools - Profesyonel stüdyo standardı</li>
+        <li>FL Studio - Başlangıç seviyesi için uygun</li>
       </ul>
       
-      <h3>Bulut Tabanlı Prodüksiyon</h3>
-      <p>Bulut teknolojisi sayesinde artık dünyanın her yerinden projelerinize erişebilir, işbirlikçi çalışmalar yapabilirsiniz. Bu teknoloji özellikle uzaktan çalışan müzisyenler için büyük avantaj sağlıyor.</p>
-      
-      <h2>Gelecekte Müzik Prodüksiyonu</h2>
-      <p>Gelecekte müzik prodüksiyonunda göreceğimiz teknolojiler:</p>
+      <h2>Mikrofon Teknikleri</h2>
+      <p>Doğru mikrofon seçimi ve yerleştirme, kaliteli kayıt için kritik öneme sahiptir:</p>
       <ul>
-        <li>Sanal gerçeklik stüdyoları</li>
-        <li>3D ses teknolojileri</li>
-        <li>Blockchain tabanlı telif hakları yönetimi</li>
-        <li>Daha gelişmiş AI destekli kompozisyon araçları</li>
+        <li>Dinamik mikrofonlar - Yüksek ses seviyeleri için</li>
+        <li>Kondenser mikrofonlar - Hassas kayıtlar için</li>
+        <li>Ribbon mikrofonlar - Vintage ses karakteri için</li>
       </ul>
       
-      <p>Bu teknolojiler müzisyenlere daha yaratıcı olma imkanı sunarken, aynı zamanda prodüksiyon sürecini de hızlandırıyor.</p>
+      <h2>Mixing ve Mastering</h2>
+      <p>Mixing sürecinde dikkat edilmesi gerekenler:</p>
+      <ul>
+        <li>Frekans dengesi</li>
+        <li>Dinamik aralık kontrolü</li>
+        <li>Stereo görüntü</li>
+        <li>Reverb ve delay kullanımı</li>
+      </ul>
     `,
-    author: "Ahmet Yılmaz",
+    author: "Mehmet Yılmaz",
     publishedDate: "2024-01-15",
     readTime: "8 dk",
     category: "Prodüksiyon",
-    tags: ["prodüksiyon", "teknoloji", "AI", "müzik"],
+    categorySlug: "produksiyon",
+    tags: ["prodüksiyon", "müzik", "kayıt", "mixing"],
     image: "/blogexample.jpg",
     featured: true
   },
   {
     id: 2,
-    title: "Grup Kurarken Dikkat Edilmesi Gerekenler",
-    slug: "grup-kurarken-dikkat-edilmesi-gerekenler",
-    excerpt: "Başarılı bir müzik grubu kurmanın püf noktaları ve grup üyeleri arasında uyum sağlamanın yolları.",
+    title: "Grup Müziğinde İletişim ve Uyum",
+    slug: "grup-muziginde-iletisim-ve-uyum",
+    excerpt: "Bir müzik grubunda başarılı olmak için gerekli iletişim becerileri ve grup uyumu konuları.",
     content: `
-      <p>Başarılı bir müzik grubu kurmak sadece iyi müzisyenler bulmakla bitmiyor. Grup dinamikleri, iletişim ve ortak hedefler de en az müzik kalitesi kadar önemli. Bu yazımızda grup kurarken dikkat edilmesi gereken noktaları ele alacağız.</p>
+      <p>Grup müziği, bireysel yeteneklerin yanı sıra kolektif uyum gerektiren bir sanat formudur. Bu yazımızda grup içi iletişimi ele alacağız.</p>
       
-      <h2>Müziksel Uyum</h2>
-      <p>Grup üyelerinin müziksel tarzları ve yetenekleri uyumlu olmalı. Ancak bu, herkesin aynı tarzda çalması gerektiği anlamına gelmiyor. Farklı tarzların birleşmesi bazen çok daha ilginç sonuçlar verebilir.</p>
-      
-      <h3>Repertuar Seçimi</h3>
-      <p>Grup repertuarını belirlerken şu faktörleri göz önünde bulundurun:</p>
+      <h2>Grup Dinamikleri</h2>
+      <p>Başarılı bir grup için gerekli unsurlar:</p>
       <ul>
-        <li>Grup üyelerinin ortak beğenileri</li>
-        <li>Hedef kitlenin beklentileri</li>
-        <li>Teknik seviye uyumu</li>
-        <li>Müzik türü çeşitliliği</li>
+        <li>Açık iletişim</li>
+        <li>Karşılıklı saygı</li>
+        <li>Ortak hedefler</li>
+        <li>Esneklik ve uyum</li>
       </ul>
       
-      <h2>İletişim ve Organizasyon</h2>
-      <p>Grup içi iletişim, başarılı bir grubun temel taşlarından biridir. Düzenli toplantılar, açık iletişim kanalları ve net beklentiler belirlemek önemlidir.</p>
-      
-      <h3>Rol Dağılımı</h3>
-      <p>Grupta her üyenin net bir rolü olmalı:</p>
+      <h2>Prova Teknikleri</h2>
+      <p>Verimli prova için öneriler:</p>
       <ul>
-        <li>Liderlik (müziksel ve organizasyonel)</li>
-        <li>Teknik sorumluluklar</li>
-        <li>İletişim ve pazarlama</li>
-        <li>Finansal yönetim</li>
+        <li>Düzenli program</li>
+        <li>Net hedefler</li>
+        <li>Geri bildirim kültürü</li>
+        <li>Teknik gelişim odaklı çalışma</li>
       </ul>
-      
-      <h2>Hedef Belirleme</h2>
-      <p>Grup üyelerinin ortak hedefleri olmalı. Kimi sadece hobi olarak müzik yapmak isterken, kimi profesyonel kariyer hedefliyor olabilir. Bu farklılıklar başlangıçta net bir şekilde konuşulmalı.</p>
-      
-      <h2>Pratik ve Performans</h2>
-      <p>Düzenli pratik yapmak ve performans deneyimi kazanmak grup gelişimi için kritiktir. Küçük mekanlarda başlayarak deneyim kazanmak, daha büyük fırsatlara hazırlanmanın en iyi yoludur.</p>
     `,
-    author: "Zeynep Kaya",
+    author: "Ayşe Demir",
     publishedDate: "2024-01-10",
     readTime: "6 dk",
     category: "Grup Müziği",
-    tags: ["grup", "müzik", "organizasyon", "iletişim"],
-    image: "/blogexample.jpg",
-    featured: true
+    categorySlug: "grup-muzigi",
+    tags: ["grup", "iletişim", "prova", "uyum"],
+    image: "/blogexample.jpg"
   },
   {
     id: 3,
-    title: "Enstrüman Seçerken Nelere Dikkat Etmeli?",
-    slug: "enstruman-secerken-nelere-dikkat-etmeli",
-    excerpt: "İlk enstrümanınızı seçerken dikkat etmeniz gereken faktörler ve doğru seçim yapmanın yolları.",
+    title: "Enstrüman Seçiminde Dikkat Edilecekler",
+    slug: "enstruman-seciminde-dikkat-edilecekler",
+    excerpt: "İlk enstrümanınızı seçerken dikkat etmeniz gereken faktörler ve öneriler.",
     content: `
-      <p>İlk enstrümanınızı seçmek heyecan verici ama aynı zamanda zorlu bir süreç. Bu karar müzik yolculuğunuzu şekillendirecek. Bu yazımızda enstrüman seçerken dikkat etmeniz gereken faktörleri ele alacağız.</p>
+      <p>Enstrüman seçimi, müzik yolculuğunuzun en önemli kararlarından biridir. Bu rehber size doğru seçimi yapmanızda yardımcı olacak.</p>
       
-      <h2>Kişisel Tercihler</h2>
-      <p>Enstrüman seçerken öncelikle kendi tercihlerinizi göz önünde bulundurun. Hangi müzik türlerini seviyorsunuz? Hangi enstrümanların sesini beğeniyorsunuz?</p>
-      
-      <h3>Fiziksel Uygunluk</h3>
-      <p>Enstrüman seçerken fiziksel özelliklerinizi de düşünün:</p>
+      <h2>Başlangıç Seviyesi Enstrümanlar</h2>
+      <p>Yeni başlayanlar için önerilen enstrümanlar:</p>
       <ul>
-        <li>Boy ve el büyüklüğü</li>
-        <li>Parmak uzunluğu</li>
-        <li>Fiziksel güç</li>
-        <li>Sağlık durumu</li>
+        <li>Gitar - Erişilebilir ve çok yönlü</li>
+        <li>Piyano - Müzik teorisi için ideal</li>
+        <li>Ukulele - Küçük ve taşınabilir</li>
+        <li>Flüt - Nefesli enstrümanlar için giriş</li>
       </ul>
       
-      <h2>Bütçe ve Kalite</h2>
-      <p>Enstrüman fiyatları çok geniş bir aralıkta değişiyor. Başlangıç seviyesi enstrümanlar genellikle uygun fiyatlıdır, ancak çok ucuz enstrümanlar öğrenmeyi zorlaştırabilir.</p>
-      
-      <h3>Kalite Faktörleri</h3>
-      <p>İyi bir enstrüman seçerken şunlara dikkat edin:</p>
+      <h2>Seçim Kriterleri</h2>
+      <p>Enstrüman seçerken düşünmeniz gerekenler:</p>
       <ul>
-        <li>Malzeme kalitesi</li>
-        <li>İşçilik</li>
-        <li>Ses kalitesi</li>
-        <li>Dayanıklılık</li>
-        <li>Garanti</li>
+        <li>Bütçe</li>
+        <li>Fiziksel uygunluk</li>
+        <li>Müzik türü tercihi</li>
+        <li>Öğrenme süresi</li>
       </ul>
-      
-      <h2>Öğrenme Kolaylığı</h2>
-      <p>Bazı enstrümanlar diğerlerine göre öğrenmesi daha kolaydır. Başlangıç seviyesi için önerilen enstrümanlar:</p>
-      <ul>
-        <li>Ukulele</li>
-        <li>Melodika</li>
-        <li>Basit perküsyon enstrümanları</li>
-        <li>Elektronik klavye</li>
-      </ul>
-      
-      <h2>Uzun Vadeli Düşünün</h2>
-      <p>Enstrüman seçerken sadece bugünü değil, geleceği de düşünün. Hangi enstrümanla ileride neler yapmak istiyorsunuz? Bu soru size doğru yönü gösterecektir.</p>
-      
-      <h2>Profesyonel Danışmanlık</h2>
-      <p>Mümkünse bir müzik mağazasında profesyonel danışmanlık alın. Deneyimli satıcılar size en uygun enstrümanı bulmanızda yardımcı olabilir.</p>
     `,
-    author: "Mehmet Demir",
+    author: "Can Özkan",
     publishedDate: "2024-01-05",
-    readTime: "7 dk",
+    readTime: "5 dk",
     category: "Enstrüman",
-    tags: ["enstrüman", "seçim", "başlangıç", "müzik"],
+    categorySlug: "enstruman",
+    tags: ["enstrüman", "seçim", "başlangıç", "öğrenme"],
     image: "/blogexample.jpg"
   },
   {
     id: 4,
-    title: "Müzik Teorisi: Temel Kavramlar",
-    slug: "muzik-teorisi-temel-kavramlar",
-    excerpt: "Müzik teorisinin temel kavramları ve bu bilgilerin pratik müzik yapımında nasıl kullanılacağı.",
+    title: "Müzik Teorisinin Temelleri",
+    slug: "muzik-teorisinin-temelleri",
+    excerpt: "Müzik teorisinin temel kavramları ve pratik uygulamaları hakkında kapsamlı rehber.",
     content: `
-      <p>Müzik teorisi, müziği anlamanın ve yaratmanın temelidir. Bu yazımızda müzik teorisinin temel kavramlarını ve bunların pratik uygulamalarını ele alacağız.</p>
+      <p>Müzik teorisi, müziği anlamak ve yaratmak için gerekli temel bilgileri sağlar. Bu yazımızda temel kavramları ele alacağız.</p>
       
-      <h2>Notalar ve Gamlar</h2>
-      <p>Müzik teorisinin temeli notalardır. Batı müziğinde 7 temel nota vardır: Do, Re, Mi, Fa, Sol, La, Si.</p>
-      
-      <h3>Gamlar (Diziler)</h3>
-      <p>Gamlar, notaların belirli bir düzende sıralanmasıdır. En yaygın gamlar:</p>
+      <h2>Nota Sistemi</h2>
+      <p>Batı müziği nota sistemi:</p>
       <ul>
-        <li>Majör gam</li>
-        <li>Minör gam</li>
-        <li>Pentatonik gam</li>
-        <li>Blues gamı</li>
+        <li>Do, Re, Mi, Fa, Sol, La, Si</li>
+        <li>Bemol ve diyez işaretleri</li>
+        <li>Oktav kavramı</li>
+        <li>Anahtar işaretleri</li>
       </ul>
       
       <h2>Akorlar ve Armoni</h2>
-      <p>Akorlar, birden fazla notanın aynı anda çalınmasıdır. Temel akor türleri:</p>
+      <p>Temel akor yapıları:</p>
       <ul>
         <li>Majör akorlar</li>
         <li>Minör akorlar</li>
-        <li>Diminished akorlar</li>
-        <li>Augmented akorlar</li>
+        <li>Dominant yedili</li>
+        <li>Akor ilerlemeleri</li>
       </ul>
-      
-      <h3>Akor İlerlemeleri</h3>
-      <p>Akor ilerlemeleri, bir şarkının temel yapısını oluşturur. Yaygın akor ilerlemeleri:</p>
-      <ul>
-        <li>I-IV-V (majör)</li>
-        <li>I-V-vi-IV (pop)</li>
-        <li>ii-V-I (jazz)</li>
-      </ul>
-      
-      <h2>Ritim ve Metrik</h2>
-      <p>Ritim, müziğin zaman içindeki düzenidir. Temel ritim kavramları:</p>
-      <ul>
-        <li>Vuruş (beat)</li>
-        <li>Ölçü (measure)</li>
-        <li>Tempo</li>
-        <li>Metrik</li>
-      </ul>
-      
-      <h2>Dinamik ve Artikülasyon</h2>
-      <p>Dinamik, müziğin ses seviyesini belirler:</p>
-      <ul>
-        <li>Pianissimo (pp) - çok yumuşak</li>
-        <li>Piano (p) - yumuşak</li>
-        <li>Mezzo-piano (mp) - orta yumuşak</li>
-        <li>Mezzo-forte (mf) - orta güçlü</li>
-        <li>Forte (f) - güçlü</li>
-        <li>Fortissimo (ff) - çok güçlü</li>
-      </ul>
-      
-      <h2>Pratik Uygulama</h2>
-      <p>Müzik teorisini öğrenirken pratik yapmak çok önemlidir. Teorik bilgileri enstrümanınızda uygulayarak pekiştirin.</p>
     `,
-    author: "Elif Özkan",
+    author: "Zeynep Kaya",
     publishedDate: "2023-12-28",
     readTime: "10 dk",
     category: "Müzik Teorisi",
-    tags: ["teori", "nota", "akor", "ritim", "müzik"],
+    categorySlug: "muzik-teorisi",
+    tags: ["teori", "nota", "akor", "armoni"],
     image: "/blogexample.jpg"
   },
   {
     id: 5,
-    title: "Sahne Performansı İçin İpuçları",
-    slug: "sahne-performansi-icin-ipuclari",
-    excerpt: "Sahne korkusunu yenmek ve etkileyici performanslar sergilemek için pratik ipuçları ve teknikler.",
+    title: "Sahne Performansı ve Sahne Korkusu",
+    slug: "sahne-performansi-ve-sahne-korkusu",
+    excerpt: "Sahne performansında başarılı olmak için teknikler ve sahne korkusuyla başa çıkma yöntemleri.",
     content: `
-      <p>Sahne performansı, birçok müzisyenin en büyük korkularından biridir. Ancak doğru tekniklerle bu korkuyu yenebilir ve etkileyici performanslar sergileyebilirsiniz. Bu yazımızda sahne performansı için pratik ipuçlarını paylaşacağız.</p>
+      <p>Sahne performansı, birçok müzisyen için hem heyecan verici hem de korkutucu bir deneyimdir. Bu yazımızda bu konuları ele alacağız.</p>
       
-      <h2>Sahne Korkusunu Yenme</h2>
-      <p>Sahne korkusu normal bir duygudur. Hatta profesyonel müzisyenler bile bu duyguyu yaşar. Önemli olan bu korkuyu kontrol altına almak.</p>
-      
-      <h3>Nefes Teknikleri</h3>
-      <p>Sahne korkusunu yenmek için nefes teknikleri çok etkilidir:</p>
+      <h2>Sahne Korkusuyla Başa Çıkma</h2>
+      <p>Yaygın teknikler:</p>
       <ul>
-        <li>Derin nefes alma</li>
-        <li>4-7-8 tekniği</li>
-        <li>Diyafram nefesi</li>
+        <li>Nefes egzersizleri</li>
+        <li>Görselleştirme teknikleri</li>
+        <li>Düzenli prova</li>
+        <li>Profesyonel destek</li>
       </ul>
       
-      <h2>Hazırlık Süreci</h2>
-      <p>İyi bir performans için hazırlık çok önemlidir. Performans öncesi yapmanız gerekenler:</p>
+      <h2>Performans Teknikleri</h2>
+      <p>Başarılı performans için öneriler:</p>
       <ul>
-        <li>Yeterli pratik</li>
-        <li>Teknik kontrol</li>
-        <li>Ekipman kontrolü</li>
-        <li>Mental hazırlık</li>
+        <li>İyi hazırlık</li>
+        <li>Fiziksel rahatlık</li>
+        <li>Seyirci ile iletişim</li>
+        <li>Hata yönetimi</li>
       </ul>
-      
-      <h3>Pratik Stratejileri</h3>
-      <p>Performans öncesi pratik yaparken:</p>
-      <ul>
-        <li>Yavaş tempoda başlayın</li>
-        <li>Zorlu pasajları tekrarlayın</li>
-        <li>Metronom kullanın</li>
-        <li>Kayıt alıp dinleyin</li>
-      </ul>
-      
-      <h2>Sahne Varlığı</h2>
-      <p>Sahne varlığı, izleyiciyle bağ kurmanızı sağlar. Bunun için:</p>
-      <ul>
-        <li>Göz teması kurun</li>
-        <li>Vücut dilinize dikkat edin</li>
-        <li>Enerjinizi koruyun</li>
-        <li>Doğal olun</li>
-      </ul>
-      
-      <h2>Teknik Hazırlık</h2>
-      <p>Performans öncesi teknik hazırlık:</p>
-      <ul>
-        <li>Enstrümanınızı kontrol edin</li>
-        <li>Yedek ekipman bulundurun</li>
-        <li>Ses kontrolü yapın</li>
-        <li>Işık ayarlarını kontrol edin</li>
-      </ul>
-      
-      <h2>İzleyici Etkileşimi</h2>
-      <p>İzleyiciyle etkileşim kurmak performansınızı güçlendirir:</p>
-      <ul>
-        <li>Selamlayın</li>
-        <li>Şarkılar arası konuşun</li>
-        <li>İzleyici tepkilerine yanıt verin</li>
-        <li>Teşekkür edin</li>
-      </ul>
-      
-      <h2>Hata Yapma Korkusu</h2>
-      <p>Hata yapmaktan korkmayın. Hatalar doğaldır ve genellikle izleyici tarafından fark edilmez. Önemli olan hatanızı düzgün bir şekilde yönetmektir.</p>
     `,
-    author: "Can Yıldız",
+    author: "Elif Yıldız",
     publishedDate: "2023-12-20",
-    readTime: "9 dk",
+    readTime: "7 dk",
     category: "Performans",
-    tags: ["sahne", "performans", "korku", "teknik"],
+    categorySlug: "performans",
+    tags: ["performans", "sahne", "korku", "teknik"],
     image: "/blogexample.jpg"
   },
   {
     id: 6,
-    title: "Dijital Müzik Platformları ve Müzisyenler",
-    slug: "dijital-muzik-platformlari-ve-muzisyenler",
-    excerpt: "Dijital müzik platformlarının müzisyenlere sunduğu fırsatlar ve bu platformları etkili kullanma yöntemleri.",
+    title: "Dijital Müzik Platformları ve Teknoloji",
+    slug: "dijital-muzik-platformlari-ve-teknoloji",
+    excerpt: "Modern müzik endüstrisinde dijital platformların rolü ve teknolojik gelişmeler.",
     content: `
-      <p>Dijital müzik platformları, müzisyenlerin müziklerini dünyaya ulaştırmasını sağlayan güçlü araçlardır. Bu yazımızda bu platformları nasıl etkili kullanabileceğinizi ele alacağız.</p>
+      <p>Dijital teknoloji, müzik endüstrisini köklü bir şekilde değiştirdi. Bu yazımızda bu değişimleri ve fırsatları ele alacağız.</p>
       
-      <h2>Platform Seçimi</h2>
-      <p>Farklı dijital müzik platformları farklı avantajlar sunar. Platform seçerken şunları göz önünde bulundurun:</p>
+      <h2>Streaming Platformları</h2>
+      <p>Popüler platformlar:</p>
       <ul>
-        <li>Hedef kitleniz</li>
-        <li>Platform popülerliği</li>
-        <li>Telif hakları oranları</li>
-        <li>Platform özellikleri</li>
+        <li>Spotify - En büyük streaming servisi</li>
+        <li>Apple Music - Yüksek kalite odaklı</li>
+        <li>YouTube Music - Video içerik entegrasyonu</li>
+        <li>Bandcamp - Bağımsız sanatçılar için</li>
       </ul>
       
-      <h3>Popüler Platformlar</h3>
-      <p>En popüler dijital müzik platformları:</p>
+      <h2>Teknolojik Trendler</h2>
+      <p>Güncel gelişmeler:</p>
       <ul>
-        <li>Spotify</li>
-        <li>Apple Music</li>
-        <li>YouTube Music</li>
-        <li>Amazon Music</li>
-        <li>Deezer</li>
-      </ul>
-      
-      <h2>İçerik Optimizasyonu</h2>
-      <p>Platformlarda başarılı olmak için içeriğinizi optimize edin:</p>
-      <ul>
-        <li>Kaliteli ses dosyaları</li>
-        <li>Çekici kapak tasarımları</li>
-        <li>Etkili başlıklar</li>
-        <li>Doğru etiketler</li>
-      </ul>
-      
-      <h3>Metadata Optimizasyonu</h3>
-      <p>Metadata, müziğinizin bulunabilirliğini artırır:</p>
-      <ul>
-        <li>Doğru sanatçı adı</li>
-        <li>Albüm bilgileri</li>
-        <li>Tarih bilgileri</li>
-        <li>Kategori seçimi</li>
-      </ul>
-      
-      <h2>Promosyon Stratejileri</h2>
-      <p>Platformlarda başarılı olmak için promosyon yapın:</p>
-      <ul>
-        <li>Sosyal medya kullanımı</li>
-        <li>Playlist pitching</li>
-        <li>Influencer işbirlikleri</li>
-        <li>Canlı performanslar</li>
-      </ul>
-      
-      <h2>Analitik Takibi</h2>
-      <p>Platform analitiklerini takip ederek performansınızı ölçün:</p>
-      <ul>
-        <li>Dinlenme sayıları</li>
-        <li>Coğrafi dağılım</li>
-        <li>Dinleyici demografisi</li>
-        <li>Popülerlik trendleri</li>
-      </ul>
-      
-      <h2>Gelir Optimizasyonu</h2>
-      <p>Platformlardan gelir elde etmek için:</p>
-      <ul>
-        <li>Çoklu platform kullanımı</li>
-        <li>Merchandise satışı</li>
-        <li>Canlı performanslar</li>
-        <li>Özel içerikler</li>
-      </ul>
-      
-      <h2>Gelecek Trendleri</h2>
-      <p>Dijital müzik platformlarının geleceği:</p>
-      <ul>
-        <li>Yapay zeka önerileri</li>
-        <li>Sanal gerçeklik deneyimleri</li>
+        <li>Yapay zeka destekli müzik üretimi</li>
+        <li>VR/AR konser deneyimleri</li>
         <li>Blockchain tabanlı telif hakları</li>
-        <li>Daha kişiselleştirilmiş deneyimler</li>
+        <li>Sosyal medya entegrasyonu</li>
       </ul>
     `,
-    author: "Selin Arslan",
+    author: "Deniz Arslan",
     publishedDate: "2023-12-15",
-    readTime: "11 dk",
+    readTime: "9 dk",
     category: "Dijital Müzik",
-    tags: ["platform", "dijital", "müzik", "promosyon"],
+    categorySlug: "dijital-muzik",
+    tags: ["dijital", "teknoloji", "platform", "streaming"],
     image: "/blogexample.jpg"
   },
   {
@@ -416,6 +258,7 @@ export const blogPosts: BlogPost[] = [
     publishedDate: "2023-12-10",
     readTime: "7 dk",
     category: "Eğitim",
+    categorySlug: "egitim",
     tags: ["eğitim", "teknoloji", "online", "uygulama"],
     image: "/blogexample.jpg"
   },
@@ -423,99 +266,101 @@ export const blogPosts: BlogPost[] = [
     id: 8,
     title: "Klasik Müzikten Modern Müziğe Geçiş",
     slug: "klasik-muzikten-modern-muzige-gecis",
-    excerpt: "Klasik müzik eğitimi alan müzisyenlerin modern müzik türlerine geçiş yaparken dikkat etmesi gerekenler.",
+    excerpt: "Klasik müzik eğitimi alan müzisyenlerin modern müzik türlerine geçiş sürecinde yaşadıkları deneyimler ve öneriler.",
     content: `
-      <p>Klasik müzik eğitimi, sağlam bir temel oluşturur ancak modern müzik türlerine geçiş yaparken farklı yaklaşımlar gerektirir. Bu yazımızda bu geçiş sürecini ele alacağız.</p>
+      <p>Klasik müzik eğitimi, sağlam bir temel oluşturur ancak modern müzik türlerine geçiş bazen zorlayıcı olabilir. Bu yazımızda bu geçiş sürecini ele alacağız.</p>
       
-      <h2>Temel Farklılıklar</h2>
-      <p>Klasik ve modern müzik arasındaki temel farklılıklar:</p>
+      <h2>Klasik Eğitimin Avantajları</h2>
+      <p>Klasik müzik eğitiminin modern müziğe katkıları:</p>
       <ul>
-        <li>Ritim yaklaşımları</li>
-        <li>Harmonik yapılar</li>
-        <li>İmprovisasyon teknikleri</li>
-        <li>Dinamik kullanımı</li>
+        <li>Güçlü teknik temel</li>
+        <li>Müzik teorisi bilgisi</li>
+        <li>Disiplinli çalışma alışkanlığı</li>
+        <li>Nota okuma becerisi</li>
       </ul>
       
-      <h2>Geçiş Stratejileri</h2>
-      <p>Başarılı bir geçiş için öneriler:</p>
+      <h2>Geçiş Sürecinde Dikkat Edilecekler</h2>
+      <p>Modern müziğe geçerken önemli noktalar:</p>
       <ul>
-        <li>Farklı müzik türlerini dinleyin</li>
-        <li>Yeni teknikler öğrenin</li>
-        <li>İmprovisasyon pratiği yapın</li>
-        <li>Modern ekipmanları deneyin</li>
+        <li>Farklı ritim yapılarını öğrenme</li>
+        <li>Improvisasyon becerilerini geliştirme</li>
+        <li>Elektronik enstrümanlara adaptasyon</li>
+        <li>Farklı müzik kültürlerini anlama</li>
       </ul>
     `,
-    author: "Mert Özkan",
+    author: "Ahmet Yılmaz",
     publishedDate: "2023-12-05",
     readTime: "8 dk",
-    category: "Müzik Teorisi",
-    tags: ["klasik", "modern", "geçiş", "teori"],
+    category: "Eğitim",
+    categorySlug: "egitim",
+    tags: ["klasik", "modern", "geçiş", "eğitim"],
     image: "/blogexample.jpg"
   },
   {
     id: 9,
-    title: "Müzik Terapisi ve İyileştirici Gücü",
-    slug: "muzik-terapisi-ve-iyilestirici-gucu",
-    excerpt: "Müziğin terapötik etkileri ve müzik terapisinin fiziksel ve ruhsal sağlığa katkıları.",
+    title: "Müzik Terapisinin Sağlığa Katkıları",
+    slug: "muzik-terapisinin-sagliga-katkilari",
+    excerpt: "Müzik terapisinin fiziksel ve ruhsal sağlığa olan olumlu etkileri ve uygulama alanları.",
     content: `
-      <p>Müzik, insan sağlığı üzerinde güçlü etkilere sahiptir. Bu yazımızda müzik terapisinin faydalarını ve uygulama alanlarını ele alacağız.</p>
+      <p>Müzik terapisinin sağlığa olan olumlu etkileri bilimsel araştırmalarla kanıtlanmıştır. Bu yazımızda müzik terapisinin farklı alanlardaki uygulamalarını ele alacağız.</p>
       
-      <h2>Müzik Terapisinin Faydaları</h2>
-      <p>Müzik terapisinin sağlığa katkıları:</p>
+      <h2>Fiziksel Sağlık Etkileri</h2>
+      <p>Müzik terapisinin fiziksel faydaları:</p>
+      <ul>
+        <li>Ağrı yönetimi</li>
+        <li>Motor becerilerin gelişimi</li>
+        <li>Solunum kontrolü</li>
+        <li>Kas gevşetme</li>
+      </ul>
+      
+      <h2>Ruhsal Sağlık Etkileri</h2>
+      <p>Müzik terapisinin psikolojik faydaları:</p>
       <ul>
         <li>Stres azaltma</li>
         <li>Anksiyete yönetimi</li>
-        <li>Ağrı kontrolü</li>
-        <li>Hafıza geliştirme</li>
-        <li>Motor beceri iyileştirme</li>
-      </ul>
-      
-      <h2>Uygulama Alanları</h2>
-      <p>Müzik terapisinin kullanıldığı alanlar:</p>
-      <ul>
-        <li>Hastaneler ve klinikler</li>
-        <li>Okullar ve eğitim kurumları</li>
-        <li>Yaşlı bakım merkezleri</li>
-        <li>Rehabilitasyon merkezleri</li>
+        <li>Depresyon tedavisi</li>
+        <li>Duygusal ifade</li>
       </ul>
     `,
-    author: "Ayşe Demir",
+    author: "Selin Demir",
     publishedDate: "2023-11-30",
     readTime: "6 dk",
     category: "Sağlık",
-    tags: ["terapi", "sağlık", "iyileştirme", "psikoloji"],
+    categorySlug: "saglik",
+    tags: ["terapi", "sağlık", "psikoloji", "tedavi"],
     image: "/blogexample.jpg"
   },
   {
     id: 10,
-    title: "Jazz Müziğinde İmprovisasyon Teknikleri",
-    slug: "jazz-muziginde-improvisasyon-teknikleri",
+    title: "Jazz Improvisasyon Teknikleri",
+    slug: "jazz-improvisasyon-teknikleri",
     excerpt: "Jazz müziğinde improvisasyon yapmanın temel teknikleri ve geliştirme yöntemleri.",
     content: `
-      <p>Jazz müziğinin en önemli özelliklerinden biri improvisasyondur. Bu yazımızda jazz improvisasyon tekniklerini ve geliştirme yöntemlerini ele alacağız.</p>
+      <p>Jazz improvisasyonu, müziğin en özgür ve yaratıcı formlarından biridir. Bu yazımızda jazz improvisasyonunun temel tekniklerini ele alacağız.</p>
       
-      <h2>Temel İmprovisasyon Teknikleri</h2>
-      <p>Jazz improvisasyonunun temel teknikleri:</p>
+      <h2>Temel Improvisasyon Teknikleri</h2>
+      <p>Jazz improvisasyonunda kullanılan teknikler:</p>
       <ul>
-        <li>Gamları öğrenme ve uygulama</li>
-        <li>Akor ilerlemelerini analiz etme</li>
-        <li>Motif geliştirme</li>
-        <li>Dinamik ve artikülasyon kullanımı</li>
+        <li>Modal improvisasyon</li>
+        <li>Chord tone targeting</li>
+        <li>Scale patterns</li>
+        <li>Rhythmic variation</li>
       </ul>
       
       <h2>Geliştirme Yöntemleri</h2>
-      <p>İmprovisasyon becerilerini geliştirmek için:</p>
+      <p>Improvisasyon becerilerini geliştirmek için:</p>
       <ul>
-        <li>Düzenli pratik yapın</li>
-        <li>Farklı stil ve müzisyenleri dinleyin</li>
-        <li>Transkripsiyon çalışın</li>
-        <li>Grup çalışmalarına katılın</li>
+        <li>Transcription çalışması</li>
+        <li>Backing track ile pratik</li>
+        <li>Melodic development</li>
+        <li>Rhythmic complexity</li>
       </ul>
     `,
-    author: "Burak Yılmaz",
+    author: "Burak Özkan",
     publishedDate: "2023-11-25",
     readTime: "9 dk",
     category: "Jazz",
+    categorySlug: "jazz",
     tags: ["jazz", "improvisasyon", "teknik", "müzik"],
     image: "/blogexample.jpg"
   },
@@ -523,100 +368,114 @@ export const blogPosts: BlogPost[] = [
     id: 11,
     title: "Müzik Endüstrisinde Telif Hakları",
     slug: "muzik-endustrisinde-telif-haklari",
-    excerpt: "Müzik endüstrisinde telif hakları, lisanslama ve müzisyenlerin haklarını koruma yöntemleri.",
+    excerpt: "Müzik endüstrisinde telif hakları, lisanslama ve yasal konular hakkında detaylı bilgi.",
     content: `
-      <p>Telif hakları, müzisyenlerin eserlerini korumak ve gelir elde etmek için kritik öneme sahiptir. Bu yazımızda telif hakları konusunu detaylı olarak ele alacağız.</p>
+      <p>Müzik endüstrisinde telif hakları, sanatçıların eserlerini korumak için kritik öneme sahiptir. Bu yazımızda telif hakları konusunu detaylı olarak ele alacağız.</p>
       
       <h2>Telif Hakları Türleri</h2>
-      <p>Müzik endüstrisinde telif hakları:</p>
+      <p>Müzik endüstrisinde farklı telif hakları:</p>
       <ul>
-        <li>Beste telif hakları</li>
-        <li>Söz telif hakları</li>
-        <li>Yorum telif hakları</li>
-        <li>Prodüksiyon telif hakları</li>
+        <li>Kompozisyon hakları</li>
+        <li>Kayıt hakları</li>
+        <li>Performans hakları</li>
+        <li>Yayın hakları</li>
       </ul>
       
-      <h2>Hakları Koruma Yöntemleri</h2>
-      <p>Telif haklarınızı korumak için:</p>
+      <h2>Lisanslama Süreçleri</h2>
+      <p>Müzik lisanslama türleri:</p>
       <ul>
-        <li>Eserlerinizi kayıt altına alın</li>
-        <li>Telif hakları kuruluşlarına üye olun</li>
-        <li>Lisans anlaşmalarını dikkatli inceleyin</li>
-        <li>Hukuki danışmanlık alın</li>
+        <li>Mechanical licenses</li>
+        <li>Synchronization licenses</li>
+        <li>Performance licenses</li>
+        <li>Print licenses</li>
       </ul>
     `,
-    author: "Zeynep Arslan",
+    author: "Merve Yıldız",
     publishedDate: "2023-11-20",
-    readTime: "8 dk",
+    readTime: "10 dk",
     category: "Hukuk",
-    tags: ["telif", "hukuk", "endüstri", "haklar"],
+    categorySlug: "hukuk",
+    tags: ["telif", "hukuk", "lisans", "endüstri"],
     image: "/blogexample.jpg"
   },
   {
     id: 12,
-    title: "Müzik ve Kültür: Dünya Müzikleri",
-    slug: "muzik-ve-kultur-dunya-muzikleri",
-    excerpt: "Dünya müziklerinin kültürel kökenleri ve farklı toplumlarda müziğin rolü.",
+    title: "Dünya Müzikleri ve Kültürel Zenginlik",
+    slug: "dunya-muzikleri-ve-kulturel-zenginlik",
+    excerpt: "Farklı kültürlerin müzik gelenekleri ve dünya müziklerinin zenginliği hakkında keşif.",
     content: `
-      <p>Müzik, her kültürün ayrılmaz bir parçasıdır. Bu yazımızda dünya müziklerinin kültürel kökenlerini ve toplumlardaki rolünü ele alacağız.</p>
+      <p>Dünya müzikleri, insanlığın kültürel zenginliğinin en güzel örneklerinden biridir. Bu yazımızda farklı kültürlerin müzik geleneklerini keşfedeceğiz.</p>
       
-      <h2>Kültürel Müzik Türleri</h2>
-      <p>Dünya genelinde farklı müzik türleri:</p>
+      <h2>Afrika Müzikleri</h2>
+      <p>Afrika kıtasının zengin müzik gelenekleri:</p>
       <ul>
-        <li>Afrika müzikleri</li>
-        <li>Asya müzikleri</li>
-        <li>Latin Amerika müzikleri</li>
-        <li>Ortadoğu müzikleri</li>
-        <li>Avrupa halk müzikleri</li>
+        <li>Geleneksel ritimler</li>
+        <li>Vokal teknikleri</li>
+        <li>Enstrüman çeşitliliği</li>
+        <li>Topluluk müziği</li>
       </ul>
       
-      <h2>Müziğin Kültürel Rolü</h2>
-      <p>Müziğin toplumlardaki işlevleri:</p>
+      <h2>Asya Müzikleri</h2>
+      <p>Asya'nın çeşitli müzik kültürleri:</p>
       <ul>
-        <li>Dini törenler</li>
-        <li>Toplumsal kutlamalar</li>
-        <li>Hikaye anlatımı</li>
-        <li>İletişim aracı</li>
+        <li>Hint klasik müziği</li>
+        <li>Çin operası</li>
+        <li>Japon geleneksel müziği</li>
+        <li>Orta Doğu müzikleri</li>
       </ul>
     `,
-    author: "Ece Kaya",
+    author: "Kaan Arslan",
     publishedDate: "2023-11-15",
-    readTime: "7 dk",
+    readTime: "8 dk",
     category: "Kültür",
-    tags: ["kültür", "dünya", "müzik", "toplum"],
+    categorySlug: "kultur",
+    tags: ["kültür", "dünya", "gelenek", "müzik"],
     image: "/blogexample.jpg"
   }
 ];
 
-export function getRecentPosts(limit?: number): BlogPost[] {
-  const sorted = [...blogPosts].sort((a, b) => 
-    new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
-  );
-  return limit ? sorted.slice(0, limit) : sorted;
-}
+export const getRecentPosts = (count: number = 6): BlogPost[] => {
+  return blogPosts
+    .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
+    .slice(0, count);
+};
 
-export function getFeaturedPosts(): BlogPost[] {
-  return blogPosts.filter(post => post.featured);
-}
-
-export function getPostsByCategory(category: string): BlogPost[] {
-  return blogPosts.filter(post => post.category === category);
-}
-
-export function getPostBySlug(slug: string): BlogPost | undefined {
+export const getPostBySlug = (slug: string): BlogPost | undefined => {
   return blogPosts.find(post => post.slug === slug);
-}
+};
 
-export function getCategories(): string[] {
-  return [...new Set(blogPosts.map(post => post.category))];
-}
-
-export function searchPosts(query: string): BlogPost[] {
+export const searchPosts = (query: string): BlogPost[] => {
   const lowercaseQuery = query.toLowerCase();
   return blogPosts.filter(post => 
     post.title.toLowerCase().includes(lowercaseQuery) ||
     post.excerpt.toLowerCase().includes(lowercaseQuery) ||
     post.content.toLowerCase().includes(lowercaseQuery) ||
+    post.author.toLowerCase().includes(lowercaseQuery) ||
     post.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
   );
-}
+};
+
+export const getCategories = (): string[] => {
+  return [...new Set(blogPosts.map(post => post.category))];
+};
+
+export const getPostsByCategory = (category: string): BlogPost[] => {
+  return blogPosts.filter(post => post.category === category);
+};
+
+export const getCategoryDescription = (category: string): string => {
+  const descriptions: { [key: string]: string } = {
+    "Prodüksiyon": "Müzik prodüksiyonu, kayıt teknikleri ve stüdyo teknolojileri hakkında detaylı rehberler.",
+    "Grup Müziği": "Grup kurma, yönetim ve grup içi iletişim konularında pratik ipuçları.",
+    "Enstrüman": "Enstrüman seçimi, bakımı ve öğrenme süreçleri hakkında kapsamlı bilgiler.",
+    "Müzik Teorisi": "Müzik teorisinin temelleri ve pratik uygulamaları.",
+    "Performans": "Sahne performansı, sahne korkusu ve performans teknikleri.",
+    "Dijital Müzik": "Dijital platformlar, teknoloji ve modern müzik endüstrisi.",
+    "Eğitim": "Müzik eğitimi ve öğrenme süreçleri hakkında rehberler.",
+    "Sağlık": "Müzik terapisinin sağlığa katkıları ve uygulamaları.",
+    "Jazz": "Jazz müziği ve improvisasyon teknikleri.",
+    "Hukuk": "Müzik endüstrisinde telif hakları ve yasal konular.",
+    "Kültür": "Dünya müzikleri ve kültürel müzik türleri."
+  };
+  return descriptions[category] || `${category} kategorisindeki en güncel yazılar ve rehberler.`;
+};

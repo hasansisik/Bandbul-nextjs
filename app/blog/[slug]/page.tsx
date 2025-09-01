@@ -70,9 +70,11 @@ export default function BlogDetailPage() {
           <article className="mb-16">
             {/* Category and Featured Badge */}
             <div className="flex items-center gap-3 mb-6">
-              <Badge variant="outline" className="text-sm border-border font-medium px-4 py-2">
-                {post.category}
-              </Badge>
+              <Link href={`/blog/kategori/${post.categorySlug}`}>
+                <Badge variant="outline" className="text-sm border-border font-medium px-4 py-2 hover:bg-accent transition-colors cursor-pointer">
+                  {post.category}
+                </Badge>
+              </Link>
               {post.featured && (
                 <Badge className="text-sm bg-primary text-primary-foreground font-medium px-4 py-2">
                   Öne Çıkan
@@ -178,9 +180,14 @@ export default function BlogDetailPage() {
                         </div>
                         <div className="p-6">
                           <div className="flex items-center gap-2 mb-3">
-                            <Badge variant="outline" className="text-xs border-border">
-                              {relatedPost.category}
-                            </Badge>
+                            <Link 
+                              href={`/blog/kategori/${relatedPost.categorySlug}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Badge variant="outline" className="text-xs border-border hover:bg-accent transition-colors cursor-pointer">
+                                {relatedPost.category}
+                              </Badge>
+                            </Link>
                           </div>
                           
                           <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight">

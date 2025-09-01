@@ -11,18 +11,34 @@ import {
   User,
   ArrowRight
 } from "lucide-react";
-import { getPostsByCategory, getCategories, BlogPost } from "@/lib/blogData";
+import { getPostsByCategory, getCategories, BlogPost, blogPosts } from "@/lib/blogData";
 import { notFound } from "next/navigation";
 
 export default function BlogCategoryPage() {
   const params = useParams();
   const router = useRouter();
-  const category = params.category as string;
+  const categorySlug = params.category as string;
 
+  // Create a mapping from categorySlug to category name
+  const categorySlugToName: { [key: string]: string } = {
+    "produksiyon": "Prodüksiyon",
+    "grup-muzigi": "Grup Müziği",
+    "enstruman": "Enstrüman",
+    "muzik-teorisi": "Müzik Teorisi",
+    "performans": "Performans",
+    "dijital-muzik": "Dijital Müzik",
+    "egitim": "Eğitim",
+    "saglik": "Sağlık",
+    "jazz": "Jazz",
+    "hukuk": "Hukuk",
+    "kultur": "Kültür"
+  };
+
+  const category = categorySlugToName[categorySlug];
   const categories = getCategories();
-  const posts = getPostsByCategory(category);
+  const posts = category ? getPostsByCategory(category) : [];
 
-  if (!categories.includes(category)) {
+  if (!category || !categories.includes(category)) {
     notFound();
   }
 
@@ -103,9 +119,14 @@ export default function BlogCategoryPage() {
                       </div>
                       <div className="p-8">
                         <div className="flex items-center gap-3 mb-4">
-                          <Badge variant="outline" className="text-sm border-border font-medium">
-                            {post.category}
-                          </Badge>
+                          <Link 
+                            href={`/blog/kategori/${post.categorySlug}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Badge variant="outline" className="text-sm border-border font-medium hover:bg-accent transition-colors cursor-pointer">
+                              {post.category}
+                            </Badge>
+                          </Link>
                           {post.featured && (
                             <Badge className="text-sm bg-primary text-primary-foreground font-medium">
                               Öne Çıkan
@@ -172,8 +193,9 @@ export default function BlogCategoryPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.filter(cat => cat !== category).map((cat) => {
                 const categoryPosts = getPostsByCategory(cat);
+                const catSlug = blogPosts.find(post => post.category === cat)?.categorySlug || cat.toLowerCase().replace(/\s+/g, '-');
                 return (
-                  <Link key={cat} href={`/blog/kategori/${cat}`}>
+                  <Link key={cat} href={`/blog/kategori/${catSlug}`}>
                     <div className="bg-card/50 backdrop-blur border border-border/50 p-6 hover:shadow-lg transition-all duration-300 group rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
                         <Badge variant="outline" className="text-sm border-border font-medium">

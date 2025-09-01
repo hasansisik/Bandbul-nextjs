@@ -186,8 +186,14 @@ export default function BlogPage() {
                       </div>
                       <div className="p-8">
                         <div className="flex items-center gap-3 mb-4">
-                          <Link href={`/blog/kategori/${post.category}`}>
-                            <Badge variant="outline" className="text-sm border-border font-medium hover:bg-accent transition-colors cursor-pointer">
+                          <Link 
+                            href={`/blog/kategori/${post.categorySlug}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Badge 
+                              variant="outline" 
+                              className="text-sm border-border font-medium hover:bg-accent transition-colors cursor-pointer"
+                            >
                               {post.category}
                             </Badge>
                           </Link>

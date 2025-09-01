@@ -113,9 +113,11 @@ const BlogSection = () => {
                           />
                           {/* Category Badge Overlay */}
                           <div className="absolute top-3 left-3">
-                            <Badge variant="secondary" className="text-xs font-medium bg-background/90 text-foreground border-0">
-                              {post.category}
-                            </Badge>
+                            <Link href={`/blog/kategori/${post.categorySlug}`}>
+                              <Badge variant="secondary" className="text-xs font-medium bg-background/90 text-foreground border-0 hover:bg-accent transition-colors cursor-pointer">
+                                {post.category}
+                              </Badge>
+                            </Link>
                           </div>
                           {/* Read Time Overlay */}
                           <div className="absolute top-3 right-3">
