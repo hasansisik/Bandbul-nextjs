@@ -27,6 +27,8 @@ const BlogSection = () => {
 
   // Mouse/Touch event handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start dragging if clicking on empty space, not on links
+    if ((e.target as HTMLElement).closest('a')) return;
     setIsDragging(true);
     setStartX(e.pageX - (carouselRef.current?.offsetLeft || 0));
     setScrollLeft(currentIndex * 25);
@@ -51,6 +53,8 @@ const BlogSection = () => {
 
   // Touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Only start dragging if touching empty space, not on links
+    if ((e.target as HTMLElement).closest('a')) return;
     setIsDragging(true);
     setStartX(e.touches[0].pageX - (carouselRef.current?.offsetLeft || 0));
     setScrollLeft(currentIndex * 25);
@@ -70,8 +74,8 @@ const BlogSection = () => {
 
   return (
     <section className="py-16 bg-muted/10">
-      <div className="container mx-auto px-4">
-        <div className="max-w-7xl mx-auto">
+      <div className="container mx-auto">
+        <div className="max-w-8xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 text-foreground">İlginizi Çekebilecek Bilgiler</h2>
@@ -102,65 +106,58 @@ const BlogSection = () => {
               >
                 {blogPosts.map((post) => (
                   <div key={post.id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
-                    <Link href={`/blog/${post.slug}`}>
-                      <div className="group h-full bg-card/50 backdrop-blur transition-all duration-300 overflow-hidden border border-border/50 shadow-sm pb-2 rounded-lg">
-                        {/* Image Container */}
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                    <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
+                      <div className="aspect-[4/3] overflow-hidden relative">
+                        <Link href={`/blog/${post.slug}`}>
                           <img 
                             src={post.image} 
                             alt={post.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover"
                           />
-                          {/* Category Badge Overlay */}
-                          <div className="absolute top-3 left-3">
-                            <Link href={`/blog/kategori/${post.categorySlug}`}>
-                              <Badge variant="secondary" className="text-xs font-medium bg-background/90 text-foreground border-0 hover:bg-accent transition-colors cursor-pointer">
-                                {post.category}
-                              </Badge>
-                            </Link>
-                          </div>
-                          {/* Read Time Overlay */}
-                          <div className="absolute top-3 right-3">
-                            <div className="flex items-center gap-1 text-xs text-foreground bg-background/20 backdrop-blur-sm px-2 py-1 rounded-full">
-                              <Clock className="h-3 w-3" />
-                              {post.readTime}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-6">
-                          {/* Title */}
-                          <h3 className="font-semibold text-lg leading-tight mb-3 group-hover:text-primary transition-colors duration-300 line-clamp-2 text-foreground">
-                            {post.title}
-                          </h3>
-                          
-                          {/* Excerpt */}
-                          <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">
-                            {post.excerpt}
-                          </p>
-                          
-                          {/* Footer */}
-                          <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(post.publishedDate).toLocaleDateString('tr-TR', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 group-hover:bg-primary/10 group-hover:text-primary transition-all duration-300"
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
+                        </Link>
+                        {/* Read Time - Top Right */}
+                        <div className="absolute top-3 right-3">
+                          <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                            <Clock className="h-3 w-3" />
+                            {post.readTime}
                           </div>
                         </div>
                       </div>
-                    </Link>
+
+                      <div className="p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Link href={`/blog/kategori/${post.categorySlug}`}>
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs border-border cursor-pointer hover:bg-muted"
+                            >
+                              {post.category}
+                            </Badge>
+                          </Link>
+                        </div>
+                        
+                        <Link href={`/blog/${post.slug}`}>
+                          <h3 className="font-semibold text-lg leading-tight mb-3 line-clamp-2 text-foreground">
+                            {post.title}
+                          </h3>
+                        </Link>
+                        
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+                          {post.excerpt}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{new Date(post.publishedDate).toLocaleDateString('tr-TR', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -166,66 +166,63 @@ export default function BlogPage() {
         {/* Blog Posts Grid */}
         {displayedPosts.length > 0 ? (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
               {displayedPosts.map((post) => (
-                <article key={post.id} className="group">
-                  <Link href={`/blog/${post.slug}`}>
-                    <div className="bg-card/50 backdrop-blur border border-border/50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img
-                          src={post.image}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                      <div className="p-8">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Link 
-                            href={`/blog/kategori/${post.categorySlug}`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Badge 
-                              variant="outline" 
-                              className="text-sm border-border font-medium hover:bg-accent transition-colors cursor-pointer"
-                            >
-                              {post.category}
-                            </Badge>
-                          </Link>
-                          {post.featured && (
-                            <Badge className="text-sm bg-primary text-primary-foreground font-medium">
-                              Öne Çıkan
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <h2 className="text-2xl font-bold text-foreground mb-4 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                          {post.title}
-                        </h2>
-                        
-                        <p className="text-muted-foreground text-base mb-6 line-clamp-3 leading-relaxed">
-                          {post.excerpt}
-                        </p>
-                        
-                        <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border/50">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <span className="font-medium">{post.author}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" />
-                              <span>{formatDate(post.publishedDate)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span className="font-medium">{post.readTime}</span>
-                          </div>
-                        </div>
+                <article key={post.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                  <div className="aspect-[4/3] overflow-hidden relative">
+                    <Link href={`/blog/${post.slug}`}>
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </Link>
+                    {/* Read Time - Top Right */}
+                    <div className="absolute top-3 right-3">
+                      <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                        <Clock className="h-3 w-3" />
+                        {post.readTime}
                       </div>
                     </div>
-                  </Link>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Link href={`/blog/kategori/${post.categorySlug}`}>
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs border-border cursor-pointer hover:bg-muted"
+                        >
+                          {post.category}
+                        </Badge>
+                      </Link>
+                      {post.featured && (
+                        <Badge className="text-xs bg-primary text-primary-foreground">
+                          Öne Çıkan
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Link href={`/blog/${post.slug}`}>
+                      <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
+                        {post.title}
+                      </h2>
+                    </Link>
+                    
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                    
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border">
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        <span>{post.author}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(post.publishedDate)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
