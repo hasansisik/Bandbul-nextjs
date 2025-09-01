@@ -71,6 +71,17 @@ const SupportSection = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
+                  Telefon Numarası
+                </label>
+                <Input 
+                  type="tel"
+                  placeholder="+90 5XX XXX XX XX"
+                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
                   Konu *
                 </label>
                 <Input 
