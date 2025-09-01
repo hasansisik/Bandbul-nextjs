@@ -84,7 +84,9 @@ const Header = () => {
                 ))}
               </nav>
 
-              <ThemeToggle />
+              <div className="hidden md:block">
+                <ThemeToggle />
+              </div>
               
               {isLoggedIn ? (
                 <>
