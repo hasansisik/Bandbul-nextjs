@@ -52,7 +52,7 @@ export default function BlogDetailPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-6">
         {/* Back Button */}
         <div className="mb-8">
           <Button
@@ -65,7 +65,7 @@ export default function BlogDetailPage() {
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-12xl mx-auto">
           {/* Article Header */}
           <article className="mb-16">
             {/* Category and Featured Badge */}
@@ -104,7 +104,7 @@ export default function BlogDetailPage() {
             </div>
 
             {/* Featured Image */}
-            <div className="aspect-[16/9] rounded-2xl overflow-hidden mb-12 shadow-lg">
+            <div className="aspect-[5/2] rounded-2xl overflow-hidden mb-12 shadow-lg">
               <img
                 src={post.image}
                 alt={post.title}
@@ -165,52 +165,55 @@ export default function BlogDetailPage() {
                 <p className="text-lg text-muted-foreground">Bu yazıyı beğendiyseniz, aşağıdaki yazılar da ilginizi çekebilir.</p>
               </div>
               
-              <div className="grid md:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {recentPosts.map((relatedPost) => (
-                  <article key={relatedPost.id} className="group">
-                    <Link href={`/blog/${relatedPost.slug}`}>
-                      <div className="bg-card/50 backdrop-blur border border-border/50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
-                        <div className="aspect-[4/3] overflow-hidden">
-                          <img
-                            src={relatedPost.image}
-                            alt={relatedPost.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-                        <div className="p-6">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Link 
-                              href={`/blog/kategori/${relatedPost.categorySlug}`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Badge variant="outline" className="text-xs border-border hover:bg-accent transition-colors cursor-pointer">
-                                {relatedPost.category}
-                              </Badge>
-                            </Link>
-                          </div>
-                          
-                          <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                            {relatedPost.title}
-                          </h3>
-                          
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
-                            {relatedPost.excerpt}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              <span className="font-medium">{relatedPost.author}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span className="font-medium">{relatedPost.readTime}</span>
-                            </div>
-                          </div>
+                  <article key={relatedPost.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                    <div className="aspect-[4/3] overflow-hidden relative">
+                      <Link href={`/blog/${relatedPost.slug}`}>
+                        <img
+                          src={relatedPost.image}
+                          alt={relatedPost.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </Link>
+                      {/* Read Time - Top Right */}
+                      <div className="absolute top-3 right-3">
+                        <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                          <Clock className="h-3 w-3" />
+                          {relatedPost.readTime}
                         </div>
                       </div>
-                    </Link>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Link href={`/blog/kategori/${relatedPost.categorySlug}`}>
+                          <Badge variant="outline" className="text-xs border-border hover:bg-accent transition-colors cursor-pointer">
+                            {relatedPost.category}
+                          </Badge>
+                        </Link>
+                      </div>
+                      
+                      <Link href={`/blog/${relatedPost.slug}`} className="block">
+                        <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2 hover:text-primary transition-colors leading-tight">
+                          {relatedPost.title}
+                        </h3>
+                        
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+                          {relatedPost.excerpt}
+                        </p>
+                      </Link>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span className="font-medium">{relatedPost.author}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span className="font-medium">{formatDate(relatedPost.publishedDate)}</span>
+                        </div>
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>
