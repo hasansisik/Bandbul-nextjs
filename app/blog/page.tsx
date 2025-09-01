@@ -96,30 +96,34 @@ export default function BlogPage() {
         </div>
 
         {/* Search and Filter Section */}
-        <div className="bg-card/50 backdrop-blur border border-border/50 rounded-2xl p-8 mb-12 shadow-sm">
-          <div className="flex flex-col lg:flex-row gap-6">
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="flex flex-col sm:flex-row gap-4" style={{alignItems: 'stretch'}}>
             {/* Search */}
             <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <div className="relative" style={{height: '40px'}}>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Blog yazılarında ara..."
+                  placeholder="Ara..."
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-12 h-12 text-lg border-border focus:border-ring rounded-xl bg-background/50 backdrop-blur"
+                  className="pl-10 border border-border bg-background rounded-md"
+                  style={{height: '40px', minHeight: '40px'}}
                 />
               </div>
             </div>
 
             {/* Category Filter */}
-            <div className="lg:w-72">
+            <div className="sm:w-48" style={{height: '40px'}}>
               <Select value={selectedCategory || "all"} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="h-12 text-lg border-border focus:border-ring rounded-xl bg-background/50 backdrop-blur">
-                  <SelectValue placeholder="Tüm kategoriler" />
+                <SelectTrigger 
+                  className="border border-border bg-background rounded-md"
+                  style={{height: '40px', minHeight: '40px'}}
+                >
+                  <SelectValue placeholder="Kategori" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tüm kategoriler</SelectItem>
+                  <SelectItem value="all">Tümü</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -129,24 +133,15 @@ export default function BlogPage() {
               </Select>
             </div>
 
-            {/* Filter Toggle */}
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="h-12 px-6 border-border hover:bg-accent rounded-xl"
-            >
-              <Filter className="h-5 w-5 mr-2" />
-              Filtreler
-            </Button>
-
             {/* Clear Filters */}
             {(searchQuery || selectedCategory) && (
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={clearFilters}
-                className="h-12 px-6 text-muted-foreground hover:text-foreground rounded-xl"
+                className="px-4 border border-border rounded-md"
+                style={{height: '40px', minHeight: '40px'}}
               >
-                Filtreleri Temizle
+                Temizle
               </Button>
             )}
           </div>
