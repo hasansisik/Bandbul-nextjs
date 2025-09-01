@@ -1,10 +1,51 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter } from "lucide-react";
 import Image from "next/image";
+import { getCategories, listingsData } from "@/lib/listingsData";
 
 const HeroSection = () => {
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedInstrument, setSelectedInstrument] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showInstrumentDropdown, setShowInstrumentDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Refs for dropdown containers
+  const categoryRef = useRef<HTMLDivElement>(null);
+  const instrumentRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
+      }
+      if (instrumentRef.current && !instrumentRef.current.contains(event.target as Node)) {
+        setShowInstrumentDropdown(false);
+      }
+      if (locationRef.current && !locationRef.current.contains(event.target as Node)) {
+        setShowLocationDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Get filter options from data
+  const categories = getCategories();
+  const instruments = Array.from(new Set(listingsData.map(listing => listing.instrument).filter(Boolean)));
+  const locations = Array.from(new Set(listingsData.map(listing => listing.location)));
+
   const searchOptions = [
     {
       id: "find-talent",
@@ -25,21 +66,53 @@ const HeroSection = () => {
       id: "search-type",
       label: "NE ARIYORSUN",
       icon: <Briefcase className="h-4 w-4 text-gray-600" />,
-      placeholder: "NE ARIYORSUN"
+      placeholder: selectedCategory || "NE ARIYORSUN",
+      onClick: () => setShowCategoryDropdown(!showCategoryDropdown)
     },
     {
       id: "instrument",
       label: "ENSTRÜMAN",
       icon: <Clipboard className="h-4 w-4 text-gray-600" />,
-      placeholder: "ENSTRÜMAN"
+      placeholder: selectedInstrument || "ENSTRÜMAN",
+      onClick: () => setShowInstrumentDropdown(!showInstrumentDropdown)
     },
     {
       id: "city",
       label: "ŞEHİR",
       icon: <MapPin className="h-4 w-4 text-gray-600" />,
-      placeholder: "ŞEHİR"
+      placeholder: selectedLocation || "ŞEHİR",
+      onClick: () => setShowLocationDropdown(!showLocationDropdown)
     }
   ];
+
+  const handleFilter = () => {
+    const params = new URLSearchParams();
+    
+    if (selectedCategory) {
+      // Convert Turkish category name to URL slug
+      const categorySlugMap: Record<string, string> = {
+        'Grup Arıyorum': 'grup-ariyorum',
+        'Müzisyen Arıyorum': 'muzisyen-ariyorum',
+        'Ders Almak İstiyorum': 'ders-almak-istiyorum',
+        'Ders Veriyorum': 'ders-veriyorum',
+        'Enstrüman Satıyorum': 'enstruman-satiyorum',
+        'Stüdyo Kiralıyorum': 'studyo-kiraliyorum'
+      };
+      params.set('category', categorySlugMap[selectedCategory] || selectedCategory.toLowerCase().replace(/\s+/g, '-'));
+    }
+    
+    if (selectedInstrument) {
+      params.set('instrument', selectedInstrument);
+    }
+    
+    if (selectedLocation) {
+      params.set('location', selectedLocation);
+    }
+    
+    // Navigate to listings page with filters
+    const queryString = params.toString();
+    window.location.href = `/ilanlar${queryString ? `?${queryString}` : ''}`;
+  };
 
   return (
     <section className="relative flex items-center mt-8 h-[500px] md:h-[500px] px-4">
@@ -76,23 +149,119 @@ const HeroSection = () => {
               <CardContent className="p-0">
                 {/* Filter Options */}
                 <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                  {filterOptions.map((option) => (
+                  {/* Category Filter */}
+                  <div className="flex-1 relative" ref={categoryRef}>
                     <div
-                      key={option.id}
-                      className="flex-1 bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
                     >
                       <div className="flex items-center gap-2 md:gap-3">
-                        {option.icon}
-                        <div className="text-xs md:text-sm text-gray-900 font-medium">{option.placeholder}</div>
+                        <Briefcase className="h-4 w-4 text-gray-600" />
+                        <div className="text-xs md:text-sm text-gray-900 font-medium">
+                          {selectedCategory || "NE ARIYORSUN"}
+                        </div>
                       </div>
                       <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                  ))}
+                    
+                    {/* Category Dropdown */}
+                    {showCategoryDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
+                        {categories.map((category) => (
+                          <div
+                            key={category.value}
+                            onClick={() => {
+                              setSelectedCategory(category.label);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
+                          >
+                            {category.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Instrument Filter */}
+                  <div className="flex-1 relative" ref={instrumentRef}>
+                    <div
+                      onClick={() => setShowInstrumentDropdown(!showInstrumentDropdown)}
+                      className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
+                    >
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Clipboard className="h-4 w-4 text-gray-600" />
+                        <div className="text-xs md:text-sm text-gray-900 font-medium">
+                          {selectedInstrument || "ENSTRÜMAN"}
+                        </div>
+                      </div>
+                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    
+                    {/* Instrument Dropdown */}
+                    {showInstrumentDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
+                        {instruments.map((instrument) => (
+                          <div
+                            key={instrument}
+                            onClick={() => {
+                              setSelectedInstrument(instrument || '');
+                              setShowInstrumentDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
+                          >
+                            {instrument}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Location Filter */}
+                  <div className="flex-1 relative" ref={locationRef}>
+                    <div
+                      onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                      className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
+                    >
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <MapPin className="h-4 w-4 text-gray-600" />
+                        <div className="text-xs md:text-sm text-gray-900 font-medium">
+                          {selectedLocation || "ŞEHİR"}
+                        </div>
+                      </div>
+                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    
+                    {/* Location Dropdown */}
+                    {showLocationDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-48 overflow-y-auto">
+                        {locations.map((location) => (
+                          <div
+                            key={location}
+                            onClick={() => {
+                              setSelectedLocation(location);
+                              setShowLocationDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
+                          >
+                            {location}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Filter Button */}
-                  <Button className="bg-black hover:bg-gray-700 text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 h-10 md:h-10 w-full md:w-auto">
+                  <Button 
+                    onClick={handleFilter}
+                    className="bg-black hover:bg-gray-700 text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 h-10 md:h-10 w-full md:w-auto"
+                  >
                     <Filter className="h-3 w-3" />
                     Filtrele
                   </Button>

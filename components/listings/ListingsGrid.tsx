@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Heart, 
   MessageCircle, 
   MapPin, 
   Calendar, 
   User,
-  Music,
-  Star
+  Music
 } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -22,6 +20,7 @@ interface ListingsGridProps {
   selectedCategories?: string[];
   selectedLocations?: string[];
   selectedExperience?: string[];
+  selectedInstruments?: string[];
   onClearFilters?: () => void;
   viewMode?: 'grid' | 'list';
 }
@@ -31,10 +30,10 @@ const ListingsGrid = ({
   selectedCategories = [], 
   selectedLocations = [], 
   selectedExperience = [],
+  selectedInstruments = [],
   onClearFilters,
   viewMode = 'grid'
 }: ListingsGridProps) => {
-  const [favorites, setFavorites] = useState<number[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [filteredListings, setFilteredListings] = useState<ListingItem[]>(listingsData);
@@ -71,7 +70,7 @@ const ListingsGrid = ({
           return aTime - bTime;
         });
       case "popular":
-        return sorted.sort((a, b) => b.rating - a.rating);
+        return sorted; // No rating to sort by
       default:
         return sorted;
     }
@@ -96,46 +95,47 @@ const ListingsGrid = ({
       filtered = filtered.filter(listing => selectedLocations.includes(listing.location));
     }
 
-    // Apply experience filters
-    if (selectedExperience.length > 0) {
-      filtered = filtered.filter(listing => selectedExperience.includes(listing.experience));
-    }
+                // Apply experience filters
+            if (selectedExperience.length > 0) {
+              filtered = filtered.filter(listing => selectedExperience.includes(listing.experience));
+            }
 
-    // Apply sorting
-    filtered = sortListings(filtered, sortBy);
+            // Apply instrument filters
+            if (selectedInstruments.length > 0) {
+              filtered = filtered.filter(listing => 
+                listing.instrument && selectedInstruments.includes(listing.instrument)
+              );
+            }
 
-    setFilteredListings(filtered);
-  }, [searchQuery, sortBy, selectedCategories, selectedLocations, selectedExperience, sortListings]);
+            // Apply sorting
+            filtered = sortListings(filtered, sortBy);
 
-  const toggleFavorite = useCallback((id: number) => {
-    setFavorites(prev => 
-      prev.includes(id) 
-        ? prev.filter(favId => favId !== id)
-        : [...prev, id]
-    );
-  }, []);
+            setFilteredListings(filtered);
+          }, [searchQuery, sortBy, selectedCategories, selectedLocations, selectedExperience, selectedInstruments, sortListings]);
+
+
 
   const getCategoryColor = useCallback((category: string) => {
     switch (category) {
       case "Grup Arıyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       case "Ders Veriyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       case "Enstrüman Satıyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       case "Stüdyo Kiralıyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       case "Müzisyen Arıyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       case "Ders Almak İstiyorum":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
       default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   }, []);
 
   const renderListingCard = (listing: ListingItem) => (
-    <div key={listing.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <div key={listing.id} className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <Link href={`/ilan-detay/${generateSlug(listing.title)}`} className="block">
         {/* Image */}
         <div className="relative aspect-video overflow-hidden">
@@ -149,46 +149,31 @@ const ListingsGrid = ({
               {listing.category}
             </Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
-            onClick={(e) => {
-              e.preventDefault();
-              toggleFavorite(listing.id);
-            }}
-          >
-            <Heart 
-              className={`h-4 w-4 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-            />
-          </Button>
+
         </div>
 
         {/* Content */}
         <div className="p-5">
           {/* Title and Rating */}
           <div className="flex items-start justify-between mb-3">
-            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1 mr-2 leading-tight">
+            <h3 className="font-semibold text-card-foreground text-sm line-clamp-2 flex-1 mr-2 leading-tight">
               {listing.title}
             </h3>
-            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
-            </div>
+
           </div>
 
           {/* Description */}
-          <p className="text-gray-600 text-xs mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-muted-foreground text-xs mb-4 line-clamp-2 leading-relaxed">
             {listing.description}
           </p>
 
           {/* Location and Date */}
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3" />
               {listing.location}
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               {listing.postedDate}
             </div>
@@ -196,11 +181,11 @@ const ListingsGrid = ({
 
           {/* Author and Experience */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <User className="h-3 w-3" />
               {listing.author}
             </div>
-            <Badge variant="outline" className="text-xs border-gray-200">
+            <Badge variant="outline" className="text-xs border-border">
               {listing.experience}
             </Badge>
           </div>
@@ -222,7 +207,7 @@ const ListingsGrid = ({
   );
 
   const renderListingRow = (listing: ListingItem) => (
-    <div key={listing.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <div key={listing.id} className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <Link href={`/ilan-detay/${generateSlug(listing.title)}`} className="block">
         <div className="flex">
           {/* Image */}
@@ -237,39 +222,24 @@ const ListingsGrid = ({
                 {listing.category}
               </Badge>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-7 w-7 p-0 bg-white/90 hover:bg-white shadow-sm"
-              onClick={(e) => {
-                e.preventDefault();
-                toggleFavorite(listing.id);
-              }}
-            >
-              <Heart 
-                className={`h-3 w-3 ${favorites.includes(listing.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-              />
-            </Button>
+
           </div>
 
           {/* Content */}
           <div className="flex-1 p-5">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-gray-900 text-base flex-1 mr-4">
+              <h3 className="font-semibold text-card-foreground text-base flex-1 mr-4">
                 {listing.title}
               </h3>
-              <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                <span className="text-xs text-gray-700 font-medium">{listing.rating}</span>
-              </div>
+
             </div>
 
-            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
               {listing.description}
             </p>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {listing.location}
@@ -284,7 +254,7 @@ const ListingsGrid = ({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-xs border-gray-200">
+                <Badge variant="outline" className="text-xs border-border">
                   {listing.experience}
                 </Badge>
               </div>
@@ -310,11 +280,11 @@ const ListingsGrid = ({
   return (
     <div className="space-y-6">
       {/* Sort Options */}
-      <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between bg-card rounded-lg p-4 shadow-sm border border-border">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600 font-medium">Sırala:</span>
+          <span className="text-sm text-muted-foreground font-medium">Sırala:</span>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px] border-gray-200">
+            <SelectTrigger className="w-[200px] border-border">
               <SelectValue placeholder="Sıralama seçin" />
             </SelectTrigger>
             <SelectContent>
@@ -324,7 +294,7 @@ const ListingsGrid = ({
             </SelectContent>
           </Select>
         </div>
-        <span className="text-sm text-gray-600 font-medium">
+        <span className="text-sm text-muted-foreground font-medium">
           {filteredListings.length} ilan bulundu
         </span>
       </div>

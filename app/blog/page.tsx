@@ -235,7 +235,7 @@ export default function BlogPage() {
                   className="bg-primary hover:bg-primary/90 px-8 py-4 text-lg rounded-xl"
                 >
                   <ChevronDown className="h-5 w-5 mr-2" />
-                  {posts.length - displayedPosts.length} Yazı Daha Göster
+                  Daha Fazla
                 </Button>
               </div>
             )}

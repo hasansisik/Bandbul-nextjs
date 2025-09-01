@@ -3,18 +3,24 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Grid3X3, List } from "lucide-react";
-import { useState } from "react";
+import { Search, Filter, Grid3X3, List, X } from "lucide-react";
+import React, { useState } from "react";
 
 interface ListingsHeaderProps {
   onSearch?: (query: string) => void;
   onViewModeChange?: (mode: 'grid' | 'list') => void;
   onFilterClick?: () => void;
   viewMode?: 'grid' | 'list';
+  searchQuery?: string;
 }
 
-const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 'grid' }: ListingsHeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 'grid', searchQuery: propSearchQuery = "" }: ListingsHeaderProps) => {
+  const [searchQuery, setSearchQuery] = useState(propSearchQuery);
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    setSearchQuery(propSearchQuery);
+  }, [propSearchQuery]);
 
   const handleSearch = () => {
     onSearch?.(searchQuery);
@@ -26,6 +32,11 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
 
   const handleFilterClick = () => {
     onFilterClick?.();
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    onSearch?.("");
   };
 
   return (
@@ -48,15 +59,27 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="pr-12 h-12 bg-background/50 backdrop-blur border-border focus:border-ring"
+              className="pr-20 h-12 bg-background/50 backdrop-blur border-border focus:border-ring"
             />
-            <Button
-              size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
-              onClick={handleSearch}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+              {searchQuery && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearSearch}
+                  className="h-10 w-10 p-0 hover:bg-accent"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                className="h-10 w-10 p-0 bg-primary hover:bg-primary/90"
+                onClick={handleSearch}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Filter Button */}

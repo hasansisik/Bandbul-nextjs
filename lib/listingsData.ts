@@ -8,8 +8,6 @@ export interface ListingItem {
   location: string;
   image: string;
   author: string;
-  rating: number;
-  isFavorite: boolean;
   postedDate: string;
   experience: string;
   instrument?: string;
@@ -25,8 +23,7 @@ export const listingsData: ListingItem[] = [
     location: "Bayburt",
     image: "/blogexample.jpg",
     author: "Ahmet Yılmaz",
-    rating: 4.8,
-    isFavorite: false,
+
     postedDate: "2 saat önce",
     experience: "İleri",
     instrument: "Trompet",
@@ -40,8 +37,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Zeynep Kaya",
-    rating: 4.9,
-    isFavorite: true,
+
     postedDate: "1 gün önce",
     experience: "Profesyonel",
     instrument: "Vokal",
@@ -55,8 +51,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Mehmet Demir",
-    rating: 4.7,
-    isFavorite: false,
+
     postedDate: "3 gün önce",
     experience: "Orta",
     instrument: "Klavye",
@@ -70,8 +65,7 @@ export const listingsData: ListingItem[] = [
     location: "İzmir",
     image: "/blogexample.jpg",
     author: "Can Yıldız",
-    rating: 4.6,
-    isFavorite: false,
+
     postedDate: "1 hafta önce",
     experience: "İleri",
     instrument: "Gitar",
@@ -85,8 +79,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Elif Özkan",
-    rating: 4.9,
-    isFavorite: true,
+
     postedDate: "2 gün önce",
     experience: "Profesyonel",
     instrument: "Gitar",
@@ -100,8 +93,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Selin Arslan",
-    rating: 4.5,
-    isFavorite: false,
+
     postedDate: "4 gün önce",
     experience: "Orta",
     instrument: "Bas Gitar",
@@ -115,8 +107,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Burak Kaya",
-    rating: 4.4,
-    isFavorite: false,
+
     postedDate: "5 gün önce",
     experience: "Başlangıç",
     instrument: "Vokal",
@@ -130,8 +121,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Deniz Yılmaz",
-    rating: 4.3,
-    isFavorite: false,
+
     postedDate: "1 hafta önce",
     experience: "İleri",
     instrument: "Gitar",
@@ -145,8 +135,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Kemal Demir",
-    rating: 4.2,
-    isFavorite: false,
+
     postedDate: "2 hafta önce",
     experience: "Orta",
     instrument: "Davul",
@@ -160,8 +149,7 @@ export const listingsData: ListingItem[] = [
     location: "Ankara",
     image: "/blogexample.jpg",
     author: "Ayşe Kaya",
-    rating: 4.1,
-    isFavorite: false,
+
     postedDate: "3 hafta önce",
     experience: "Başlangıç",
     instrument: "Gitar",
@@ -175,8 +163,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul, Kadıköy",
     image: "/blogexample.jpg",
     author: "Ahmet Yılmaz",
-    rating: 4.8,
-    isFavorite: false,
+
     postedDate: "2 saat önce",
     experience: "Orta",
     instrument: "Gitar",
@@ -190,8 +177,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul, Beşiktaş",
     image: "/blogexample.jpg",
     author: "Zeynep Kaya",
-    rating: 4.9,
-    isFavorite: true,
+
     postedDate: "1 gün önce",
     experience: "İleri",
     instrument: "Piyano",
@@ -205,8 +191,7 @@ export const listingsData: ListingItem[] = [
     location: "Ankara, Çankaya",
     image: "/blogexample.jpg",
     author: "Mehmet Demir",
-    rating: 4.7,
-    isFavorite: false,
+
     postedDate: "3 gün önce",
     experience: "Profesyonel",
     instrument: "Bas Gitar",
@@ -220,8 +205,7 @@ export const listingsData: ListingItem[] = [
     location: "İzmir, Konak",
     image: "/blogexample.jpg",
     author: "Can Yıldız",
-    rating: 4.6,
-    isFavorite: false,
+
     postedDate: "1 hafta önce",
     experience: "Orta",
     instrument: "Gitar",
@@ -235,8 +219,7 @@ export const listingsData: ListingItem[] = [
     location: "İstanbul, Şişli",
     image: "/blogexample.jpg",
     author: "Elif Özkan",
-    rating: 4.9,
-    isFavorite: true,
+
     postedDate: "2 gün önce",
     experience: "Profesyonel",
     instrument: "Stüdyo",

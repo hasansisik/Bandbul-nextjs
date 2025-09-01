@@ -5,12 +5,10 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Heart, 
   MessageCircle, 
   MapPin, 
   Calendar, 
   User,
-  Star,
   ArrowLeft,
   Share2,
   Phone,
@@ -23,7 +21,6 @@ import { generateSlug } from "@/lib/utils";
 export default function ListingDetailPage() {
   const params = useParams();
   const [listing, setListing] = useState<ListingItem | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -38,9 +35,7 @@ export default function ListingDetailPage() {
     }
   }, [params.slug]);
 
-  const handleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
+
 
   if (!listing) {
     return (
@@ -85,16 +80,7 @@ export default function ListingDetailPage() {
                 </Badge>
               </div>
               <div className="absolute top-4 right-4 flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 p-0 bg-background/90 hover:bg-background shadow-sm"
-                  onClick={handleFavorite}
-                >
-                  <Heart 
-                    className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} 
-                  />
-                </Button>
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -123,10 +109,7 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 bg-muted/50 px-4 py-3 rounded-xl border border-border/50">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-lg font-semibold text-foreground">{listing.rating}</span>
-                </div>
+
               </div>
             </div>
 

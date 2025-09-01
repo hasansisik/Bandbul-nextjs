@@ -20,7 +20,6 @@ import {
   Phone, 
   Mail, 
   Upload, 
-  Star,
   Users,
   Award,
   Clock,
@@ -28,8 +27,8 @@ import {
   Settings,
   User,
   Briefcase,
-  Heart,
-  Share2
+  Share2,
+  Bell
 } from "lucide-react"
 import { type ListingItem } from "@/lib/listingsData"
 
@@ -44,7 +43,6 @@ const mockUser = {
   location: "İstanbul, Türkiye",
   avatar: null, // Will be updated when user uploads profile picture
   bio: "Profesyonel müzik öğretmeni ve gitarist. 10+ yıllık deneyimle klasik ve modern müzik eğitimi veriyorum.",
-  rating: 4.9,
   totalReviews: 127,
   totalListings: 3,
   skills: ["Gitar", "Piyano", "Müzik Teorisi", "Kompozisyon"],
@@ -61,8 +59,6 @@ const mockListings: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Ahmet Yılmaz",
-    rating: 4.8,
-    isFavorite: false,
     postedDate: "2 saat önce",
     experience: "İleri",
     instrument: "Gitar",
@@ -76,8 +72,6 @@ const mockListings: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Ahmet Yılmaz",
-    rating: 4.9,
-    isFavorite: false,
     postedDate: "1 gün önce",
     experience: "Profesyonel",
     instrument: "Piyano",
@@ -91,8 +85,6 @@ const mockListings: ListingItem[] = [
     location: "İstanbul",
     image: "/blogexample.jpg",
     author: "Ahmet Yılmaz",
-    rating: 4.7,
-    isFavorite: false,
     postedDate: "3 gün önce",
     experience: "Orta",
     instrument: "Gitar",
@@ -148,8 +140,6 @@ export function ProfilePage() {
     type: "",
     image: "/blogexample.jpg", // Default image
     author: `${userData.firstName} ${userData.lastName}`,
-    rating: 0,
-    isFavorite: false,
     postedDate: "Şimdi"
   })
 
@@ -186,8 +176,6 @@ export function ProfilePage() {
       location: newListing.location || userData.location,
       image: newListing.image || "/blogexample.jpg",
       author: `${userData.firstName} ${userData.lastName}`,
-      rating: 0,
-      isFavorite: false,
       postedDate: "Şimdi",
       experience: newListing.experience || "Orta",
       instrument: newListing.instrument || "",
@@ -205,8 +193,6 @@ export function ProfilePage() {
       type: "",
       image: "/blogexample.jpg",
       author: `${userData.firstName} ${userData.lastName}`,
-      rating: 0,
-      isFavorite: false,
       postedDate: "Şimdi"
     })
     setShowCreateForm(false)
@@ -247,17 +233,31 @@ export function ProfilePage() {
                   {userData.firstName} {userData.lastName}
                 </h1>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
-                    <span className="font-semibold text-foreground">{userData.rating}</span>
-                    <span className="text-muted-foreground">({userData.totalReviews} değerlendirme)</span>
-                  </div>
+
                   <span>•</span>
                   <span>{userData.location}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border hover:bg-accent"
+                onClick={() => window.location.href = '/mesajlar'}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Mesajlar
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-border hover:bg-accent"
+                onClick={() => window.location.href = '/bildirimler'}
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Bildirimler
+              </Button>
               <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleEditProfile}>
                 <Settings className="w-4 h-4 mr-2" />
                 Düzenle
@@ -282,20 +282,8 @@ export function ProfilePage() {
                   </div>
                   <span className="font-semibold text-card-foreground">{userData.totalListings}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Star className="w-5 h-5 text-yellow-500 mr-3" />
-                    <span className="text-sm text-muted-foreground">Ortalama Puan</span>
-                  </div>
-                  <span className="font-semibold text-card-foreground">{userData.rating}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 text-muted-foreground mr-3" />
-                    <span className="text-sm text-muted-foreground">Değerlendirme</span>
-                  </div>
-                  <span className="font-semibold text-card-foreground">{userData.totalReviews}</span>
-                </div>
+
+
               </div>
             </div>
 

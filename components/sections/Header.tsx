@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Menu, User, Search, Bell, MessageCircle, Heart, ChevronRight } from "lucide-react";
+import { Menu, User, Search, Bell, MessageCircle, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import Link from "next/link";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const mainMenuItems = [
     { name: "Anasayfa", href: "/" },
@@ -23,7 +24,10 @@ const Header = () => {
   const categoryItems = [
     { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
     { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
-    { name: "Ders Almak İstiyorum", href: "/ilanlar?category=ders-almak-istiyorum" }
+    { name: "Ders Almak İstiyorum", href: "/ilanlar?category=ders-almak-istiyorum" },
+    { name: "Ders Veriyorum", href: "/ilanlar?category=ders-veriyorum" },
+    { name: "Enstrüman Satıyorum", href: "/ilanlar?category=enstruman-satiyorum" },
+    { name: "Stüdyo Kiralıyorum", href: "/ilanlar?category=studyo-kiraliyorum" }
   ];
 
   const handleLogin = () => {
@@ -34,43 +38,77 @@ const Header = () => {
     setIsLoggedIn(false);
   };
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      window.location.href = `/ilanlar?search=${encodeURIComponent(searchQuery.trim())}`;
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border/50">
       {/* Top Header */}
       <div className="border-b border-border/50">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link href="/">
-                <Image
-                  src="/bandbul-logo.png"
-                  alt="Bandbul Logo"
-                  width={120}
-                  height={40}
-                  className="h-8 w-auto"
-                  priority
-                />
-              </Link>
-            </div>
-            
-            {/* Desktop Content - Ortada */}
-            <div className="hidden md:flex items-center flex-1 justify-center">
-              {/* Search Bar */}
-              <div className="relative max-w-md w-full mx-8">
+            {/* Logo and Search */}
+            <div className="flex items-center space-x-4 flex-1">
+              <div className="flex-shrink-0">
+                <Link href="/">
+                  <Image
+                    src="/bandbul-logo.png"
+                    alt="Bandbul Logo"
+                    width={120}
+                    height={40}
+                    className="h-8 w-auto"
+                    priority
+                  />
+                </Link>
+              </div>
+              
+              {/* Search Bar - Close to Logo */}
+              <div className="hidden md:block relative max-w-md w-full">
                 <Input
                   placeholder="Hangi müzik hizmetini arıyorsunuz?"
-                  className="pr-12 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-ring h-12 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="pr-20 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-ring h-10 w-full"
                 />
-                <Button
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
-                  variant="default"
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                  {searchQuery && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={clearSearch}
+                      className="h-8 w-8 p-0 hover:bg-accent"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleSearch}
+                    className="h-8 w-8 p-0 bg-primary hover:bg-primary/90"
+                    variant="default"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
+            </div>
 
+            {/* Desktop Content - Center */}
+            <div className="hidden md:flex items-center flex-1 justify-center">
               {/* Ana Menü */}
               <nav className="flex items-center space-x-6">
                 {mainMenuItems.map((item) => (
@@ -93,21 +131,24 @@ const Header = () => {
                 
                 {isLoggedIn ? (
                   <>
-                    <Button variant="ghost" size="sm" className="hover:bg-accent">
-                      <Bell className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="hover:bg-accent">
-                      <MessageCircle className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="hover:bg-accent">
-                      <Heart className="h-5 w-5" />
-                    </Button>
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors" onClick={handleLogout}>
-                        <User className="h-4 w-4 text-primary" />
+                    <Link href="/bildirimler">
+                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                        <Bell className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <Link href="/mesajlar">
+                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                        <MessageCircle className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <Link href="/profil">
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                    </div>
+                    </Link>
                   </>
                 ) : (
                   <>
@@ -164,15 +205,31 @@ const Header = () => {
               <div className="relative">
                 <Input
                   placeholder="Hangi müzik hizmetini arıyorsunuz?"
-                  className="pr-12 h-12 bg-muted/30 border-border/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="pr-20 h-12 bg-muted/30 border-border/50"
                 />
-                <Button
-                  size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
-                  variant="default"
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                  {searchQuery && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={clearSearch}
+                      className="h-10 w-10 p-0 hover:bg-accent"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleSearch}
+                    className="h-10 w-10 p-0 bg-primary hover:bg-primary/90"
+                    variant="default"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 

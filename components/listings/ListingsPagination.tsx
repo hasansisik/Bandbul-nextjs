@@ -51,10 +51,10 @@ const ListingsPagination = () => {
   };
 
   return (
-    <div className="flex items-center justify-between bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="flex items-center justify-between bg-card rounded-xl p-6 shadow-sm border border-border">
       {/* Page Info */}
-      <div className="text-sm text-gray-600">
-        Sayfa <span className="font-semibold text-gray-900">{currentPage}</span> / <span className="font-semibold text-gray-900">{totalPages}</span> - Toplam <span className="font-semibold text-gray-900">1,247</span> ilan
+      <div className="text-sm text-muted-foreground">
+        Sayfa <span className="font-semibold text-card-foreground">{currentPage}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">1,247</span> ilan
       </div>
 
       {/* Pagination Controls */}
@@ -65,7 +65,7 @@ const ListingsPagination = () => {
           size="sm"
           onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="h-9 w-9 p-0 border-gray-200 hover:bg-gray-50"
+          className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -76,14 +76,14 @@ const ListingsPagination = () => {
             <div key={index}>
               {page === '...' ? (
                 <div className="flex items-center justify-center w-9 h-9">
-                  <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                  <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                 </div>
               ) : (
                 <Button
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
                   onClick={() => handlePageChange(page as number)}
-                  className={`h-9 w-9 p-0 ${currentPage === page ? 'bg-black hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}`}
+                  className={`h-9 w-9 p-0 ${currentPage === page ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border hover:bg-accent'}`}
                 >
                   {page}
                 </Button>
@@ -98,7 +98,7 @@ const ListingsPagination = () => {
           size="sm"
           onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="h-9 w-9 p-0 border-gray-200 hover:bg-gray-50"
+          className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -106,9 +106,9 @@ const ListingsPagination = () => {
 
       {/* Items Per Page */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">Sayfa başına:</span>
+        <span className="text-sm text-muted-foreground">Sayfa başına:</span>
         <Select defaultValue="12">
-          <SelectTrigger className="w-[80px] border-gray-200">
+          <SelectTrigger className="w-[80px] border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
