@@ -39,7 +39,7 @@ const Header = () => {
       {/* Top Header */}
       <div className="border-b border-border/50">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center">
+          <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/">
@@ -54,25 +54,25 @@ const Header = () => {
               </Link>
             </div>
             
-            {/* Search Bar - Ortada ve geniş */}
-            <div className="hidden md:flex relative flex-1 mx-8">
-              <Input
-                placeholder="Hangi müzik hizmetini arıyorsunuz?"
-                className="pr-12 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-ring h-12 w-full"
-              />
-              <Button
-                size="sm"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
-                variant="default"
-              >
-                <Search className="h-5 w-5" />
-              </Button>
-            </div>
+            {/* Desktop Content - Ortada */}
+            <div className="hidden md:flex items-center flex-1 justify-center">
+              {/* Search Bar */}
+              <div className="relative max-w-md w-full mx-8">
+                <Input
+                  placeholder="Hangi müzik hizmetini arıyorsunuz?"
+                  className="pr-12 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-ring h-12 w-full"
+                />
+                <Button
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-primary hover:bg-primary/90"
+                  variant="default"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+              </div>
 
-            {/* Ana Menü ve User Actions - Sağda */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
               {/* Ana Menü */}
-              <nav className="hidden md:flex items-center space-x-6 px-20">
+              <nav className="flex items-center space-x-6">
                 {mainMenuItems.map((item) => (
                   <Link
                     key={item.name}
@@ -83,42 +83,47 @@ const Header = () => {
                   </Link>
                 ))}
               </nav>
+            </div>
 
-              <div className="hidden md:block">
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4 flex-shrink-0">
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center space-x-4">
                 <ThemeToggle />
-              </div>
-              
-              {isLoggedIn ? (
-                <>
-                  <Button variant="ghost" size="sm" className="hidden md:flex hover:bg-accent">
-                    <Bell className="h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="hidden md:flex hover:bg-accent">
-                    <MessageCircle className="h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="hidden md:flex hover:bg-accent">
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                  <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors" onClick={handleLogout}>
-                      <User className="h-4 w-4 text-primary" />
+                
+                {isLoggedIn ? (
+                  <>
+                    <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Bell className="h-5 w-5" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <MessageCircle className="h-5 w-5" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="hover:bg-accent">
+                      <Heart className="h-5 w-5" />
+                    </Button>
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors" onClick={handleLogout}>
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" size="sm" className="hidden md:flex border-border hover:bg-accent" onClick={handleLogin}>
-                    Giriş Yap
-                  </Button>
-                  <Button size="sm" className="hidden md:flex bg-primary hover:bg-primary/90">
-                    Kayıt Ol
-                  </Button>
-                </>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" size="sm" className="border-border hover:bg-accent" onClick={handleLogin}>
+                      Giriş Yap
+                    </Button>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90">
+                      Kayıt Ol
+                    </Button>
+                  </>
+                )}
+              </div>
 
-              {/* Mobile Menu Button */}
-              <div className="md:hidden">
+              {/* Mobile Actions */}
+              <div className="md:hidden flex items-center space-x-2">
+                <ThemeToggle />
                 <Button
                   variant="ghost"
                   size="sm"

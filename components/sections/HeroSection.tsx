@@ -42,7 +42,7 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative flex items-center mt-8 h-[500px]">
+    <section className="relative flex items-center mt-8 h-[500px] md:h-[500px] px-4">
       {/* Background with padding only */}
       <div className="container mx-auto relative z-10 rounded-3xl overflow-hidden h-full">
         {/* Background Image */}
@@ -58,31 +58,32 @@ const HeroSection = () => {
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
-        <div className="max-w-6xl mx-auto h-full flex flex-col justify-center">
+        <div className="max-w-6xl mx-auto h-full flex flex-col justify-center px-6 md:px-4">
           {/* Text Content */}
-          <div className="text-white mb-12 relative z-10 ">
-            <h1 className="text-6xl md:text-6xl font-bold leading-tight">
+          <div className="text-white mb-8 md:mb-12 relative z-10">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">
               Yeni Bir İlan Ver
             </h1>
-            <p className="text-2xl text-gray-200 mb-8 max-w-2xl">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-6 md:mb-8 max-w-2xl">
               Yeni bir ilan verirken
-              Kendini en iyi şekilde ifade etmeyi unutma            </p>
+              Kendini en iyi şekilde ifade etmeyi unutma
+            </p>
           </div>
 
           {/* Search Card - Below text, centered */}
           <div className="max-w-4xl relative z-10">
-            <Card className="bg-white/30 backdrop-blur border-white/20 rounded-3xl p-8 shadow-2xl">
+            <Card className="bg-white/30 backdrop-blur border-white/20 rounded-3xl p-6 md:p-8 shadow-2xl">
               <CardContent className="p-0">
                 {/* Filter Options */}
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                   {filterOptions.map((option) => (
                     <div
                       key={option.id}
-                      className="flex-1 bg-white/90 backdrop-blur rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10"
+                      className="flex-1 bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 md:gap-3">
                         {option.icon}
-                        <div className="text-sm text-gray-900 font-medium">{option.placeholder}</div>
+                        <div className="text-xs md:text-sm text-gray-900 font-medium">{option.placeholder}</div>
                       </div>
                       <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -91,7 +92,7 @@ const HeroSection = () => {
                   ))}
                   
                   {/* Filter Button */}
-                  <Button className="bg-black hover:bg-gray-700 text-white px-6 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <Button className="bg-black hover:bg-gray-700 text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 h-10 md:h-10 w-full md:w-auto">
                     <Filter className="h-3 w-3" />
                     Filtrele
                   </Button>
