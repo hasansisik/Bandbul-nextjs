@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
+import Header from "@/components/sections/Header";
+import Footer from "@/components/sections/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 const geistSans = Geist({
@@ -36,7 +36,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Header />
           {children}
+          <Footer />
           
           {/* Fixed Scroll to Top Button - Bottom Right */}
           <ScrollToTop />
