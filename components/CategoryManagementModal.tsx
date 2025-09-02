@@ -5,7 +5,7 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge"
-import { Settings, Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -51,7 +51,7 @@ export default function CategoryManagementModal({
 
   const defaultTriggerButton = (
     <Button variant="outline" className="flex items-center gap-2">
-      <Settings className="h-4 w-4" />
+      <Plus className="h-4 w-4" />
       Kategoriler
     </Button>
   )
