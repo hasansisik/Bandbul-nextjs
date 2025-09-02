@@ -35,22 +35,6 @@ const data = {
   },
   navMain: [
     {
-      title: "Ana Sayfa",
-      url: "/dashboard",
-      icon: Home,
-      isActive: true,
-      items: [
-        {
-          title: "Genel Bakış",
-          url: "/dashboard",
-        },
-        {
-          title: "İstatistikler",
-          url: "/dashboard/istatistikler",
-        },
-      ],
-    },
-    {
       title: "Blog",
       url: "/dashboard/blog",
       icon: BookOpen,
@@ -93,27 +77,9 @@ const data = {
       ],
     },
     {
-      title: "Sayfalar",
-      url: "/dashboard/sayfalar",
-      icon: FileText,
-      items: [
-        {
-          title: "Tüm Sayfalar",
-          url: "/dashboard/sayfalar",
-        },
-        {
-          title: "Yeni Sayfa",
-          url: "/dashboard/sayfalar/yeni",
-        },
-        {
-          title: "Menüler",
-          url: "/dashboard/sayfalar/menuler",
-        },
-        {
-          title: "Ayarlar",
-          url: "/dashboard/sayfalar/ayarlar",
-        },
-      ],
+      title: "İletişim Formları",
+      url: "/dashboard/forms",
+      icon: Send,
     },
     {
       title: "Ayarlar",
