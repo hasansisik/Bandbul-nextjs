@@ -3,15 +3,14 @@
 import * as React from "react"
 import {
   BookOpen,
-  Bot,
-  Command,
-  Frame,
+  FileText,
+  Home,
   LifeBuoy,
   Map,
-  PieChart,
   Send,
   Settings2,
   SquareTerminal,
+  Store,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -36,118 +35,141 @@ const data = {
   },
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Ana Sayfa",
+      url: "/dashboard",
+      icon: Home,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Genel Bakış",
+          url: "/dashboard",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "İstatistikler",
+          url: "/dashboard/istatistikler",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
+      title: "Blog",
+      url: "/dashboard/blog",
       icon: BookOpen,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Tüm Yazılar",
+          url: "/dashboard/blog",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Yeni Yazı",
+          url: "/dashboard/blog/yeni",
         },
         {
-          title: "Tutorials",
-          url: "#",
+          title: "Kategoriler",
+          url: "/dashboard/blog/kategoriler",
         },
         {
-          title: "Changelog",
-          url: "#",
+          title: "Yorumlar",
+          url: "/dashboard/blog/yorumlar",
         },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
+      title: "İlanlar",
+      url: "/dashboard/ilanlar",
+      icon: Store,
+      items: [
+        {
+          title: "Tüm İlanlar",
+          url: "/dashboard/ilanlar",
+        },
+        {
+          title: "Yeni İlan",
+          url: "/dashboard/ilanlar/yeni",
+        },
+        {
+          title: "Kategoriler",
+          url: "/dashboard/ilanlar/kategoriler",
+        },
+        {
+          title: "Onay Bekleyenler",
+          url: "/dashboard/ilanlar/onay-bekleyenler",
+        },
+      ],
+    },
+    {
+      title: "Sayfalar",
+      url: "/dashboard/sayfalar",
+      icon: FileText,
+      items: [
+        {
+          title: "Tüm Sayfalar",
+          url: "/dashboard/sayfalar",
+        },
+        {
+          title: "Yeni Sayfa",
+          url: "/dashboard/sayfalar/yeni",
+        },
+        {
+          title: "Menüler",
+          url: "/dashboard/sayfalar/menuler",
+        },
+        {
+          title: "Ayarlar",
+          url: "/dashboard/sayfalar/ayarlar",
+        },
+      ],
+    },
+    {
+      title: "Ayarlar",
+      url: "/dashboard/ayarlar",
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Genel",
+          url: "/dashboard/ayarlar/genel",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "Kullanıcılar",
+          url: "/dashboard/ayarlar/kullanicilar",
         },
         {
-          title: "Billing",
-          url: "#",
+          title: "Bildirimler",
+          url: "/dashboard/ayarlar/bildirimler",
         },
         {
-          title: "Limits",
-          url: "#",
+          title: "Güvenlik",
+          url: "/dashboard/ayarlar/guvenlik",
         },
       ],
     },
   ],
   navSecondary: [
     {
-      title: "Support",
-      url: "#",
+      title: "Destek",
+      url: "/dashboard/destek",
       icon: LifeBuoy,
     },
     {
-      title: "Feedback",
-      url: "#",
+      title: "Geri Bildirim",
+      url: "/dashboard/geri-bildirim",
       icon: Send,
     },
   ],
   projects: [
     {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      name: "Bandbul",
+      url: "/",
+      icon: SquareTerminal,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
+      name: "Blog Yönetimi",
+      url: "/dashboard/blog",
+      icon: BookOpen,
     },
     {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      name: "İlan Yönetimi",
+      url: "/dashboard/ilanlar",
+      icon: Store,
     },
   ],
 }
@@ -159,13 +181,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <a href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                  <SquareTerminal className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">Bandbul</span>
+                  <span className="truncate text-xs">Dashboard</span>
                 </div>
               </a>
             </SidebarMenuButton>
