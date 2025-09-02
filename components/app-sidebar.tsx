@@ -75,24 +75,20 @@ const data = {
     },
     {
       title: "İlanlar",
-      url: "/dashboard/ilanlar",
+      url: "/dashboard/listings",
       icon: Store,
       items: [
         {
           title: "Tüm İlanlar",
-          url: "/dashboard/ilanlar",
+          url: "/dashboard/listings",
         },
         {
           title: "Yeni İlan",
-          url: "/dashboard/ilanlar/yeni",
+          url: "/dashboard/listings/form",
         },
         {
           title: "Kategoriler",
-          url: "/dashboard/ilanlar/kategoriler",
-        },
-        {
-          title: "Onay Bekleyenler",
-          url: "/dashboard/ilanlar/onay-bekleyenler",
+          url: "/dashboard/listings",
         },
       ],
     },
@@ -168,7 +164,7 @@ const data = {
     },
     {
       name: "İlan Yönetimi",
-      url: "/dashboard/ilanlar",
+      url: "/dashboard/listings",
       icon: Store,
     },
   ],
