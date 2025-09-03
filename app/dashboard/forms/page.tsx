@@ -7,14 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  MessageSquare, 
-  Search, 
-  Trash2, 
-  Eye, 
-  Mail, 
-  Phone, 
-  Calendar
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  MessageSquare,
+  Search,
+  Trash2,
+  Eye,
+  Mail,
+  Phone,
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import {
   AlertDialog,
@@ -45,6 +48,8 @@ export default function FormsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedForm, setSelectedForm] = useState<ContactForm | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const formsPerPage = 12;
 
   // Mock data - in real app this would come from an API
   useEffect(() => {
@@ -116,35 +121,52 @@ export default function FormsPage() {
   // Filter forms based on search term and status
   useEffect(() => {
     let filtered = forms;
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(form => 
+      filtered = filtered.filter(form =>
         form.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         form.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         form.subject.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (statusFilter !== "all") {
       filtered = filtered.filter(form => form.status === statusFilter);
     }
-    
+
     setFilteredForms(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   }, [searchTerm, statusFilter, forms]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredForms.length / formsPerPage);
+  const startIndex = (currentPage - 1) * formsPerPage;
+  const endIndex = startIndex + formsPerPage;
+  const currentForms = filteredForms.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleDelete = (id: string) => {
     setForms(prev => prev.filter(form => form.id !== id));
   };
 
   const markAsRead = (id: string) => {
-    setForms(prev => prev.map(form => 
+    setForms(prev => prev.map(form =>
       form.id === id ? { ...form, status: 'read' as const } : form
     ));
   };
 
   const markAsReplied = (id: string) => {
-    setForms(prev => prev.map(form => 
+    setForms(prev => prev.map(form =>
       form.id === id ? { ...form, status: 'replied' as const } : form
+    ));
+  };
+
+  const markAsUnread = (id: string) => {
+    setForms(prev => prev.map(form =>
+      form.id === id ? { ...form, status: 'new' as const } : form
     ));
   };
 
@@ -164,7 +186,7 @@ export default function FormsPage() {
   const formatDate = (date: Date) => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return "Az önce";
     if (diffInHours < 24) return `${diffInHours} saat önce`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} gün önce`;
@@ -190,7 +212,7 @@ export default function FormsPage() {
       </div>
 
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-4">
         <h1 className="text-3xl font-bold mb-2">İletişim Formları</h1>
         <p className="text-muted-foreground">
           Gelen iletişim formlarını görüntüleyin ve yönetin
@@ -267,147 +289,186 @@ export default function FormsPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <div className="relative group">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none px-4 py-2 pr-10 border-2 border-border/60 rounded-md bg-background/50 backdrop-blur focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 h-10 min-w-[140px] cursor-pointer hover:border-border/80 transition-all duration-200"
-              >
-                <option value="all">Tüm Durumlar</option>
-                <option value="new">Yeni</option>
-                <option value="read">Okundu</option>
-                <option value="replied">Yanıtlandı</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px] h-10 border-2 border-border/60 bg-background/50 backdrop-blur hover:border-border/80 focus:border-ring focus:ring-2 focus:ring-ring/20">
+                <SelectValue placeholder="Tüm Durumlar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="new">Yeni</SelectItem>
+                <SelectItem value="read">Okundu</SelectItem>
+                <SelectItem value="replied">Yanıtlandı</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       {/* Forms List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Form Listesi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredForms.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Gösterilecek form bulunamadı</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredForms.map((form) => (
-                <div
-                  key={form.id}
-                  className="flex items-start justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold">{form.name}</h3>
-                      {getStatusBadge(form.status)}
-                      <span className="text-sm text-muted-foreground">
-                        {formatDate(form.submittedAt)}
-                      </span>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4 mb-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">E-posta:</span>
-                        <span className="font-medium">{form.email}</span>
-                      </div>
-                      {form.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Telefon:</span>
-                          <span className="font-medium">{form.phone}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="mb-3">
-                      <span className="text-sm text-muted-foreground">Konu:</span>
-                      <span className="font-medium ml-2">{form.subject}</span>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <span className="text-sm text-muted-foreground">Mesaj:</span>
-                      <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
-                        {form.message}
-                      </p>
-                    </div>
+      {currentForms.length === 0 ? (
+        <div className="text-center py-12">
+          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">Gösterilecek form bulunamadı</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {currentForms.map((form) => (
+            <Card key={form.id} className="hover:shadow-md transition-all duration-200 flex flex-col">
+              <CardHeader className="pb-1">
+                <div className="flex items-center justify-between ">
+                  <h3 className="font-semibold text-sm truncate">{form.name}</h3>
+                  {getStatusBadge(form.status)}
+                </div>
+                <p className="text-xs text-muted-foreground">{formatDate(form.submittedAt)}</p>
+              </CardHeader>
+
+              <CardContent className="pt-0 space-y-2 flex-1">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">E-posta:</span>
+                    <span className="font-medium truncate">{form.email}</span>
                   </div>
-                  
-                  <div className="flex flex-col gap-2 ml-4">
+                  {form.phone && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Telefon:</span>
+                      <span className="font-medium truncate">{form.phone}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <span className="text-xs text-muted-foreground">Konu:</span>
+                  <p className="text-sm font-medium mt-1 line-clamp-2">{form.subject}</p>
+                </div>
+
+                <div>
+                  <span className="text-xs text-muted-foreground">Mesaj:</span>
+                  <p className="text-xs mt-1 text-muted-foreground line-clamp-3">
+                    {form.message}
+                  </p>
+                </div>
+              </CardContent>
+
+              <div className="px-6 pb-2">
+                <div className="flex flex-col gap-2  border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedForm(form)}
+                    className="w-full h-8 text-xs"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Detay
+                  </Button>
+
+                  {form.status === 'new' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedForm(form)}
-                      className="w-full"
+                      onClick={() => markAsRead(form.id)}
+                      className="w-full h-8 text-xs"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Detay
+                      Okundu
                     </Button>
-                    
-                    {form.status === 'new' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => markAsRead(form.id)}
-                        className="w-full"
-                      >
-                        Okundu İşaretle
+                  )}
+
+                  {form.status === 'read' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markAsReplied(form.id)}
+                      className="w-full h-8 text-xs"
+                    >
+                      Yanıtlandı
+                    </Button>
+                  )}
+
+                  {form.status === 'replied' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markAsUnread(form.id)}
+                      className="w-full h-8 text-xs"
+                    >
+                      Okunmadı
+                    </Button>
+                  )}
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="w-full h-8 text-xs">
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Sil
                       </Button>
-                    )}
-                    
-                    {form.status === 'read' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => markAsReplied(form.id)}
-                        className="w-full"
-                      >
-                        Yanıtlandı İşaretle
-                      </Button>
-                    )}
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm" className="w-full">
-                          <Trash2 className="h-4 w-4 mr-2" />
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Formu Sil</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Bu formu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>İptal</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(form.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
                           Sil
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Formu Sil</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Bu formu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(form.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Sil
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-muted-foreground">
+            {startIndex + 1}-{Math.min(endIndex, filteredForms.length)} / {filteredForms.length} form
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => goToPage(page)}
+                className="h-8 w-8 p-0"
+              >
+                {page}
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Form Detail Modal */}
       {selectedForm && (
@@ -423,7 +484,7 @@ export default function FormsPage() {
                   Kapat
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -435,37 +496,37 @@ export default function FormsPage() {
                     <p className="font-medium">{selectedForm.email}</p>
                   </div>
                 </div>
-                
+
                 {selectedForm.phone && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Telefon</label>
                     <p className="font-medium">{selectedForm.phone}</p>
                   </div>
                 )}
-                
+
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Konu</label>
                   <p className="font-medium">{selectedForm.subject}</p>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Mesaj</label>
                   <p className="whitespace-pre-wrap bg-muted/50 p-3 rounded-md">
                     {selectedForm.message}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   Gönderim Tarihi: {selectedForm.submittedAt.toLocaleString('tr-TR')}
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">Durum:</span>
                   {getStatusBadge(selectedForm.status)}
                 </div>
               </div>
-              
+
               <div className="flex gap-2 mt-6 pt-6 border-t">
                 {selectedForm.status === 'new' && (
                   <Button
@@ -478,7 +539,7 @@ export default function FormsPage() {
                     Okundu İşaretle
                   </Button>
                 )}
-                
+
                 {selectedForm.status === 'read' && (
                   <Button
                     onClick={() => {
@@ -490,7 +551,7 @@ export default function FormsPage() {
                     Yanıtlandı İşaretle
                   </Button>
                 )}
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="flex-1">
