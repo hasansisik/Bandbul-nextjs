@@ -18,27 +18,48 @@ import {
   Star,
   Clock
 } from "lucide-react";
-import { listingsData, type ListingItem } from "@/lib/listingsData";
-import { generateSlug } from "@/lib/utils";
+import { useAppSelector } from "@/redux/hook";
+import { getAllListings } from "@/redux/actions/userActions";
+import { useAppDispatch } from "@/redux/hook";
 
 export default function ListingDetailPage() {
   const params = useParams();
-  const [listing, setListing] = useState<ListingItem | null>(null);
+  const dispatch = useAppDispatch();
+  const { allListings, listingsLoading } = useAppSelector((state) => state.user);
+  const [listing, setListing] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Find listing by slug
-    const foundListing = listingsData.find(item => {
-      const itemSlug = generateSlug(item.title);
-      return itemSlug === params.slug;
-    });
-
-    if (foundListing) {
-      setListing(foundListing);
+    // Load all listings if not already loaded
+    if (allListings.length === 0) {
+      dispatch(getAllListings({}));
     }
-  }, [params.slug]);
+  }, [dispatch, allListings.length]);
+
+  useEffect(() => {
+    // Find listing by ID (slug parameter)
+    if (allListings.length > 0) {
+      const foundListing = allListings.find(item => item._id === params.slug);
+      if (foundListing) {
+        setListing(foundListing);
+      }
+    }
+  }, [params.slug, allListings]);
 
 
+
+  if (listingsLoading) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground text-lg">İlan yükleniyor...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!listing) {
     return (
@@ -60,7 +81,7 @@ export default function ListingDetailPage() {
           <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
             <span className="hover:text-foreground cursor-pointer transition-colors">İlanlar</span>
             <ChevronRight className="h-4 w-4" />
-            <span className="hover:text-foreground cursor-pointer transition-colors">{listing.category}</span>
+            <span className="hover:text-foreground cursor-pointer transition-colors">{listing.categoryInfo?.name || listing.category}</span>
             <ChevronRight className="h-4 w-4" />
             <span className="text-foreground font-medium truncate max-w-xs">{listing.title}</span>
           </nav>
@@ -77,7 +98,7 @@ export default function ListingDetailPage() {
                 />
                 <div className="absolute top-4 left-4">
                   <Badge variant="secondary" className="font-medium">
-                    {listing.category}
+                    {listing.categoryInfo?.name || listing.category}
                   </Badge>
                 </div>
                 <div className="absolute top-4 right-4">
@@ -104,7 +125,7 @@ export default function ListingDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>{listing.postedDate}</span>
+                      <span>{listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('tr-TR') : 'Yeni'}</span>
                     </div>
                   </div>
                 </div>
@@ -130,7 +151,7 @@ export default function ListingDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">İlan Sahibi</p>
-                      <p className="font-medium text-foreground">{listing.author}</p>
+                      <p className="font-medium text-foreground">{listing.authorInfo ? `${listing.authorInfo.name} ${listing.authorInfo.surname}` : 'Bilinmeyen'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
@@ -182,11 +203,11 @@ export default function ListingDetailPage() {
               <div className="bg-card border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Benzer İlanlar</h3>
                 <div className="space-y-4">
-                  {listingsData
-                    .filter(item => item.category === listing.category && item.id !== listing.id)
+                  {allListings
+                    .filter(item => item.category === listing.category && item._id !== listing._id)
                     .slice(0, 3)
                     .map(item => (
-                      <div key={item.id} className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                      <div key={item._id} className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
                         <img 
                           src={item.image} 
                           alt={item.title}

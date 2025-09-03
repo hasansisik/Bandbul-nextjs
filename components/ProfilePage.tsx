@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
-import { getUserListings, createListing, deleteListing, toggleListingStatus } from "@/redux/actions/userActions"
+import { getUserListings, createListing, updateListing, deleteListing, toggleListingStatus, getAllCategories } from "@/redux/actions/userActions"
+import { toast } from "sonner"
+import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Edit, 
   Plus, 
@@ -30,8 +33,24 @@ import {
   User,
   Briefcase,
   Share2,
-  Bell
+  Bell,
+  Music,
+  ImageIcon,
+  X,
+  Save
 } from "lucide-react"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 // Default user data structure
 const defaultUser = {
@@ -66,7 +85,7 @@ const experienceLevels = [
   "Profesyonel"
 ]
 
-const instruments = [
+const instrumentTypes = [
   "Gitar",
   "Piyano",
   "Davul",
@@ -83,11 +102,24 @@ const instruments = [
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingListing, setEditingListing] = useState<any>(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const [operationMessage, setOperationMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const dispatch = useAppDispatch()
   
+  // Function to show operation messages and auto-clear them
+  const showMessage = (type: 'success' | 'error' | 'info', text: string) => {
+    setOperationMessage({ type, text })
+    // Auto-clear message after 5 seconds
+    setTimeout(() => {
+      setOperationMessage(null)
+    }, 5000)
+  }
+  
   // Get user data and listings from Redux
-  const { user, userListings, listingsLoading } = useAppSelector((state) => state.user)
+  const { user, userListings, listingsLoading, categories, categoriesLoading } = useAppSelector((state) => state.user)
   
   // Transform Redux user data to component format
   const userData = user ? {
@@ -113,16 +145,21 @@ export function ProfilePage() {
     location: "",
     experience: "",
     instrument: "",
-    type: "",
-    image: "/blogexample.jpg"
+    image: ""
   })
 
-  // Load user listings on component mount
+  // Load user listings and categories on component mount
   useEffect(() => {
     if (user) {
       dispatch(getUserListings())
+      dispatch(getAllCategories({}))
     }
   }, [dispatch, user])
+
+  // Debug: Monitor userListings changes
+  useEffect(() => {
+    console.log("userListings changed:", userListings.length, userListings)
+  }, [userListings])
 
   const handleEditProfile = () => {
     // Navigate to profile editing page
@@ -134,25 +171,105 @@ export function ProfilePage() {
     setIsEditing(false)
   }
 
+  const handleEditListing = (listing: any) => {
+    setEditingListing(listing)
+    setNewListing({
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      location: listing.location,
+      experience: listing.experience || "Orta",
+      instrument: listing.instrument || "",
+      image: listing.image
+    })
+    setShowCreateForm(true)
+  }
+
+  const handleViewListing = (listing: any) => {
+    // Navigate to listing detail page
+    window.location.href = `/ilan-detay/${listing._id}`
+  }
+
+  const handleCancelEdit = () => {
+    setEditingListing(null)
+    setNewListing({
+      title: "",
+      description: "",
+      category: "",
+      location: "",
+      experience: "",
+      instrument: "",
+      image: ""
+    })
+    setShowCreateForm(false)
+  }
+
   const handleDeleteListing = async (listingId: string) => {
     try {
-      await dispatch(deleteListing(listingId))
+      const result = await dispatch(deleteListing(listingId))
+      if (deleteListing.fulfilled.match(result)) {
+        showMessage('success', "İlan başarıyla silindi.")
+        // Refresh listings
+        dispatch(getUserListings())
+      } else if (deleteListing.rejected.match(result)) {
+        const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan silinirken bir hata oluştu."
+        showMessage('error', errorMessage)
+      }
     } catch (err) {
       console.error("Delete listing error:", err)
+      showMessage('error', "İlan silinirken bir hata oluştu.")
     }
   }
 
   const handleToggleListingStatus = async (listingId: string) => {
     try {
-      await dispatch(toggleListingStatus(listingId))
+      const result = await dispatch(toggleListingStatus(listingId))
+      if (toggleListingStatus.fulfilled.match(result)) {
+        showMessage('success', "İlan durumu başarıyla değiştirildi.")
+        // Refresh listings
+        dispatch(getUserListings())
+      } else if (toggleListingStatus.rejected.match(result)) {
+        const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan durumu değiştirilirken bir hata oluştu."
+        showMessage('error', errorMessage)
+      }
     } catch (err) {
       console.error("Toggle listing status error:", err)
+      showMessage('error', "İlan durumu değiştirilirken bir hata oluştu.")
+    }
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Lütfen geçerli bir resim dosyası seçin.")
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Resim dosyası 5MB'dan küçük olmalıdır.")
+      return
+    }
+
+    setImageUploading(true)
+    try {
+      const imageUrl = await uploadImageToCloudinary(file)
+      setNewListing({ ...newListing, image: imageUrl })
+      showMessage('success', "Görsel başarıyla yüklendi!")
+    } catch (error) {
+      console.error("Image upload error:", error)
+      showMessage('error', "Görsel yüklenirken bir hata oluştu.")
+    } finally {
+      setImageUploading(false)
     }
   }
 
   const handleCreateListing = async () => {
     if (!newListing.title || !newListing.description || !newListing.category) {
-      alert("Lütfen tüm gerekli alanları doldurun.")
+      showMessage('error', "Lütfen tüm gerekli alanları doldurun.")
       return
     }
 
@@ -164,27 +281,52 @@ export function ProfilePage() {
         location: newListing.location || userData.location,
         image: newListing.image || "/blogexample.jpg",
         experience: newListing.experience || "Orta",
-        instrument: newListing.instrument || "",
-        type: newListing.type || newListing.category
+        instrument: newListing.instrument || ""
       }
 
-      await dispatch(createListing(listingData))
-      
-      // Reset form
-      setNewListing({
-        title: "",
-        description: "",
-        category: "",
-        location: "",
-        experience: "",
-        instrument: "",
-        type: "",
-        image: "/blogexample.jpg"
-      })
-      setShowCreateForm(false)
+      if (editingListing) {
+        // Update existing listing
+        console.log("Updating listing with data:", listingData)
+        const result = await dispatch(updateListing({
+          id: editingListing._id,
+          formData: listingData
+        }))
+        
+        if (updateListing.fulfilled.match(result)) {
+          console.log("Listing updated successfully:", result.payload)
+          showMessage('success', "İlan başarıyla güncellendi!")
+          handleCancelEdit()
+          dispatch(getUserListings())
+        } else if (updateListing.rejected.match(result)) {
+          const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan güncellenirken bir hata oluştu."
+          showMessage('error', errorMessage)
+        }
+      } else {
+        // Create new listing
+        console.log("Creating listing with data:", listingData)
+        const result = await dispatch(createListing(listingData))
+        
+        if (createListing.fulfilled.match(result)) {
+          console.log("Listing created successfully:", result.payload)
+          console.log("Current userListings before refresh:", userListings.length)
+          
+          showMessage('success', "İlan başarıyla oluşturuldu!")
+          handleCancelEdit()
+          dispatch(getUserListings())
+        } else if (createListing.rejected.match(result)) {
+          const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan oluşturulurken bir hata oluştu."
+          showMessage('error', errorMessage)
+        }
+      }
     } catch (err) {
-      console.error("Create listing error:", err)
+      console.error("Listing operation error:", err)
+      showMessage('error', editingListing ? "İlan güncellenirken bir hata oluştu." : "İlan oluşturulurken bir hata oluştu.")
     }
+  }
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat._id === categoryId)
+    return category ? category.name : "Bilinmeyen Kategori"
   }
 
   const getStatusBadge = (listing: any) => {
@@ -257,6 +399,54 @@ export function ProfilePage() {
         </div>
       </div>
 
+      {/* Operation Messages Display */}
+      {operationMessage && (
+        <div className="container mx-auto px-4 max-w-7xl mb-4">
+          <div className={`p-4 rounded-lg border ${
+            operationMessage.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
+              : operationMessage.type === 'error'
+              ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+              : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                {operationMessage.type === 'success' && (
+                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {operationMessage.type === 'error' && (
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {operationMessage.type === 'info' && (
+                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                <span className="font-medium">{operationMessage.text}</span>
+              </div>
+              <button
+                onClick={() => setOperationMessage(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -302,121 +492,208 @@ export function ProfilePage() {
                 <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
                 <Button onClick={() => setShowCreateForm(!showCreateForm)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Plus className="w-4 h-4 mr-2" />
-                  Yeni İlan Oluştur
+                  {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
                 </Button>
               </div>
               
               {/* Create Listing Form */}
               {showCreateForm && (
-                <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
-                  <h3 className="text-lg font-semibold text-card-foreground mb-6">Yeni İlan Oluştur</h3>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="title" className="text-sm font-medium text-card-foreground">İlan Başlığı *</Label>
-                        <Input 
-                          id="title" 
-                          placeholder="İlan başlığını girin" 
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Ana İçerik Alanı - Sol Taraf */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Başlık */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Music className="h-5 w-5" />
+                          İlan Başlığı
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Input
+                          placeholder="İlan başlığı..."
                           value={newListing.title}
                           onChange={(e) => setNewListing({...newListing, title: e.target.value})}
+                          className="text-xl font-medium"
+                          required
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="category" className="text-sm font-medium text-card-foreground">Kategori *</Label>
-                        <Select 
-                          value={newListing.category} 
-                          onValueChange={(value) => setNewListing({...newListing, category: value, type: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Kategori seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="instrument" className="text-sm font-medium text-card-foreground">Enstrüman</Label>
-                        <Select 
-                          value={newListing.instrument} 
-                          onValueChange={(value) => setNewListing({...newListing, instrument: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Enstrüman seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {instruments.map((instrument) => (
-                              <SelectItem key={instrument} value={instrument}>
-                                {instrument}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="experience" className="text-sm font-medium text-card-foreground">Deneyim Seviyesi</Label>
-                        <Select 
-                          value={newListing.experience} 
-                          onValueChange={(value) => setNewListing({...newListing, experience: value})}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Deneyim seviyesi" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {experienceLevels.map((level) => (
-                              <SelectItem key={level} value={level}>
-                                {level}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="location" className="text-sm font-medium text-card-foreground">Konum</Label>
-                        <Input 
-                          id="location" 
-                          placeholder="Konum" 
-                          value={newListing.location}
-                          onChange={(e) => setNewListing({...newListing, location: e.target.value})}
+                      </CardContent>
+                    </Card>
+
+                    {/* Görsel Alanı */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <ImageIcon className="h-5 w-5" />
+                          Görsel
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {newListing.image ? (
+                          <div className="relative">
+                            <img 
+                              src={newListing.image} 
+                              alt="İlan görseli" 
+                              className="w-full h-64 object-cover rounded-lg"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setNewListing({...newListing, image: ""})}
+                              className="absolute top-2 right-2"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                                                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                              <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-600 mb-2">Görsel yüklemek için tıklayın</p>
+                              <p className="text-sm text-gray-500 mb-4">PNG, JPG, GIF (max 5MB)</p>
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                              />
+                              <Button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={imageUploading}
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                              >
+                                {imageUploading ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Yükleniyor...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Görsel Seç
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Açıklama */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Açıklama</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Textarea
+                          placeholder="İlan detaylarını yazın..."
+                          value={newListing.description}
+                          onChange={(e) => setNewListing({...newListing, description: e.target.value})}
+                          rows={6}
+                          required
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="image" className="text-sm font-medium text-card-foreground">Görsel URL</Label>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Sağ Sidebar */}
+                  <div className="space-y-6">
+                    {/* Yayınla/Kaydet */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                         <div className="flex gap-2">
-                          <Input 
-                            id="image" 
-                            placeholder="Görsel URL'si" 
-                            value={newListing.image}
-                            onChange={(e) => setNewListing({...newListing, image: e.target.value})}
-                          />
-                          <Button variant="outline" size="sm">
-                            <Upload className="w-4 h-4" />
+                          <Button onClick={handleCreateListing} className="flex-1">
+                            <Save className="h-4 w-4 mr-2" />
+                            {editingListing ? "Güncelle" : "İlan Oluştur"}
+                          </Button>
+                          <Button variant="outline" onClick={handleCancelEdit}>
+                            İptal
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description" className="text-sm font-medium text-card-foreground">Açıklama *</Label>
-                      <Textarea 
-                        id="description" 
-                        placeholder="İlan açıklamasını detaylı bir şekilde girin" 
-                        rows={4}
-                        value={newListing.description}
-                        onChange={(e) => setNewListing({...newListing, description: e.target.value})}
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-3">
-                      <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                        İptal
-                      </Button>
-                      <Button onClick={handleCreateListing} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        İlan Oluştur
-                      </Button>
-                    </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Genel Ayarlar */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Genel Ayarlar</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Kategori */}
+                        <div className="space-y-2">
+                          <Label htmlFor="category">Kategori *</Label>
+                          {categoriesLoading ? (
+                            <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
+                          ) : (
+                            <Select value={newListing.category} onValueChange={(value) => setNewListing({...newListing, category: value})}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Kategori seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories
+                                  .filter(cat => cat.active)
+                                  .map((category) => (
+                                    <SelectItem key={category._id} value={category._id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+
+                        {/* Enstrüman */}
+                        <div className="space-y-2">
+                          <Label htmlFor="instrument">Enstrüman</Label>
+                          <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Enstrüman seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {instrumentTypes.map((instrument) => (
+                                <SelectItem key={instrument} value={instrument}>
+                                  {instrument}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Deneyim Seviyesi */}
+                        <div className="space-y-2">
+                          <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                          <Select value={newListing.experience} onValueChange={(value) => setNewListing({...newListing, experience: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Deneyim seviyesi seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {experienceLevels.map((level) => (
+                                <SelectItem key={level} value={level}>
+                                  {level}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Konum */}
+                        <div className="space-y-2">
+                          <Label htmlFor="location" className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            Konum
+                          </Label>
+                          <Input
+                            id="location"
+                            placeholder="Şehir, ilçe..."
+                            value={newListing.location}
+                            onChange={(e) => setNewListing({...newListing, location: e.target.value})}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}
@@ -439,7 +716,7 @@ export function ProfilePage() {
                         />
                         <div className="absolute top-3 left-3">
                           <Badge className="bg-background/90 text-foreground border-0 shadow-sm">
-                            {listing.category}
+                            {getCategoryName(listing.category)}
                           </Badge>
                         </div>
                         <div className="absolute top-3 right-3">
@@ -477,30 +754,77 @@ export function ProfilePage() {
                         </div>
 
                         <div className="flex space-x-2">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>İlan Durumunu Değiştir</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  "{listing.title}" başlıklı ilanın durumunu {listing.status === 'active' ? 'pasif' : 'aktif'} yapmak istediğinizden emin misiniz?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleToggleListingStatus(listing._id)}
+                                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
+                                  {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                           <Button 
                             variant="outline" 
-                            size="sm" 
-                            className="flex-1"
-                            onClick={() => handleToggleListingStatus(listing._id)}
+                            size="sm"
+                            onClick={() => handleEditListing(listing)}
                           >
-                            <Edit className="w-4 h-4 mr-1" />
-                            {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+                            <Edit className="w-4 h-4" />
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => {/* View functionality */}}
+                            onClick={() => handleViewListing(listing)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
-                            onClick={() => handleDeleteListing(listing._id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>İlanı Sil</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  "{listing.title}" başlıklı ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteListing(listing._id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Sil
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </div>
