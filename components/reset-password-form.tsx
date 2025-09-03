@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useAppDispatch, useAppSelector } from "@/redux/hook"
+import { resetPassword } from "@/redux/actions/userActions"
 
 export function ResetPasswordForm({
   className,
@@ -16,11 +18,10 @@ export function ResetPasswordForm({
   const [passwordToken, setPasswordToken] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
+  const dispatch = useAppDispatch()
+  const { loading, message, error } = useAppSelector((state) => state.user)
 
   // Pre-fill email from URL params if available
   useEffect(() => {
@@ -32,49 +33,29 @@ export function ResetPasswordForm({
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setMessage("")
 
     if (newPassword !== confirmPassword) {
-      setError("Şifreler eşleşmiyor")
-      setIsLoading(false)
       return
     }
 
     if (newPassword.length < 6) {
-      setError("Şifre en az 6 karakter olmalıdır")
-      setIsLoading(false)
       return
     }
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          passwordToken: Number(passwordToken),
-          newPassword,
-        }),
-      })
+      const result = await dispatch(resetPassword({
+        email,
+        passwordToken: Number(passwordToken),
+        newPassword,
+      }))
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage(data.message)
+      if (resetPassword.fulfilled.match(result)) {
         setTimeout(() => {
           router.push("/giris")
         }, 2000)
-      } else {
-        setError(data.message)
       }
     } catch (err) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.")
-    } finally {
-      setIsLoading(false)
+      console.error("Reset password error:", err)
     }
   }
 
@@ -155,8 +136,8 @@ export function ResetPasswordForm({
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Şifre Değiştiriliyor..." : "Şifreyi Değiştir"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Şifre Değiştiriliyor..." : "Şifreyi Değiştir"}
               </Button>
 
               <div className="text-center text-sm">

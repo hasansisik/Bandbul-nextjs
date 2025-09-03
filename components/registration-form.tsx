@@ -1,19 +1,58 @@
+"use client"
+
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useAppDispatch, useAppSelector } from "@/redux/hook"
+import { register } from "@/redux/actions/userActions"
+import { useRouter } from "next/navigation"
 
 export function RegistrationForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [kvkkAccepted, setKvkkAccepted] = useState(false)
+  const dispatch = useAppDispatch()
+  const { loading, error } = useAppSelector((state) => state.user)
+  const router = useRouter()
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      return
+    }
+
+    try {
+      const result = await dispatch(register({
+        name: firstName,
+        surname: lastName,
+        email,
+        password,
+      }))
+      
+      if (register.fulfilled.match(result)) {
+        router.push(`/dogrulama?email=${encodeURIComponent(email)}`)
+      }
+    } catch (err) {
+      console.error("Registration error:", err)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form onSubmit={handleRegister} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Hesap Oluştur</h1>
@@ -22,12 +61,20 @@ export function RegistrationForm({
                 </p>
               </div>
               
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              
               <div className="grid gap-3">
                 <Label htmlFor="firstName">Ad</Label>
                 <Input
                   id="firstName"
                   type="text"
                   placeholder="Adınız"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   required
                 />
               </div>
@@ -38,6 +85,8 @@ export function RegistrationForm({
                   id="lastName"
                   type="text"
                   placeholder="Soyadınız"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                   required
                 />
               </div>
@@ -48,6 +97,8 @@ export function RegistrationForm({
                   id="email"
                   type="email"
                   placeholder="ornek@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -58,6 +109,8 @@ export function RegistrationForm({
                   id="password" 
                   type="password" 
                   placeholder="Parolanızı girin"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required 
                 />
               </div>
@@ -68,12 +121,19 @@ export function RegistrationForm({
                   id="confirmPassword" 
                   type="password" 
                   placeholder="Parolanızı tekrar girin"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required 
                 />
               </div>
               
               <div className="flex items-center space-x-2">
-                <Checkbox id="kvkk" required />
+                <Checkbox 
+                  id="kvkk" 
+                  checked={kvkkAccepted}
+                  onCheckedChange={(checked) => setKvkkAccepted(checked as boolean)}
+                  required 
+                />
                 <Label 
                   htmlFor="kvkk" 
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -83,8 +143,8 @@ export function RegistrationForm({
                 </Label>
               </div>
               
-              <Button type="submit" className="w-full">
-                Hesap Oluştur
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Hesap Oluşturuluyor..." : "Hesap Oluştur"}
               </Button>
               
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -93,7 +153,7 @@ export function RegistrationForm({
                 </span>
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" type="button" className="w-full">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
@@ -112,15 +172,6 @@ export function RegistrationForm({
                   </svg>
                   <span className="sr-only">Google ile kayıt ol</span>
                 </Button>
-                <Button variant="outline" type="button" className="w-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                      d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.908 44.908 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.358-2.602zm-10.201.553c1.265 0 2.058.791 2.675 1.446.307.327.737.871 1.234 1.579l-1.02 1.566c-.757 1.163-1.882 3.017-2.837 4.338-1.191 1.649-1.81 1.817-2.486 1.817-.524 0-1.038-.237-1.383-.794-.263-.426-.464-1.13-.464-2.046 0-2.221.63-4.535 1.66-6.088.454-.687.964-1.226 1.533-1.533a2.264 2.264 0 0 1 1.088-.285z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <span className="sr-only">Meta ile kayıt ol</span>
-                </Button>
               </div>
               
               <div className="text-center text-sm">
@@ -133,9 +184,9 @@ export function RegistrationForm({
           </form>
           <div className="bg-muted relative hidden md:block">
             <img
-              src="/placeholder.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              src="/hero.jpg"
+              alt="Hero Image"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
         </CardContent>

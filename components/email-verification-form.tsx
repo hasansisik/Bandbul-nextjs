@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useAppDispatch, useAppSelector } from "@/redux/hook"
+import { verifyEmail, againEmail } from "@/redux/actions/userActions"
 
 export function EmailVerificationForm({
   className,
@@ -14,71 +16,40 @@ export function EmailVerificationForm({
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const [verificationCode, setVerificationCode] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const dispatch = useAppDispatch()
+  const { loading, message, error } = useAppSelector((state) => state.user)
 
   const handleVerifyEmail = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setMessage("")
+
+    // Ensure email is always available from URL params
+    const emailToUse = searchParams.get("email") || email
 
     try {
-      const response = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          verificationCode: Number(verificationCode),
-        }),
-      })
+      const result = await dispatch(verifyEmail({
+        email: emailToUse,
+        verificationCode: Number(verificationCode),
+      }))
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage(data.message)
+      if (verifyEmail.fulfilled.match(result)) {
         setTimeout(() => {
           router.push("/giris")
         }, 2000)
-      } else {
-        setError(data.message)
       }
     } catch (err) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.")
-    } finally {
-      setIsLoading(false)
+      console.error("Verification error:", err)
     }
   }
 
   const handleResendCode = async () => {
-    setIsLoading(true)
-    setError("")
-    setMessage("")
-
     try {
-      const response = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage(data.message)
-      } else {
-        setError(data.message)
-      }
+      // Ensure email is always available from URL params
+      const emailToUse = searchParams.get("email") || email
+      await dispatch(againEmail(emailToUse))
     } catch (err) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.")
-    } finally {
-      setIsLoading(false)
+      console.error("Resend error:", err)
     }
   }
 
@@ -91,7 +62,7 @@ export function EmailVerificationForm({
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">E-posta Doğrulama</h1>
                 <p className="text-muted-foreground text-balance">
-                  E-posta adresinize gönderilen 4 haneli kodu girin
+                  E-posta adresinize gönderilen 4 haneli doğrulama kodunu girin
                 </p>
               </div>
               
@@ -107,17 +78,7 @@ export function EmailVerificationForm({
                 </div>
               )}
 
-              <div className="grid gap-3">
-                <Label htmlFor="email">E-posta</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="ornek@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+
 
               <div className="grid gap-3">
                 <Label htmlFor="verificationCode">Doğrulama Kodu</Label>
@@ -133,8 +94,8 @@ export function EmailVerificationForm({
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Doğrulanıyor..." : "E-postayı Doğrula"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Doğrulanıyor..." : "E-postayı Doğrula"}
               </Button>
 
               <div className="text-center">
@@ -142,7 +103,7 @@ export function EmailVerificationForm({
                   type="button"
                   variant="outline"
                   onClick={handleResendCode}
-                  disabled={isLoading || !email}
+                  disabled={loading || !email}
                   className="text-sm"
                 >
                   Kod Tekrar Gönder

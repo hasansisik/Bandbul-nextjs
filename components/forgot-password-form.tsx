@@ -6,43 +6,27 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAppDispatch, useAppSelector } from "@/redux/hook"
+import { forgotPassword } from "@/redux/actions/userActions"
 
 export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
+  const dispatch = useAppDispatch()
+  const { loading, message, error } = useAppSelector((state) => state.user)
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setMessage("")
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setMessage(data.message)
+      const result = await dispatch(forgotPassword(email))
+      if (forgotPassword.fulfilled.match(result)) {
         setEmail("")
-      } else {
-        setError(data.message)
       }
     } catch (err) {
-      setError("Bir hata oluştu. Lütfen tekrar deneyin.")
-    } finally {
-      setIsLoading(false)
+      console.error("Forgot password error:", err)
     }
   }
 
@@ -83,8 +67,8 @@ export function ForgotPasswordForm({
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Gönderiliyor..." : "Şifre Sıfırlama Kodu Gönder"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Gönderiliyor..." : "Şifre Sıfırlama Kodu Gönder"}
               </Button>
 
               <div className="text-center text-sm">

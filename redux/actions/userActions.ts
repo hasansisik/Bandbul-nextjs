@@ -4,6 +4,7 @@ import { server } from "@/config";
 
 export interface RegisterPayload {
   name: string;
+  surname: string;
   email: string;
   password: string;
 }

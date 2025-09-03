@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { Providers } from "@/redux/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,10 +37,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          
-          {/* Fixed Scroll to Top Button - Bottom Right */}
-          <ScrollToTop />
+          <Providers>
+            {children}
+            
+            {/* Fixed Scroll to Top Button - Bottom Right */}
+            <ScrollToTop />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
