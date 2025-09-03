@@ -11,6 +11,7 @@ import {
   Settings2,
   SquareTerminal,
   Store,
+  Users,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -37,49 +38,22 @@ const data = {
     {
       title: "Blog",
       url: "/dashboard/blog",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Tüm Yazılar",
-          url: "/dashboard/blog",
-        },
-        {
-          title: "Yeni Yazı",
-          url: "/dashboard/blog/yeni",
-        },
-        {
-          title: "Kategoriler",
-          url: "/dashboard/blog/kategoriler",
-        },
-        {
-          title: "Yorumlar",
-          url: "/dashboard/blog/yorumlar",
-        },
-      ],
+      icon: BookOpen
     },
     {
       title: "İlanlar",
       url: "/dashboard/listings",
-      icon: Store,
-      items: [
-        {
-          title: "Tüm İlanlar",
-          url: "/dashboard/listings",
-        },
-        {
-          title: "Yeni İlan",
-          url: "/dashboard/listings/form",
-        },
-        {
-          title: "Kategoriler",
-          url: "/dashboard/listings",
-        },
-      ],
+      icon: Store
     },
     {
       title: "İletişim Formları",
       url: "/dashboard/forms",
       icon: Send,
+    },
+    {
+      title: "Kullanıcılar",
+      url: "/dashboard/users",
+      icon: Users,
     },
     {
       title: "Ayarlar",
@@ -89,10 +63,6 @@ const data = {
         {
           title: "Genel",
           url: "/dashboard/ayarlar/genel",
-        },
-        {
-          title: "Kullanıcılar",
-          url: "/dashboard/ayarlar/kullanicilar",
         },
         {
           title: "Bildirimler",
@@ -119,11 +89,6 @@ const data = {
   ],
   projects: [
     {
-      name: "Bandbul",
-      url: "/",
-      icon: SquareTerminal,
-    },
-    {
       name: "Blog Yönetimi",
       url: "/dashboard/blog",
       icon: BookOpen,
@@ -132,6 +97,11 @@ const data = {
       name: "İlan Yönetimi",
       url: "/dashboard/listings",
       icon: Store,
+    },
+    {
+      name: "Kullanıcı Yönetimi",
+      url: "/dashboard/users",
+      icon: Users,
     },
   ],
 }
