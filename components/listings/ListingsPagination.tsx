@@ -5,9 +5,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
-const ListingsPagination = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 12;
+interface ListingsPaginationProps {
+  totalListings: number;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+}
+
+const ListingsPagination = ({ totalListings, currentPage = 1, onPageChange }: ListingsPaginationProps) => {
+  const [page, setPage] = useState(currentPage);
+  const itemsPerPage = 12;
+  const totalPages = Math.ceil(totalListings / itemsPerPage);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -44,17 +51,23 @@ const ListingsPagination = () => {
     return pages;
   };
 
-  const handlePageChange = (page: number | string) => {
-    if (typeof page === 'number') {
-      setCurrentPage(page);
+  const handlePageChange = (newPage: number | string) => {
+    if (typeof newPage === 'number') {
+      setPage(newPage);
+      onPageChange?.(newPage);
     }
   };
+
+  // Don't show pagination if there are no listings
+  if (totalListings === 0) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-between bg-card rounded-xl p-6 shadow-sm border border-border">
       {/* Page Info */}
       <div className="text-sm text-muted-foreground">
-        Sayfa <span className="font-semibold text-card-foreground">{currentPage}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">1,247</span> ilan
+        Sayfa <span className="font-semibold text-card-foreground">{page}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">{totalListings.toLocaleString()}</span> ilan
       </div>
 
       {/* Pagination Controls */}
@@ -63,8 +76,8 @@ const ListingsPagination = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
+          onClick={() => handlePageChange(Math.max(1, page - 1))}
+          disabled={page === 1}
           className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -72,20 +85,20 @@ const ListingsPagination = () => {
 
         {/* Page Numbers */}
         <div className="flex items-center gap-1">
-          {getPageNumbers().map((page, index) => (
+          {getPageNumbers().map((pageNum, index) => (
             <div key={index}>
-              {page === '...' ? (
+              {pageNum === '...' ? (
                 <div className="flex items-center justify-center w-9 h-9">
                   <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                 </div>
               ) : (
                 <Button
-                  variant={currentPage === page ? "default" : "outline"}
+                  variant={page === pageNum ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handlePageChange(page as number)}
-                  className={`h-9 w-9 p-0 ${currentPage === page ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border hover:bg-accent'}`}
+                  onClick={() => handlePageChange(pageNum as number)}
+                  className={`h-9 w-9 p-0 ${page === pageNum ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border hover:bg-accent'}`}
                 >
-                  {page}
+                  {pageNum}
                 </Button>
               )}
             </div>
@@ -96,8 +109,8 @@ const ListingsPagination = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
           className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronRight className="h-4 w-4" />

@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { getCategories, getTypes, listingsData } from "@/lib/listingsData";
+import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
 
 interface ListingsFilterProps {
   onFiltersChange?: (filters: {
@@ -27,35 +28,51 @@ interface ListingsFilterProps {
 
 const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+  const { allListings, categories } = useAppSelector((state) => state.user);
+  
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
 
-  const categories = getCategories();
-  const types = getTypes();
+  // Load data on component mount
+  useEffect(() => {
+    if (allListings.length === 0) {
+      dispatch(getAllListings({}));
+    }
+    if (categories.length === 0) {
+      dispatch(getAllCategories({}));
+    }
+  }, [dispatch, allListings.length, categories.length]);
 
-  // Get unique locations from data
-  const locations = Array.from(new Set(listingsData.map(listing => listing.location)))
+  const categoryOptions = categories.map(cat => ({
+    value: cat.name, // Use category name instead of ID for filtering
+    label: cat.name,
+    count: allListings.filter(listing => listing.categoryInfo?.name === cat.name || listing.category === cat.name).length
+  }));
+
+  // Get unique locations from Redux state
+  const locations = Array.from(new Set(allListings.map(listing => listing.location)))
     .map(location => ({
-      id: location.toLowerCase().replace(/\s+/g, '-'),
+      id: location, // Use actual location name for filtering
       name: location,
-      count: listingsData.filter(listing => listing.location === location).length
+      count: allListings.filter(listing => listing.location === location).length
     }));
 
-  // Get unique instruments from data
-  const instruments = Array.from(new Set(listingsData.map(listing => listing.instrument).filter(Boolean)))
+  // Get unique instruments from Redux state
+  const instruments = Array.from(new Set(allListings.map(listing => listing.instrument).filter(Boolean)))
     .map(instrument => ({
-      id: instrument!.toLowerCase().replace(/\s+/g, '-'),
+      id: instrument!, // Use actual instrument name for filtering
       name: instrument!,
-      count: listingsData.filter(listing => listing.instrument === instrument).length
+      count: allListings.filter(listing => listing.instrument === instrument).length
     }));
 
   const experienceLevels = [
-    { id: "baslangic", name: "Başlangıç", count: listingsData.filter(l => l.experience === "Başlangıç").length },
-    { id: "orta", name: "Orta", count: listingsData.filter(l => l.experience === "Orta").length },
-    { id: "ileri", name: "İleri", count: listingsData.filter(l => l.experience === "İleri").length },
-    { id: "profesyonel", name: "Profesyonel", count: listingsData.filter(l => l.experience === "Profesyonel").length }
+    { id: "Başlangıç", name: "Başlangıç", count: allListings.filter(l => l.experience === "Başlangıç").length },
+    { id: "Orta", name: "Orta", count: allListings.filter(l => l.experience === "Orta").length },
+    { id: "İleri", name: "İleri", count: allListings.filter(l => l.experience === "İleri").length },
+    { id: "Profesyonel", name: "Profesyonel", count: allListings.filter(l => l.experience === "Profesyonel").length }
   ];
 
   const handleCategoryToggle = useCallback((categoryId: string) => {
@@ -137,12 +154,12 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     
     // Set location filter
     if (locationParam) {
-      newFilters.locations = [locationParam.toLowerCase().replace(/\s+/g, '-')];
+      newFilters.locations = [locationParam]; // Use actual location name
     }
     
     // Set instrument filter
     if (instrumentParam) {
-      newFilters.instruments = [instrumentParam.toLowerCase().replace(/\s+/g, '-')];
+      newFilters.instruments = [instrumentParam]; // Use actual instrument name
     }
     
     // Update state
@@ -186,7 +203,7 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
           Kategoriler
         </h4>
         <div className="space-y-2">
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <div key={category.value} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors">
               <div className="flex items-center space-x-2">
                 <Checkbox

@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { getAllListings } from "@/redux/actions/userActions";
 import ListingsHeader from "@/components/listings/ListingsHeader";
 import ListingsFilter from "@/components/listings/ListingsFilter";
 import ListingsGrid from "@/components/listings/ListingsGrid";
@@ -19,6 +21,8 @@ const categorySlugMap: Record<string, string> = {
 
 function ListingsPageContent() {
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+  const { allListings, listingsLoading } = useAppSelector((state) => state.user);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(true);
@@ -28,6 +32,13 @@ function ListingsPageContent() {
     experience: [] as string[],
     instruments: [] as string[]
   });
+
+  // Load listings on component mount
+  useEffect(() => {
+    if (allListings.length === 0) {
+      dispatch(getAllListings({}));
+    }
+  }, [dispatch, allListings.length]);
 
   // Handle URL parameters on page load
   useEffect(() => {
@@ -92,6 +103,8 @@ function ListingsPageContent() {
           {/* Main Content */}
           <div className="flex-1">
             <ListingsGrid
+              listings={allListings}
+              listingsLoading={listingsLoading}
               searchQuery={searchQuery}
               selectedCategories={activeFilters.categories}
               selectedLocations={activeFilters.locations}
@@ -101,7 +114,7 @@ function ListingsPageContent() {
               onClearFilters={clearAllFilters}
             />
             <div className="mt-8">
-              <ListingsPagination />
+              <ListingsPagination totalListings={allListings.length} />
             </div>
           </div>
         </div>

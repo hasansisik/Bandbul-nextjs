@@ -6,9 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter } from "lucide-react";
 import Image from "next/image";
-import { getCategories, listingsData } from "@/lib/listingsData";
+import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
 
 const HeroSection = () => {
+  const dispatch = useAppDispatch();
+  const { allListings, categories } = useAppSelector((state) => state.user);
+  
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedInstrument, setSelectedInstrument] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -20,6 +24,16 @@ const HeroSection = () => {
   const categoryRef = useRef<HTMLDivElement>(null);
   const instrumentRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
+
+  // Load data on component mount
+  useEffect(() => {
+    if (allListings.length === 0) {
+      dispatch(getAllListings({}));
+    }
+    if (categories.length === 0) {
+      dispatch(getAllCategories({}));
+    }
+  }, [dispatch, allListings.length, categories.length]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -41,10 +55,14 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Get filter options from data
-  const categories = getCategories();
-  const instruments = Array.from(new Set(listingsData.map(listing => listing.instrument).filter(Boolean)));
-  const locations = Array.from(new Set(listingsData.map(listing => listing.location)));
+  // Get filter options from Redux state
+  const categoryOptions = categories.map(cat => ({
+    value: cat._id,
+    label: cat.name,
+    count: allListings.filter(listing => listing.category === cat._id).length
+  }));
+  const instruments = Array.from(new Set(allListings.map(listing => listing.instrument).filter(Boolean)));
+  const locations = Array.from(new Set(allListings.map(listing => listing.location)));
 
   const searchOptions = [
     {
@@ -170,7 +188,7 @@ const HeroSection = () => {
                     {showCategoryDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                          {categories.map((category) => (
+                          {categoryOptions.map((category) => (
                             <div
                               key={category.value}
                               onClick={() => {
