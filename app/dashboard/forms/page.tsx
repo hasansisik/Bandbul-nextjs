@@ -197,7 +197,7 @@ export default function FormsPage() {
   return (
     <>
       {/* Header with Sidebar Toggle */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-2">
         <SidebarTrigger className="-ml-1" />
         <Breadcrumb>
           <BreadcrumbList>
