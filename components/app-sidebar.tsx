@@ -36,6 +36,11 @@ const data = {
   },
   navMain: [
     {
+      title: "Anasayfa",
+      url: "/dashboard",
+      icon: Home
+    },
+    {
       title: "Blog",
       url: "/dashboard/blog",
       icon: BookOpen
@@ -59,20 +64,7 @@ const data = {
       title: "Ayarlar",
       url: "/dashboard/ayarlar",
       icon: Settings2,
-      items: [
-        {
-          title: "Genel",
-          url: "/dashboard/ayarlar/genel",
-        },
-        {
-          title: "Bildirimler",
-          url: "/dashboard/ayarlar/bildirimler",
-        },
-        {
-          title: "Güvenlik",
-          url: "/dashboard/ayarlar/guvenlik",
-        },
-      ],
+      
     },
   ],
   navSecondary: [
@@ -129,7 +121,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
