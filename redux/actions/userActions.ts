@@ -42,6 +42,38 @@ export interface EditProfilePayload {
   skills?: string[];
 }
 
+export interface CreateListingPayload {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  image?: string;
+  experience: string;
+  instrument?: string;
+  type?: string;
+}
+
+export interface UpdateListingPayload {
+  title?: string;
+  description?: string;
+  category?: string;
+  location?: string;
+  image?: string;
+  experience?: string;
+  instrument?: string;
+  type?: string;
+  status?: string;
+}
+
+export interface CreateCategoryPayload {
+  name: string;
+}
+
+export interface UpdateCategoryPayload {
+  name?: string;
+  active?: boolean;
+}
+
 export const register = createAsyncThunk(
   "user/register",
   async (payload: RegisterPayload, thunkAPI) => {
@@ -178,6 +210,279 @@ export const editProfile = createAsyncThunk(
       const response = await axios.post(
         `${server}/auth/edit-profile`,
         formData,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+// Listing Actions
+export const createListing = createAsyncThunk(
+  "user/createListing",
+  async (formData: CreateListingPayload, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.post(
+        `${server}/listings`,
+        formData,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const getAllListings = createAsyncThunk(
+  "user/getAllListings",
+  async (params: any = {}, thunkAPI) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${server}/listings${queryString ? `?${queryString}` : ''}`;
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const getUserListings = createAsyncThunk(
+  "user/getUserListings",
+  async (_, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(
+        `${server}/listings/user/me`,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const updateListing = createAsyncThunk(
+  "user/updateListing",
+  async ({ id, formData }: { id: string; formData: UpdateListingPayload }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.put(
+        `${server}/listings/${id}`,
+        formData,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const deleteListing = createAsyncThunk(
+  "user/deleteListing",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.delete(
+        `${server}/listings/${id}`,
+        config
+      );
+      return { id, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const toggleListingStatus = createAsyncThunk(
+  "user/toggleListingStatus",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/listings/${id}/toggle-status`,
+        {},
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+// Category Actions
+export const createCategory = createAsyncThunk(
+  "user/createCategory",
+  async (formData: CreateCategoryPayload, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.post(
+        `${server}/listing-categories`,
+        formData,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const getAllCategories = createAsyncThunk(
+  "user/getAllCategories",
+  async (params: any = {}, thunkAPI) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${server}/listing-categories${queryString ? `?${queryString}` : ''}`;
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const updateCategory = createAsyncThunk(
+  "user/updateCategory",
+  async ({ id, formData }: { id: string; formData: UpdateCategoryPayload }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.put(
+        `${server}/listing-categories/${id}`,
+        formData,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const deleteCategory = createAsyncThunk(
+  "user/deleteCategory",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.delete(
+        `${server}/listing-categories/${id}`,
+        config
+      );
+      return { id, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const toggleCategoryStatus = createAsyncThunk(
+  "user/toggleCategoryStatus",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/listing-categories/${id}/toggle-status`,
+        {},
         config
       );
       return response.data;

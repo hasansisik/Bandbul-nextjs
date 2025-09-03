@@ -9,6 +9,17 @@ import {
   forgotPassword,
   resetPassword,
   editProfile,
+  createListing,
+  getAllListings,
+  getUserListings,
+  updateListing,
+  deleteListing,
+  toggleListingStatus,
+  createCategory,
+  getAllCategories,
+  updateCategory,
+  deleteCategory,
+  toggleCategoryStatus,
 } from "../actions/userActions";
 
 interface UserState {
@@ -18,6 +29,14 @@ interface UserState {
   error: string | null;
   isAuthenticated?: boolean;
   message?: string;
+  listings: any[];
+  allListings: any[];
+  userListings: any[];
+  listingsLoading: boolean;
+  listingsError: string | null;
+  categories: any[];
+  categoriesLoading: boolean;
+  categoriesError: string | null;
 }
 
 const initialState: UserState = {
@@ -25,6 +44,14 @@ const initialState: UserState = {
   user: {},
   loading: false,
   error: null,
+  listings: [],
+  allListings: [],
+  userListings: [],
+  listingsLoading: false,
+  listingsError: null,
+  categories: [],
+  categoriesLoading: false,
+  categoriesError: null,
 };
 
 export const userReducer = createReducer(initialState, (builder) => {
@@ -141,8 +168,168 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.loading = false;
       state.error = action.payload as string;
     })
-    //Get All Users
-
+    // Create Listing
+    .addCase(createListing.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(createListing.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      state.userListings.unshift(action.payload.listing);
+      state.message = action.payload.message;
+    })
+    .addCase(createListing.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Get All Listings
+    .addCase(getAllListings.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(getAllListings.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      state.allListings = action.payload.listings;
+      state.listings = action.payload.listings;
+    })
+    .addCase(getAllListings.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Get User Listings
+    .addCase(getUserListings.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(getUserListings.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      state.userListings = action.payload.listings;
+    })
+    .addCase(getUserListings.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Update Listing
+    .addCase(updateListing.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(updateListing.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      const index = state.userListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (index !== -1) {
+        state.userListings[index] = action.payload.listing;
+      }
+      const allIndex = state.allListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (allIndex !== -1) {
+        state.allListings[allIndex] = action.payload.listing;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(updateListing.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Delete Listing
+    .addCase(deleteListing.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(deleteListing.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      state.userListings = state.userListings.filter(listing => listing._id !== action.payload.id);
+      state.allListings = state.allListings.filter(listing => listing._id !== action.payload.id);
+      state.message = action.payload.message;
+    })
+    .addCase(deleteListing.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Toggle Listing Status
+    .addCase(toggleListingStatus.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(toggleListingStatus.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      const index = state.userListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (index !== -1) {
+        state.userListings[index] = action.payload.listing;
+      }
+      const allIndex = state.allListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (allIndex !== -1) {
+        state.allListings[allIndex] = action.payload.listing;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(toggleListingStatus.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Create Category
+    .addCase(createCategory.pending, (state) => {
+      state.categoriesLoading = true;
+    })
+    .addCase(createCategory.fulfilled, (state, action) => {
+      state.categoriesLoading = false;
+      state.categories.unshift(action.payload.category);
+      state.message = action.payload.message;
+    })
+    .addCase(createCategory.rejected, (state, action) => {
+      state.categoriesLoading = false;
+      state.categoriesError = action.payload as string;
+    })
+    // Get All Categories
+    .addCase(getAllCategories.pending, (state) => {
+      state.categoriesLoading = true;
+    })
+    .addCase(getAllCategories.fulfilled, (state, action) => {
+      state.categoriesLoading = false;
+      state.categories = action.payload.categories;
+    })
+    .addCase(getAllCategories.rejected, (state, action) => {
+      state.categoriesLoading = false;
+      state.categoriesError = action.payload as string;
+    })
+    // Update Category
+    .addCase(updateCategory.pending, (state) => {
+      state.categoriesLoading = true;
+    })
+    .addCase(updateCategory.fulfilled, (state, action) => {
+      state.categoriesLoading = false;
+      const index = state.categories.findIndex(category => category._id === action.payload.category._id);
+      if (index !== -1) {
+        state.categories[index] = action.payload.category;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(updateCategory.rejected, (state, action) => {
+      state.categoriesLoading = false;
+      state.categoriesError = action.payload as string;
+    })
+    // Delete Category
+    .addCase(deleteCategory.pending, (state) => {
+      state.categoriesLoading = true;
+    })
+    .addCase(deleteCategory.fulfilled, (state, action) => {
+      state.categoriesLoading = false;
+      state.categories = state.categories.filter(category => category._id !== action.payload.id);
+      state.message = action.payload.message;
+    })
+    .addCase(deleteCategory.rejected, (state, action) => {
+      state.categoriesLoading = false;
+      state.categoriesError = action.payload as string;
+    })
+    // Toggle Category Status
+    .addCase(toggleCategoryStatus.pending, (state) => {
+      state.categoriesLoading = true;
+    })
+    .addCase(toggleCategoryStatus.fulfilled, (state, action) => {
+      state.categoriesLoading = false;
+      const index = state.categories.findIndex(category => category._id === action.payload.category._id);
+      if (index !== -1) {
+        state.categories[index] = action.payload.category;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(toggleCategoryStatus.rejected, (state, action) => {
+      state.categoriesLoading = false;
+      state.categoriesError = action.payload as string;
+    });
 });
 
 export default userReducer;

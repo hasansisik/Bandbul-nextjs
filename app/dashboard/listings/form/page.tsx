@@ -2,7 +2,16 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { listingsData, ListingItem } from "@/lib/listingsData"
+import { useAppSelector, useAppDispatch } from "@/redux/hook"
+import { 
+  createListing, 
+  updateListing, 
+  deleteListing, 
+  getAllCategories,
+  getAllListings
+} from "@/redux/actions/userActions"
+import { uploadImageToCloudinary } from "@/utils/cloudinary"
+import { toast } from "sonner"
 import { Button } from "../../../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card"
 import { Input } from "../../../../components/ui/input"
@@ -31,8 +40,11 @@ import ListingsCategoryModal from "../../../../components/ListingsCategoryModal"
 function ListingsFormContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const editId = searchParams.get('id')
   const isEditing = !!editId
+  
+  const { categories, categoriesLoading, allListings, listingsLoading } = useAppSelector((state) => state.user)
   
   const [formData, setFormData] = useState({
     title: "",
@@ -40,22 +52,24 @@ function ListingsFormContent() {
     category: "",
     location: "",
     image: "",
-    author: "",
     experience: "",
     instrument: ""
   })
 
   const [loading, setLoading] = useState(false)
-  const [listing, setListing] = useState<ListingItem | null>(null)
-  const [categoriesList, setCategoriesList] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [listing, setListing] = useState<any>(null)
 
+  // Load categories and listings on component mount
   useEffect(() => {
-    // Kategorileri listingsData'dan al
-    const categories = Array.from(new Set(listingsData.map(l => l.category)))
-    setCategoriesList(categories)
+    dispatch(getAllCategories({}))
+    dispatch(getAllListings({}))
+  }, [dispatch])
 
-    if (isEditing && editId) {
-      const foundListing = listingsData.find(l => l.id === parseInt(editId))
+  // Load listing data for editing
+  useEffect(() => {
+    if (isEditing && editId && allListings.length > 0) {
+      const foundListing = allListings.find(l => l._id === editId)
       if (foundListing) {
         setListing(foundListing)
         setFormData({
@@ -64,70 +78,79 @@ function ListingsFormContent() {
           category: foundListing.category,
           location: foundListing.location,
           image: foundListing.image,
-          author: foundListing.author,
           experience: foundListing.experience || "",
           instrument: foundListing.instrument || ""
         })
       }
     }
-  }, [editId, isEditing])
+  }, [editId, isEditing, allListings])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const imageUrl = await uploadImageToCloudinary(file)
+      setFormData(prev => ({ ...prev, image: imageUrl }))
+          } catch (error) {
+        console.error('Image upload error:', error)
+        toast.error('Görsel yükleme başarısız. Lütfen tekrar deneyin.')
+      } finally {
+        setUploading(false)
+      }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     
-    if (isEditing && listing) {
-      // Güncelleme işlemi
-      const updatedListing = {
-        ...listing,
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        location: formData.location,
-        image: formData.image,
-        author: formData.author,
-        experience: formData.experience,
-        instrument: formData.instrument
-      }
-
-      // İlanı güncelle
-      const listingIndex = listingsData.findIndex(l => l.id === listing.id)
-      if (listingIndex !== -1) {
-        listingsData[listingIndex] = updatedListing
-      }
-
-      console.log("Güncellenmiş ilan:", updatedListing)
-      alert("İlan başarıyla güncellendi!")
-    } else {
-      // Yeni ekleme işlemi
-      const newListing = {
-        id: Date.now(),
-        postedDate: "Şimdi",
-        ...formData
-      }
-
-      // Yeni ilanı ekle
-      listingsData.push(newListing)
-
-      console.log("Yeni ilan:", newListing)
-      alert("İlan başarıyla oluşturuldu!")
-    }
-    
-    setLoading(false)
-    router.replace("/dashboard/listings", { scroll: false })
-  }
-
-  const handleDelete = () => {
-    if (listing && confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
-      // İlanı sil
-      const listingIndex = listingsData.findIndex(l => l.id === listing.id)
-      if (listingIndex !== -1) {
-        listingsData.splice(listingIndex, 1)
+    try {
+      if (isEditing && listing) {
+        // Update existing listing
+        await dispatch(updateListing({
+          id: listing._id,
+          formData: {
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            location: formData.location,
+            image: formData.image,
+            experience: formData.experience,
+            instrument: formData.instrument
+          }
+        }))
+                  toast.success("İlan başarıyla güncellendi!")
+      } else {
+        // Create new listing
+        await dispatch(createListing({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          location: formData.location,
+          image: formData.image,
+          experience: formData.experience,
+          instrument: formData.instrument
+        }))
+                  toast.success("İlan başarıyla oluşturuldu!")
       }
       
-      console.log("İlan silindi:", listing.id)
-      alert("İlan silindi!")
       router.replace("/dashboard/listings", { scroll: false })
+    } catch (err) {
+      console.error("Listing operation error:", err)
+              toast.error("Bir hata oluştu. Lütfen tekrar deneyin.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (listing && confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
+      try {
+        await dispatch(deleteListing(listing._id))
+                  toast.success("İlan silindi!")
+        router.replace("/dashboard/listings", { scroll: false })
+      } catch (err) {
+        console.error("Delete listing error:", err)
+                  toast.error("Silme işlemi başarısız. Lütfen tekrar deneyin.")
+      }
     }
   }
 
@@ -198,7 +221,7 @@ function ListingsFormContent() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>İptal</AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogAction
                   onClick={handleDelete}
                   className="bg-destructive text-white hover:bg-destructive/90"
                 >
@@ -260,14 +283,29 @@ function ListingsFormContent() {
               ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                   <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Görsel eklemek için URL girin</p>
+                  <p className="text-gray-600 mb-2">Görsel eklemek için dosya seçin</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file)
+                    }}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <Button 
+                      variant="outline" 
+                      className="cursor-pointer"
+                      disabled={uploading}
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                    >
+                      {uploading ? "Yükleniyor..." : "Görsel Seç"}
+                    </Button>
+                  </label>
                 </div>
               )}
-              <Input
-                placeholder="Görsel URL'si girin..."
-                value={formData.image}
-                onChange={(e) => handleChange("image", e.target.value)}
-              />
             </CardContent>
           </Card>
 
@@ -286,180 +324,61 @@ function ListingsFormContent() {
               />
             </CardContent>
           </Card>
-
-          {/* Düzenleme sırasında sağdaki veriler solda gözüksün */}
-          {isEditing && (
-            <>
-              {/* Genel Ayarlar */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Genel Ayarlar</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* İlan Sahibi */}
-                  <div className="space-y-2">
-                    <Label htmlFor="author" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      İlan Sahibi *
-                    </Label>
-                    <Input
-                      id="author"
-                      value={formData.author}
-                      onChange={(e) => handleChange("author", e.target.value)}
-                      placeholder="Adınız"
-                      required
-                    />
-                  </div>
-
-
-
-                  {/* Kategori */}
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Kategori *</Label>
-                    <div className="flex gap-2">
-                      <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Kategori seçin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categoriesList.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <ListingsCategoryModal
-                        categories={categoriesList}
-                        onCategoriesChange={setCategoriesList}
-                        triggerButton={
-                          <Button variant="outline" size="sm" className="px-3">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Enstrüman */}
-                  <div className="space-y-2">
-                    <Label htmlFor="instrument">Enstrüman</Label>
-                    <Select value={formData.instrument} onValueChange={(value) => handleChange("instrument", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Enstrüman seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {instrumentTypes.map((instrument) => (
-                          <SelectItem key={instrument} value={instrument}>
-                            {instrument}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Deneyim Seviyesi */}
-                  <div className="space-y-2">
-                    <Label htmlFor="experience">Deneyim Seviyesi</Label>
-                    <Select value={formData.experience} onValueChange={(value) => handleChange("experience", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Deneyim seviyesi seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {experienceLevels.map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Konum */}
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Konum *
-                    </Label>
-                    <Input
-                      id="location"
-                      placeholder="Şehir, ilçe..."
-                      value={formData.location}
-                      onChange={(e) => handleChange("location", e.target.value)}
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
         </div>
 
-        {/* Sağ Sidebar - Sadece yeni ekleme sırasında gözüksün */}
-        {!isEditing && (
-          <div className="space-y-6">
-            {/* Yayınla */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Yayınla</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1" disabled={loading} onClick={handleSubmit}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {loading ? "Kaydediliyor..." : "Yayınla"}
-                  </Button>
-                  <Link href="/dashboard/listings">
-                    <Button variant="outline">İptal</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Sağ Sidebar - Her iki modda da aynı */}
+        <div className="space-y-6">
+          {/* Yayınla/Kaydet */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{isEditing ? "Kaydet" : "Yayınla"}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1" disabled={loading} onClick={handleSubmit}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {loading ? "Kaydediliyor..." : (isEditing ? "Güncelle" : "Yayınla")}
+                </Button>
+                <Link href="/dashboard/listings">
+                  <Button variant="outline">İptal</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Genel Ayarlar */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Genel Ayarlar</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* İlan Sahibi */}
-                <div className="space-y-2">
-                  <Label htmlFor="author" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    İlan Sahibi *
-                  </Label>
-                  <Input
-                    id="author"
-                    value={formData.author}
-                    onChange={(e) => handleChange("author", e.target.value)}
-                    placeholder="Adınız"
-                    required
-                  />
-                </div>
-
-
-
-                {/* Kategori */}
-                <div className="space-y-2">
-                  <Label htmlFor="category">Kategori *</Label>
+          {/* Genel Ayarlar */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Genel Ayarlar</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Kategori */}
+              <div className="space-y-2">
+                <Label htmlFor="category">Kategori *</Label>
+                {categoriesLoading ? (
+                  <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
+                ) : (
                   <div className="flex gap-2">
                     <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Kategori seçin" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categoriesList.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
+                        {categories
+                          .filter(cat => cat.active)
+                          .map((category) => (
+                            <SelectItem key={category._id} value={category._id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     
                     <ListingsCategoryModal
-                      categories={categoriesList}
-                      onCategoriesChange={setCategoriesList}
+                      categories={categories.map(cat => cat.name)}
+                      onCategoriesChange={(newCategories) => {
+                        console.log("Categories changed:", newCategories)
+                      }}
                       triggerButton={
                         <Button variant="outline" size="sm" className="px-3">
                           <Plus className="h-4 w-4" />
@@ -467,85 +386,60 @@ function ListingsFormContent() {
                       }
                     />
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Enstrüman */}
-                <div className="space-y-2">
-                  <Label htmlFor="instrument">Enstrüman</Label>
-                  <Select value={formData.instrument} onValueChange={(value) => handleChange("instrument", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Enstrüman seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {instrumentTypes.map((instrument) => (
-                        <SelectItem key={instrument} value={instrument}>
-                          {instrument}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Enstrüman */}
+              <div className="space-y-2">
+                <Label htmlFor="instrument">Enstrüman</Label>
+                <Select value={formData.instrument} onValueChange={(value) => handleChange("instrument", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Enstrüman seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {instrumentTypes.map((instrument) => (
+                      <SelectItem key={instrument} value={instrument}>
+                        {instrument}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Deneyim Seviyesi */}
-                <div className="space-y-2">
-                  <Label htmlFor="experience">Deneyim Seviyesi</Label>
-                  <Select value={formData.experience} onValueChange={(value) => handleChange("experience", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Deneyim seviyesi seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experienceLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Deneyim Seviyesi */}
+              <div className="space-y-2">
+                <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                <Select value={formData.experience} onValueChange={(value) => handleChange("experience", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Deneyim seviyesi seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {experienceLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Konum */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Konum
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+              {/* Konum */}
+              <div className="space-y-2">
+                <Label htmlFor="location" className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Konum *
+                </Label>
                 <Input
+                  id="location"
                   placeholder="Şehir, ilçe..."
                   value={formData.location}
                   onChange={(e) => handleChange("location", e.target.value)}
                   required
                 />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Düzenleme sırasında sağ tarafta sadece yayınla butonu */}
-        {isEditing && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Kaydet</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1" disabled={loading} onClick={handleSubmit}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {loading ? "Kaydediliyor..." : "Güncelle"}
-                  </Button>
-                  <Link href="/dashboard/listings">
-                    <Button variant="outline">İptal</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

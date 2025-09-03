@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAppSelector } from "@/redux/hook"
+import { useAppSelector, useAppDispatch } from "@/redux/hook"
+import { getUserListings, createListing, deleteListing, toggleListingStatus } from "@/redux/actions/userActions"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,7 +32,6 @@ import {
   Share2,
   Bell
 } from "lucide-react"
-import { type ListingItem } from "@/lib/listingsData"
 
 // Default user data structure
 const defaultUser = {
@@ -48,49 +48,6 @@ const defaultUser = {
   skills: ["Müzik"],
   isOnline: false
 }
-
-// Mock user listings - matching ListingItem interface
-const mockListings: ListingItem[] = [
-  {
-    id: 1,
-    title: "Gitar Dersi - Başlangıç Seviyesi",
-    description: "Temel gitar teknikleri ve akorlar öğretilir. Haftada 2 saat.",
-    category: "Ders Veriyorum",
-    location: "İstanbul",
-    image: "/blogexample.jpg",
-    author: "Ahmet Yılmaz",
-    postedDate: "2 saat önce",
-    experience: "İleri",
-    instrument: "Gitar",
-    type: "Ders Veriyorum"
-  },
-  {
-    id: 2,
-    title: "Piyano Dersi - Orta Seviye",
-    description: "Klasik müzik ve modern parçalar üzerine çalışmalar.",
-    category: "Ders Veriyorum",
-    location: "İstanbul",
-    image: "/blogexample.jpg",
-    author: "Ahmet Yılmaz",
-    postedDate: "1 gün önce",
-    experience: "Profesyonel",
-    instrument: "Piyano",
-    type: "Ders Veriyorum"
-  },
-  {
-    id: 3,
-    title: "Rock Grubu için Gitarist Arıyoruz",
-    description: "Deneyimli gitarist arıyoruz. Rock müzik yapmak istiyoruz.",
-    category: "Grup Arıyorum",
-    location: "İstanbul",
-    image: "/blogexample.jpg",
-    author: "Ahmet Yılmaz",
-    postedDate: "3 gün önce",
-    experience: "Orta",
-    instrument: "Gitar",
-    type: "Grup Arıyorum"
-  }
-]
 
 // Available categories and types based on existing data
 const categories = [
@@ -127,8 +84,10 @@ export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   
-  // Get user data from Redux
-  const { user } = useAppSelector((state) => state.user)
+  const dispatch = useAppDispatch()
+  
+  // Get user data and listings from Redux
+  const { user, userListings, listingsLoading } = useAppSelector((state) => state.user)
   
   // Transform Redux user data to component format
   const userData = user ? {
@@ -141,16 +100,13 @@ export function ProfilePage() {
     avatar: user.profile?.picture || null,
     bio: user.profile?.bio || "Henüz bir biyografi eklenmemiş.",
     totalReviews: 0, // Will come from API later
-    totalListings: 0, // Will come from API later
+    totalListings: userListings.length,
     skills: user.profile?.skills || ["Müzik"],
     isOnline: true
   } : defaultUser
   
-  // Initialize listings as empty array (will be loaded from API later)
-  const [listings, setListings] = useState<ListingItem[]>([])
-  
   // New listing form state
-  const [newListing, setNewListing] = useState<Partial<ListingItem>>({
+  const [newListing, setNewListing] = useState({
     title: "",
     description: "",
     category: "",
@@ -158,10 +114,15 @@ export function ProfilePage() {
     experience: "",
     instrument: "",
     type: "",
-    image: "/blogexample.jpg", // Default image
-    author: `${userData.firstName} ${userData.lastName}`,
-    postedDate: "Şimdi"
+    image: "/blogexample.jpg"
   })
+
+  // Load user listings on component mount
+  useEffect(() => {
+    if (user) {
+      dispatch(getUserListings())
+    }
+  }, [dispatch, user])
 
   const handleEditProfile = () => {
     // Navigate to profile editing page
@@ -173,53 +134,63 @@ export function ProfilePage() {
     setIsEditing(false)
   }
 
-  const handleDeleteListing = (listingId: number) => {
-    setListings(listings.filter(listing => listing.id !== listingId))
+  const handleDeleteListing = async (listingId: string) => {
+    try {
+      await dispatch(deleteListing(listingId))
+    } catch (err) {
+      console.error("Delete listing error:", err)
+    }
   }
 
-  const handleToggleListingStatus = (listingId: number) => {
-    // In real app, this would toggle the listing status in the database
-    console.log("Toggle listing status:", listingId)
+  const handleToggleListingStatus = async (listingId: string) => {
+    try {
+      await dispatch(toggleListingStatus(listingId))
+    } catch (err) {
+      console.error("Toggle listing status error:", err)
+    }
   }
 
-  const handleCreateListing = () => {
+  const handleCreateListing = async () => {
     if (!newListing.title || !newListing.description || !newListing.category) {
       alert("Lütfen tüm gerekli alanları doldurun.")
       return
     }
 
-    const listing: ListingItem = {
-      id: Date.now(), // Simple ID generation
-      title: newListing.title!,
-      description: newListing.description!,
-      category: newListing.category!,
-      location: newListing.location || userData.location,
-      image: newListing.image || "/blogexample.jpg",
-      author: `${userData.firstName} ${userData.lastName}`,
-      postedDate: "Şimdi",
-      experience: newListing.experience || "Orta",
-      instrument: newListing.instrument || "",
-      type: newListing.type || newListing.category!
-    }
+    try {
+      const listingData = {
+        title: newListing.title,
+        description: newListing.description,
+        category: newListing.category,
+        location: newListing.location || userData.location,
+        image: newListing.image || "/blogexample.jpg",
+        experience: newListing.experience || "Orta",
+        instrument: newListing.instrument || "",
+        type: newListing.type || newListing.category
+      }
 
-    setListings([listing, ...listings])
-    setNewListing({
-      title: "",
-      description: "",
-      category: "",
-      location: "",
-      experience: "",
-      instrument: "",
-      type: "",
-      image: "/blogexample.jpg",
-      author: `${userData.firstName} ${userData.lastName}`,
-      postedDate: "Şimdi"
-    })
-    setShowCreateForm(false)
+      await dispatch(createListing(listingData))
+      
+      // Reset form
+      setNewListing({
+        title: "",
+        description: "",
+        category: "",
+        location: "",
+        experience: "",
+        instrument: "",
+        type: "",
+        image: "/blogexample.jpg"
+      })
+      setShowCreateForm(false)
+    } catch (err) {
+      console.error("Create listing error:", err)
+    }
   }
 
-  const getStatusBadge = (listing: ListingItem) => {
-    // For now, all listings are considered active
+  const getStatusBadge = (listing: any) => {
+    if (listing.status === 'inactive') {
+      return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Pasif</Badge>
+    }
     return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aktif</Badge>
   }
 
@@ -253,7 +224,6 @@ export function ProfilePage() {
                   {userData.firstName} {userData.lastName}
                 </h1>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-
                   <span>•</span>
                   <span>{userData.location}</span>
                 </div>
@@ -302,8 +272,6 @@ export function ProfilePage() {
                   </div>
                   <span className="font-semibold text-card-foreground">{userData.totalListings}</span>
                 </div>
-
-
               </div>
             </div>
 
@@ -330,7 +298,6 @@ export function ProfilePage() {
 
             {/* Listings Section */}
             <div className="space-y-6">
-
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
                 <Button onClick={() => setShowCreateForm(!showCreateForm)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -338,6 +305,7 @@ export function ProfilePage() {
                   Yeni İlan Oluştur
                 </Button>
               </div>
+              
               {/* Create Listing Form */}
               {showCreateForm && (
                 <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
@@ -452,102 +420,105 @@ export function ProfilePage() {
                   </div>
                 </div>
               )}
+              
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {listings.map((listing) => (
-                  <div key={listing.id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-                    <div className="relative">
-                      <img 
-                        src={listing.image} 
-                        alt={listing.title}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-background/90 text-foreground border-0 shadow-sm">
-                          {listing.category}
-                        </Badge>
-                      </div>
-                      <div className="absolute top-3 right-3">
-                        {getStatusBadge(listing)}
-                      </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-muted-foreground transition-colors">
-                        {listing.title}
-                      </h3>
-                      <div className="flex items-center text-sm text-muted-foreground mb-3">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {listing.location}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {listing.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {listing.experience}
+                {listingsLoading ? (
+                  <div className="col-span-full text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-2 text-muted-foreground">İlanlar yükleniyor...</p>
+                  </div>
+                ) : userListings.length > 0 ? (
+                  userListings.map((listing) => (
+                    <div key={listing._id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+                      <div className="relative">
+                        <img 
+                          src={listing.image} 
+                          alt={listing.title}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <Badge className="bg-background/90 text-foreground border-0 shadow-sm">
+                            {listing.category}
                           </Badge>
-                          {listing.instrument && (
-                            <Badge variant="secondary" className="text-xs">
-                              {listing.instrument}
-                            </Badge>
-                          )}
                         </div>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {listing.postedDate}
+                        <div className="absolute top-3 right-3">
+                          {getStatusBadge(listing)}
                         </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
                       </div>
+                      <div className="p-5">
+                        <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-muted-foreground transition-colors">
+                          {listing.title}
+                        </h3>
+                        <div className="flex items-center text-sm text-muted-foreground mb-3">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {listing.location}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                          {listing.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {listing.experience}
+                            </Badge>
+                            {listing.instrument && (
+                              <Badge variant="secondary" className="text-xs">
+                                {listing.instrument}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('tr-TR') : 'Yeni'}
+                          </div>
+                        </div>
 
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => handleToggleListingStatus(listing.id)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Düzenle
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {/* View functionality */}}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
-                          onClick={() => handleDeleteListing(listing.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleToggleListingStatus(listing._id)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {/* View functionality */}}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
+                            onClick={() => handleDeleteListing(listing._id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-span-full bg-card rounded-xl p-12 text-center border border-border shadow-sm">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-card-foreground mb-2">Henüz hiç ilanınız yok</h3>
+                    <p className="text-muted-foreground mb-6">İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun.</p>
+                    <Button onClick={() => setShowCreateForm(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                      <Plus className="w-4 h-4 mr-2" />
+                      İlk İlanınızı Oluşturun
+                    </Button>
                   </div>
-                ))}
+                )}
               </div>
-
-              {listings.length === 0 && (
-                <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Briefcase className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-card-foreground mb-2">Henüz hiç ilanınız yok</h3>
-                  <p className="text-muted-foreground mb-6">İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun.</p>
-                  <Button onClick={() => setShowCreateForm(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <Plus className="w-4 h-4 mr-2" />
-                    İlk İlanınızı Oluşturun
-                  </Button>
-                </div>
-              )}
-
-
-
             </div>
           </div>
         </div>

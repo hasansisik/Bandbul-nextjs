@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useAppSelector } from "@/redux/hook"
 import {
   BookOpen,
   FileText,
@@ -28,77 +29,79 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Anasayfa",
-      url: "/dashboard",
-      icon: Home
-    },
-    {
-      title: "Blog",
-      url: "/dashboard/blog",
-      icon: BookOpen
-    },
-    {
-      title: "İlanlar",
-      url: "/dashboard/listings",
-      icon: Store
-    },
-    {
-      title: "İletişim Formları",
-      url: "/dashboard/forms",
-      icon: Send,
-    },
-    {
-      title: "Kullanıcılar",
-      url: "/dashboard/users",
-      icon: Users,
-    },
-    {
-      title: "Ayarlar",
-      url: "/dashboard/ayarlar",
-      icon: Settings2,
-      
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Destek",
-      url: "/dashboard/destek",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Geri Bildirim",
-      url: "/dashboard/geri-bildirim",
-      icon: Send,
-    },
-  ],
-  projects: [
-    {
-      name: "Blog Yönetimi",
-      url: "/dashboard/blog",
-      icon: BookOpen,
-    },
-    {
-      name: "İlan Yönetimi",
-      url: "/dashboard/listings",
-      icon: Store,
-    },
-    {
-      name: "Kullanıcı Yönetimi",
-      url: "/dashboard/users",
-      icon: Users,
-    },
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAppSelector((state) => state.user)
+
+  const data = {
+    user: {
+      name: user?.name || user?.username || "Kullanıcı",
+      email: user?.email || "kullanici@example.com",
+      avatar: user?.profile?.picture || "/avatars/shadcn.jpg",
+    },
+    navMain: [
+      {
+        title: "Anasayfa",
+        url: "/dashboard",
+        icon: Home
+      },
+      {
+        title: "Blog",
+        url: "/dashboard/blog",
+        icon: BookOpen
+      },
+      {
+        title: "İlanlar",
+        url: "/dashboard/listings",
+        icon: Store
+      },
+      {
+        title: "İletişim Formları",
+        url: "/dashboard/forms",
+        icon: Send,
+      },
+      {
+        title: "Kullanıcılar",
+        url: "/dashboard/users",
+        icon: Users,
+      },
+      {
+        title: "Ayarlar",
+        url: "/dashboard/ayarlar",
+        icon: Settings2,
+        
+      },
+    ],
+    navSecondary: [
+      {
+        title: "Destek",
+        url: "/dashboard/destek",
+        icon: LifeBuoy,
+      },
+      {
+        title: "Geri Bildirim",
+        url: "/dashboard/geri-bildirim",
+        icon: Send,
+      },
+    ],
+    projects: [
+      {
+        name: "Blog Yönetimi",
+        url: "/dashboard/blog",
+        icon: BookOpen,
+      },
+      {
+        name: "İlan Yönetimi",
+        url: "/dashboard/listings",
+        icon: Store,
+      },
+      {
+        name: "Kullanıcı Yönetimi",
+        url: "/dashboard/users",
+        icon: Users,
+      },
+    ],
+  }
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>

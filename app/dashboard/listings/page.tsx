@@ -1,7 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { listingsData, ListingItem } from "@/lib/listingsData"
+import { useState, useEffect } from "react"
+import { useAppSelector, useAppDispatch } from "@/redux/hook"
+import { 
+  getAllListings, 
+  deleteListing, 
+  getAllCategories 
+} from "@/redux/actions/userActions"
+import { toast } from "sonner"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
@@ -25,17 +31,42 @@ import { DataTable } from "../../../components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 
 export default function ListingsPage() {
-  const [listings, setListings] = useState<ListingItem[]>(listingsData)
+  const dispatch = useAppDispatch()
+  const { allListings, listingsLoading, categories, categoriesLoading } = useAppSelector((state) => state.user)
 
-  const handleDelete = (id: number) => {
-    setListings(listings.filter(listing => listing.id !== id))
+  // Load listings and categories on component mount
+  useEffect(() => {
+    dispatch(getAllListings({}))
+    dispatch(getAllCategories({}))
+  }, [dispatch])
+
+  const handleDelete = async (id: string) => {
+    try {
+      await dispatch(deleteListing(id))
+      // Refresh listings after deletion
+      dispatch(getAllListings({}))
+      toast.success("İlan başarıyla silindi.")
+    } catch (err) {
+      console.error("Delete listing error:", err)
+      toast.error("İlan silinirken bir hata oluştu.")
+    }
   }
 
   const formatDate = (dateString: string) => {
-    return dateString
+    if (!dateString) return "Yeni"
+    try {
+      return new Date(dateString).toLocaleDateString('tr-TR')
+    } catch {
+      return dateString
+    }
   }
 
-  const columns: ColumnDef<ListingItem>[] = [
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat._id === categoryId)
+    return category ? category.name : "Bilinmeyen Kategori"
+  }
+
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: "image",
       header: "Görsel",
@@ -72,14 +103,25 @@ export default function ListingsPage() {
       },
     },
     {
-      accessorKey: "author",
+      accessorKey: "authorInfo",
       header: "İlan Sahibi",
-      cell: ({ row }) => <span className="text-sm font-medium">{row.getValue("author")}</span>,
+      cell: ({ row }) => {
+        const listing = row.original
+        const author = listing.authorInfo
+        if (author) {
+          return <span className="text-sm font-medium">{author.name} {author.surname}</span>
+        }
+        return <span className="text-sm text-muted-foreground">Bilinmiyor</span>
+      },
     },
     {
       accessorKey: "category",
       header: "Kategori",
-      cell: ({ row }) => <Badge variant="secondary" className="text-xs font-medium">{row.getValue("category")}</Badge>,
+      cell: ({ row }) => {
+        const listing = row.original
+        const categoryName = getCategoryName(listing.category)
+        return <Badge variant="secondary" className="text-xs font-medium">{categoryName}</Badge>
+      },
     },
     {
       accessorKey: "location",
@@ -105,9 +147,20 @@ export default function ListingsPage() {
       },
     },
     {
-      accessorKey: "postedDate",
+      accessorKey: "status",
+      header: "Durum",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
+        const variant = status === "active" ? "default" : "secondary"
+        const label = status === "active" ? "Aktif" : "Pasif"
+        
+        return <Badge variant={variant} className="text-xs">{label}</Badge>
+      },
+    },
+    {
+      accessorKey: "createdAt",
       header: "Tarih",
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.getValue("postedDate"))}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.getValue("createdAt"))}</span>,
     },
     {
       id: "actions",
@@ -116,7 +169,7 @@ export default function ListingsPage() {
         const listing = row.original
         return (
           <div className="flex gap-2">
-            <Link href={`/dashboard/listings/form?id=${listing.id}`}>
+            <Link href={`/dashboard/listings/form?id=${listing._id}`}>
               <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
                 <Edit className="h-3 w-3" />
               </Button>
@@ -141,7 +194,7 @@ export default function ListingsPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>İptal</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(listing.id)}
+                    onClick={() => handleDelete(listing._id)}
                     className="bg-destructive text-white hover:bg-destructive/90"
                   >
                     Sil
@@ -181,15 +234,10 @@ export default function ListingsPage() {
         </div>
         <div className="flex gap-2">
           <ListingsCategoryModal
-            categories={Array.from(new Set(listings.map(l => l.category)))}
+            categories={categories.map(cat => cat.name)}
             onCategoriesChange={(newCategories) => {
-              // Kategorileri güncelle
-              setListings(prev => prev.map(listing => {
-                if (!newCategories.includes(listing.category)) {
-                  return { ...listing, category: newCategories[0] || "Diğer" }
-                }
-                return listing
-              }))
+              // This is now handled by Redux, but keeping for compatibility
+              console.log("Categories changed:", newCategories)
             }}
           />
           
@@ -204,7 +252,23 @@ export default function ListingsPage() {
 
       {/* Listings Table */}
       <div className="space-y-4">
-        <DataTable columns={columns} data={listings} />
+        {listingsLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">İlanlar yükleniyor...</p>
+          </div>
+        ) : allListings.length > 0 ? (
+          <DataTable columns={columns} data={allListings} />
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Music className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Henüz hiç ilan yok</h3>
+            <p className="text-muted-foreground mb-4">İlk ilanınızı oluşturarak başlayın</p>
+            
+          </div>
+        )}
       </div>
     </div>
   )
