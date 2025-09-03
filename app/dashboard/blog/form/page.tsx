@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { useSearchParams, useRouter } from "next/navigation"
 import { blogPosts, BlogPost } from "@/lib/blogData"
@@ -38,7 +38,7 @@ import {
 } from "../../../../components/ui/alert-dialog"
 import CategoryManagementModal from "../../../../components/CategoryManagementModal"
 
-export default function BlogFormPage() {
+function BlogFormPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const editId = searchParams.get('id')
@@ -179,10 +179,8 @@ export default function BlogFormPage() {
     }
   }
 
-
-
   return (
-          <div className="space-y-6">
+    <div className="space-y-6">
       {/* Header with Sidebar Toggle and Breadcrumb */}
       <div className="flex items-center gap-4 mb-6 mt-2">
         <SidebarTrigger className="-ml-1" />
@@ -219,34 +217,34 @@ export default function BlogFormPage() {
           </p>
         </div>
         {isEditing && (
-                  <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button 
-              variant="destructive" 
-              className="flex items-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Sil
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Blog Yazısını Sil</AlertDialogTitle>
-              <AlertDialogDescription>
-                "{post?.title}" başlıklı blog yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>İptal</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDelete}
-                className="bg-destructive text-white hover:bg-destructive/90"
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                className="flex items-center gap-2"
               >
+                <Trash2 className="h-4 w-4" />
                 Sil
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Blog Yazısını Sil</AlertDialogTitle>
+                <AlertDialogDescription>
+                  "{post?.title}" başlıklı blog yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>İptal</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDelete}
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                >
+                  Sil
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
@@ -371,11 +369,11 @@ export default function BlogFormPage() {
                       <SelectValue placeholder="Kategori seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                                          {categoriesList.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
+                      {categoriesList.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   
@@ -462,5 +460,13 @@ export default function BlogFormPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BlogFormPage() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <BlogFormPageContent />
+    </Suspense>
   )
 }

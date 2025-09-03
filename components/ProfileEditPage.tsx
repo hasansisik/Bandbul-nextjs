@@ -10,7 +10,20 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Save, X, Plus, Upload, User } from "lucide-react"
 
 // Mock user data - in real app this would come from authentication/API
-const mockUser = {
+interface UserData {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  joinDate: string
+  location: string
+  bio: string
+  skills: string[]
+  avatar: string | null
+}
+
+const mockUser: UserData = {
   id: 1,
   firstName: "Ahmet",
   lastName: "Yılmaz",
@@ -24,7 +37,7 @@ const mockUser = {
 }
 
 export function ProfileEditPage() {
-  const [userData, setUserData] = useState(mockUser)
+  const [userData, setUserData] = useState<UserData>(mockUser)
   const [newSkill, setNewSkill] = useState("")
 
   const handleSave = () => {

@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
 
-import { priorities, statuses } from "@/lib/data"
-
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
 }

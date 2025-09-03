@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { listingsData, ListingItem } from "@/lib/listingsData"
 import { Button } from "../../../../components/ui/button"
@@ -28,7 +28,7 @@ import {
 } from "../../../../components/ui/alert-dialog"
 import ListingsCategoryModal from "../../../../components/ListingsCategoryModal"
 
-export default function ListingsFormPage() {
+function ListingsFormContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const editId = searchParams.get('id')
@@ -548,5 +548,13 @@ export default function ListingsFormPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ListingsFormPage() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <ListingsFormContent />
+    </Suspense>
   )
 }

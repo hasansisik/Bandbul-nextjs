@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ListingsHeader from "@/components/listings/ListingsHeader";
 import ListingsFilter from "@/components/listings/ListingsFilter";
@@ -17,7 +17,7 @@ const categorySlugMap: Record<string, string> = {
   'studyo-kiraliyorum': 'Stüdyo Kiralıyorum'
 };
 
-export default function ListingsPage() {
+function ListingsPageContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -107,5 +107,13 @@ export default function ListingsPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <ListingsPageContent />
+    </Suspense>
   );
 }
