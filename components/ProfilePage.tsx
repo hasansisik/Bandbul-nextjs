@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAppSelector } from "@/redux/hook"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,21 +33,20 @@ import {
 } from "lucide-react"
 import { type ListingItem } from "@/lib/listingsData"
 
-// Mock user data - in real app this would come from authentication/API
-const mockUser = {
-  id: 1,
-  firstName: "Ahmet",
-  lastName: "Yılmaz",
-  email: "ahmet.yilmaz@email.com",
-  phone: "+90 555 123 45 67",
-  joinDate: "2024-01-15",
-  location: "İstanbul, Türkiye",
-  avatar: null, // Will be updated when user uploads profile picture
-  bio: "Profesyonel müzik öğretmeni ve gitarist. 10+ yıllık deneyimle klasik ve modern müzik eğitimi veriyorum.",
-  totalReviews: 127,
-  totalListings: 3,
-  skills: ["Gitar", "Piyano", "Müzik Teorisi", "Kompozisyon"],
-  isOnline: true
+// Default user data structure
+const defaultUser = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  joinDate: "",
+  location: "Türkiye",
+  avatar: null,
+  bio: "Henüz bir biyografi eklenmemiş.",
+  totalReviews: 0,
+  totalListings: 0,
+  skills: ["Müzik"],
+  isOnline: false
 }
 
 // Mock user listings - matching ListingItem interface
@@ -125,9 +125,29 @@ const instruments = [
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
-  const [userData, setUserData] = useState(mockUser)
-  const [listings, setListings] = useState(mockListings)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  
+  // Get user data from Redux
+  const { user } = useAppSelector((state) => state.user)
+  
+  // Transform Redux user data to component format
+  const userData = user ? {
+    firstName: user.name || "",
+    lastName: user.surname || "",
+    email: user.email || "",
+    phone: user.profile?.phoneNumber || "",
+    joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : "",
+    location: user.address?.city || "Türkiye",
+    avatar: user.profile?.picture || null,
+    bio: user.profile?.bio || "Henüz bir biyografi eklenmemiş.",
+    totalReviews: 0, // Will come from API later
+    totalListings: 0, // Will come from API later
+    skills: user.profile?.skills || ["Müzik"],
+    isOnline: true
+  } : defaultUser
+  
+  // Initialize listings as empty array (will be loaded from API later)
+  const [listings, setListings] = useState<ListingItem[]>([])
   
   // New listing form state
   const [newListing, setNewListing] = useState<Partial<ListingItem>>({
@@ -291,7 +311,7 @@ export function ProfilePage() {
             <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
               <h3 className="font-semibold text-card-foreground mb-4">Yetenekler</h3>
               <div className="flex flex-wrap gap-2">
-                {userData.skills.map((skill, index) => (
+                {userData.skills.map((skill: string, index: number) => (
                   <Badge key={index} variant="secondary" className="text-xs">
                     {skill}
                   </Badge>

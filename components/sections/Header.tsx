@@ -8,11 +8,16 @@ import { useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
+import { useAppSelector, useAppDispatch } from "@/redux/hook";
+import { logout } from "@/redux/actions/userActions";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAppSelector((state) => state.user);
 
   const mainMenuItems = [
     { name: "Anasayfa", href: "/" },
@@ -30,12 +35,13 @@ const Header = () => {
     { name: "Stüdyo Kiralıyorum", href: "/ilanlar?category=studyo-kiraliyorum" }
   ];
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout());
+      router.push("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   const handleSearch = () => {
@@ -129,7 +135,7 @@ const Header = () => {
               <div className="hidden md:flex items-center space-x-4">
                 <ThemeToggle />
                 
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <>
                     <Link href="/bildirimler">
                       <Button variant="ghost" size="sm" className="hover:bg-accent">
@@ -149,15 +155,22 @@ const Header = () => {
                         <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                       </div>
                     </Link>
+                    <Button variant="outline" size="sm" onClick={handleLogout} className="border-border hover:bg-accent">
+                      Çıkış Yap
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" size="sm" className="border-border hover:bg-accent" onClick={handleLogin}>
-                      Giriş Yap
-                    </Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90">
-                      Kayıt Ol
-                    </Button>
+                    <Link href="/giris">
+                      <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                        Giriş Yap
+                      </Button>
+                    </Link>
+                    <Link href="/kayitol">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90">
+                        Kayıt Ol
+                      </Button>
+                    </Link>
                   </>
                 )}
               </div>
@@ -267,13 +280,24 @@ const Header = () => {
                 </div>
               </div>
 
-              {!isLoggedIn && (
+              {!isAuthenticated && (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-border/50">
-                  <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent" onClick={handleLogin}>
-                    Giriş Yap
-                  </Button>
-                  <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
-                    Kayıt Ol
+                  <Link href="/giris">
+                    <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent">
+                      Giriş Yap
+                    </Button>
+                  </Link>
+                  <Link href="/kayitol">
+                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
+                      Kayıt Ol
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              {isAuthenticated && (
+                <div className="flex flex-col space-y-2 pt-4 border-t border-border/50">
+                  <Button variant="outline" size="sm" onClick={handleLogout} className="w-full border-border hover:bg-accent">
+                    Çıkış Yap
                   </Button>
                 </div>
               )}

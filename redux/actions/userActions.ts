@@ -29,11 +29,17 @@ export interface EditProfilePayload {
   name: string;
   email: string;
   password: string;
-  address?: string;
-  jobTitle?: string;
-  company: string; 
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
   phoneNumber?: string;
   picture?: string;
+  bio?: string;
+  skills?: string[];
 }
 
 export const register = createAsyncThunk(

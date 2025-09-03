@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAppDispatch, useAppSelector } from "@/redux/hook"
+import { editProfile } from "@/redux/actions/userActions"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,41 +12,85 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Save, X, Plus, Upload, User } from "lucide-react"
 
-// Mock user data - in real app this would come from authentication/API
+// User data interface for editing
 interface UserData {
-  id: number
   firstName: string
   lastName: string
   email: string
   phone: string
-  joinDate: string
   location: string
   bio: string
   skills: string[]
   avatar: string | null
 }
 
-const mockUser: UserData = {
-  id: 1,
-  firstName: "Ahmet",
-  lastName: "Yılmaz",
-  email: "ahmet.yilmaz@email.com",
-  phone: "+90 555 123 45 67",
-  joinDate: "2024-01-15",
-  location: "İstanbul, Türkiye",
-  bio: "Profesyonel müzik öğretmeni ve gitarist. 10+ yıllık deneyimle klasik ve modern müzik eğitimi veriyorum.",
-  skills: ["Gitar", "Piyano", "Müzik Teorisi", "Kompozisyon"],
-  avatar: null // Will store uploaded image URL
-}
-
 export function ProfileEditPage() {
-  const [userData, setUserData] = useState<UserData>(mockUser)
   const [newSkill, setNewSkill] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { user, loading } = useAppSelector((state) => state.user)
+  
+  // Transform Redux user data to component format
+  const [userData, setUserData] = useState<UserData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    location: "",
+    bio: "",
+    skills: [],
+    avatar: null
+  })
+  
+  // Initialize userData when user data is available
+  useEffect(() => {
+    if (user) {
+      setUserData({
+        firstName: user.name || "",
+        lastName: user.surname || "",
+        email: user.email || "",
+        phone: user.profile?.phoneNumber || "",
+        location: user.address?.city || "Türkiye",
+        bio: user.profile?.bio || "",
+        skills: user.profile?.skills || [],
+        avatar: user.profile?.picture || null
+      })
+    }
+  }, [user])
 
-  const handleSave = () => {
-    // In real app, this would save to API
-    alert("Profil başarıyla güncellendi!")
-    window.location.href = '/profil'
+  const handleSave = async () => {
+    if (!user) return
+    
+    setIsLoading(true)
+    
+    try {
+      const result = await dispatch(editProfile({
+        name: userData.firstName,
+        email: userData.email,
+        password: "", // Not changing password
+        address: {
+          city: userData.location,
+          state: user.address?.state || "",
+          street: user.address?.street || "",
+          postalCode: user.address?.postalCode || "",
+          country: user.address?.country || "Turkey"
+        },
+        phoneNumber: userData.phone,
+        picture: userData.avatar || undefined,
+        bio: userData.bio,
+        skills: userData.skills
+      }))
+      
+      if (editProfile.fulfilled.match(result)) {
+        router.push('/profil')
+      }
+    } catch (err) {
+      console.error("Profile update error:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,9 +149,13 @@ export function ProfileEditPage() {
                 <p className="text-muted-foreground">Kişisel bilgilerinizi ve yeteneklerinizi güncelleyin</p>
               </div>
             </div>
-            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
               <Save className="w-4 h-4 mr-2" />
-              Kaydet
+              {isLoading ? "Kaydediliyor..." : "Kaydet"}
             </Button>
           </div>
         </div>
