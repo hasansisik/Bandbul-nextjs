@@ -79,8 +79,7 @@ export function RegistrationForm({
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   <a href="/kvkk" className="underline underline-offset-4 hover:text-primary">
-                    KVKK Aydınlatma Metni
-                  </a>'ni okudum ve kabul ediyorum.
+                    KVKK Metni</a>'ni okudum ve kabul ediyorum.
                 </Label>
               </div>
               

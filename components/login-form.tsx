@@ -33,7 +33,7 @@ export function LoginForm({
                 <div className="flex items-center">
                   <Label htmlFor="password">Parola</Label>
                   <a
-                    href="#"
+                    href="/sifremi-unuttum"
                     className="ml-auto text-sm underline-offset-2 hover:underline"
                   >
                     Parolanızı mı unuttunuz?
@@ -88,9 +88,9 @@ export function LoginForm({
           </form>
           <div className="bg-muted relative hidden md:block">
             <img
-              src="/placeholder.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              src="/hero.jpg"
+              alt="Hero Image"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
         </CardContent>
