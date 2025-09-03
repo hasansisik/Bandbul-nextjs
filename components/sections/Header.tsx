@@ -149,8 +149,16 @@ const Header = () => {
                     </Link>
                     <Link href="/profil">
                       <div className="relative">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors">
-                          <User className="h-4 w-4 text-primary" />
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors overflow-hidden">
+                          {user?.profile?.picture ? (
+                            <img 
+                              src={user.profile.picture} 
+                              alt="Profile" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-4 w-4 text-primary" />
+                          )}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                       </div>

@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { editProfile } from "@/redux/actions/userActions"
+import { editProfile, loadUser } from "@/redux/actions/userActions"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Save, X, Plus, Upload, User } from "lucide-react"
+import { ArrowLeft, Save, X, Plus, Upload, User, Loader2 } from "lucide-react"
+import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
 // User data interface for editing
 interface UserData {
@@ -84,6 +84,8 @@ export function ProfileEditPage() {
       }))
       
       if (editProfile.fulfilled.match(result)) {
+        // Reload user data to get updated information
+        await dispatch(loadUser())
         router.push('/profil')
       }
     } catch (err) {
@@ -93,15 +95,22 @@ export function ProfileEditPage() {
     }
   }
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploading, setIsUploading] = useState(false)
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // In real app, this would upload to server and get URL
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setUserData({...userData, avatar: e.target?.result as string})
+      setIsUploading(true)
+      try {
+        // Upload to Cloudinary
+        const imageUrl = await uploadImageToCloudinary(file)
+        setUserData({...userData, avatar: imageUrl})
+      } catch (error) {
+        console.error('Image upload error:', error)
+        alert('Resim yüklenirken bir hata oluştu. Lütfen tekrar deneyin.')
+      } finally {
+        setIsUploading(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -169,7 +178,11 @@ export function ProfileEditPage() {
             <div className="flex items-center space-x-6">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  {userData.avatar ? (
+                  {isUploading ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : userData.avatar ? (
                     <img 
                       src={userData.avatar} 
                       alt="Profile" 
@@ -195,10 +208,15 @@ export function ProfileEditPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => document.getElementById('avatar')?.click()}
+                    disabled={isUploading}
                     className="flex items-center gap-2"
                   >
-                    <Upload className="w-4 h-4" />
-                    Resim Seç
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {isUploading ? "Yükleniyor..." : "Resim Seç"}
                   </Button>
                   {userData.avatar && (
                     <Button 
