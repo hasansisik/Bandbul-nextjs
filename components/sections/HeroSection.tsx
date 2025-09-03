@@ -119,7 +119,7 @@ const HeroSection = () => {
       {/* Background with padding only */}
       <div className="container mx-auto relative z-10 rounded-3xl overflow-visible h-full">
         {/* Background Image */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 rounded-3xl overflow-hidden">
           <Image
             src="/hero.jpg"
             alt="Hero Background"
