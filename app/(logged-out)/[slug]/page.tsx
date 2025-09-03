@@ -10,7 +10,8 @@ import {
   Clock, 
   User, 
   Share2,
-  Tag
+  Tag,
+  ChevronRight
 } from "lucide-react";
 import { getPostBySlug, getRecentPosts, BlogPost } from "@/lib/blogData";
 import { notFound } from "next/navigation";
@@ -52,35 +53,29 @@ export default function BlogDetailPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-6">
-        {/* Back Button */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="text-muted-foreground hover:text-foreground text-lg px-6 py-3"
+      <div className="container mx-auto px-4 py-5">
+        {/* Modern Breadcrumb */}
+        <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-5">
+          <span 
+            onClick={() => router.push('/blog')} 
+            className="hover:text-foreground cursor-pointer transition-colors duration-200 hover:underline"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Geri Dön
-          </Button>
-        </div>
+            Blog
+          </span>
+          <ChevronRight className="h-4 w-4" />
+          <span 
+            onClick={() => router.push(`/blog/kategori/${post.categorySlug}`)} 
+            className="hover:text-foreground cursor-pointer transition-colors duration-200 hover:underline"
+          >
+            {post.category}
+          </span>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground font-semibold truncate max-w-xs">{post.title}</span>
+        </nav>
 
         <div className="max-w-12xl mx-auto">
-          {/* Article Header */}
-          <article className="mb-16">
-            {/* Category and Featured Badge */}
-            <div className="flex items-center gap-3 mb-6">
-              <Link href={`/blog/kategori/${post.categorySlug}`}>
-                <Badge variant="outline" className="text-sm border-border font-medium px-4 py-2 hover:bg-accent transition-colors cursor-pointer">
-                  {post.category}
-                </Badge>
-              </Link>
-              {post.featured && (
-                <Badge className="text-sm bg-primary text-primary-foreground font-medium px-4 py-2">
-                  Öne Çıkan
-                </Badge>
-              )}
-            </div>
+                      {/* Article Header */}
+            <article className="mb-16">
 
             {/* Title */}
             <h1 className="text-5xl font-bold text-foreground mb-8 leading-tight">
@@ -90,21 +85,27 @@ export default function BlogDetailPage() {
             {/* Meta Information */}
             <div className="flex flex-wrap items-center gap-8 text-base text-muted-foreground mb-8">
               <div className="flex items-center gap-3">
-                <User className="h-5 w-5" />
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
                 <span className="font-medium">{post.author}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5" />
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
                 <span>{formatDate(post.publishedDate)}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5" />
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
                 <span className="font-medium">{post.readTime}</span>
               </div>
             </div>
 
             {/* Featured Image */}
-            <div className="aspect-[5/2] rounded-2xl overflow-hidden mb-12 shadow-lg">
+            <div className="aspect-[5/2] rounded-3xl overflow-hidden mb-12">
               <img
                 src={post.image}
                 alt={post.title}
@@ -113,14 +114,22 @@ export default function BlogDetailPage() {
             </div>
 
             {/* Excerpt */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl p-8 mb-12 border border-border/50 shadow-sm">
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-8 mb-12">
+              <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <div className="w-2 h-8 bg-primary rounded-full"></div>
+                Özet
+              </h2>
               <p className="text-xl text-muted-foreground leading-relaxed italic">
                 {post.excerpt}
               </p>
             </div>
 
             {/* Content */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl p-12 border border-border/50 shadow-sm">
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-12">
+              <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
+                <div className="w-2 h-8 bg-primary rounded-full"></div>
+                İçerik
+              </h2>
               <div 
                 className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-h2:text-3xl prose-h2:mb-6 prose-h2:mt-12 prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6 prose-ul:text-muted-foreground prose-li:mb-2 dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: post.content }}
@@ -129,14 +138,16 @@ export default function BlogDetailPage() {
 
             {/* Tags */}
             {post.tags.length > 0 && (
-              <div className="mt-12 pt-12 border-t border-border/50">
+              <div className="mt-12 pt-12 border-t border-border/30">
                 <div className="flex items-center gap-3 mb-6">
-                  <Tag className="h-5 w-5 text-muted-foreground" />
+                  <div className="p-2 bg-primary/10 rounded-full">
+                    <Tag className="h-5 w-5 text-primary" />
+                  </div>
                   <span className="text-lg font-semibold text-foreground">Etiketler:</span>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {post.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-sm border-border px-4 py-2">
+                    <Badge key={index} variant="outline" className="text-sm border-primary/20 px-4 py-2 hover:bg-primary/10 transition-colors">
                       {tag}
                     </Badge>
                   ))}
@@ -145,11 +156,11 @@ export default function BlogDetailPage() {
             )}
 
             {/* Share Button */}
-            <div className="mt-12 pt-12 border-t border-border/50">
+            <div className="mt-12 pt-12 border-t border-border/30">
               <Button
                 onClick={handleShare}
                 variant="outline"
-                className="border-border hover:bg-accent px-8 py-3 text-lg rounded-xl"
+                className="border-primary/20 hover:bg-primary/10 px-8 py-3 text-lg rounded-2xl transition-all duration-200 hover:scale-105"
               >
                 <Share2 className="h-5 w-5 mr-3" />
                 Paylaş
@@ -159,15 +170,18 @@ export default function BlogDetailPage() {
 
           {/* Related Posts */}
           {recentPosts.length > 0 && (
-            <section className="border-t border-border/50 pt-16">
+            <section className="border-t border-border/30 pt-16">
               <div className="mb-12">
-                <h2 className="text-3xl font-bold text-foreground mb-4">Benzer Yazılar</h2>
+                <h2 className="text-3xl font-bold text-foreground mb-4 flex items-center gap-3">
+                  <div className="w-2 h-8 bg-primary rounded-full"></div>
+                  Benzer Yazılar
+                </h2>
                 <p className="text-lg text-muted-foreground">Bu yazıyı beğendiyseniz, aşağıdaki yazılar da ilginizi çekebilir.</p>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {recentPosts.map((relatedPost) => (
-                  <article key={relatedPost.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                  <article key={relatedPost.id} className="bg-card/50 backdrop-blur rounded-3xl overflow-hidden border border-border/30">
                     <div className="aspect-[4/3] overflow-hidden relative">
                       <Link href={`/${relatedPost.slug}`}>
                         <img
@@ -177,17 +191,17 @@ export default function BlogDetailPage() {
                         />
                       </Link>
                       {/* Read Time - Top Right */}
-                      <div className="absolute top-3 right-3">
-                        <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                      <div className="absolute top-4 right-4">
+                        <div className="flex items-center gap-1 text-xs text-foreground bg-background/95 px-3 py-2 rounded-2xl backdrop-blur-sm">
                           <Clock className="h-3 w-3" />
                           {relatedPost.readTime}
                         </div>
                       </div>
                     </div>
                     <div className="p-6">
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-4">
                         <Link href={`/blog/kategori/${relatedPost.categorySlug}`}>
-                          <Badge variant="outline" className="text-xs border-border hover:bg-accent transition-colors cursor-pointer">
+                          <Badge variant="outline" className="text-xs border-primary/20 hover:bg-primary/10 transition-colors cursor-pointer">
                             {relatedPost.category}
                           </Badge>
                         </Link>
@@ -203,13 +217,17 @@ export default function BlogDetailPage() {
                         </p>
                       </Link>
                       
-                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-primary/10 rounded-full">
+                            <User className="h-3 w-3 text-primary" />
+                          </div>
                           <span className="font-medium">{relatedPost.author}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-primary/10 rounded-full">
+                            <Calendar className="h-3 w-3 text-primary" />
+                          </div>
                           <span className="font-medium">{formatDate(relatedPost.publishedDate)}</span>
                         </div>
                       </div>

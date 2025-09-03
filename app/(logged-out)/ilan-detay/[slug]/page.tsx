@@ -13,7 +13,8 @@ import {
   Share2,
   Phone,
   Mail,
-  Award
+  Award,
+  ChevronRight
 } from "lucide-react";
 import { listingsData, type ListingItem } from "@/lib/listingsData";
 import { generateSlug } from "@/lib/utils";
@@ -51,92 +52,102 @@ export default function ListingDetailPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-12">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Geri Dön
-          </Button>
-        </div>
-
+      <div className="container mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Image */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-border/50 bg-card/50 backdrop-blur">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Modern Breadcrumb */}
+            <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
+              <span className="hover:text-foreground cursor-pointer transition-colors duration-200 hover:underline">İlanlar</span>
+              <ChevronRight className="h-4 w-4" />
+              <span className="hover:text-foreground cursor-pointer transition-colors duration-200 hover:underline">{listing.category}</span>
+              <ChevronRight className="h-4 w-4" />
+              <span className="text-foreground font-semibold truncate max-w-xs">{listing.title}</span>
+            </nav>
+
+            {/* Enhanced Image */}
+            <div className="relative aspect-video rounded-3xl overflow-hidden bg-card/50 backdrop-blur group">
               <img 
                 src={listing.image} 
                 alt={listing.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute top-4 left-4">
-                <Badge className="bg-background/90 text-foreground border-border/50">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute top-6 left-6">
+                <Badge className="bg-background/95 text-foreground border-0 px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-sm">
                   {listing.category}
                 </Badge>
               </div>
-              <div className="absolute top-4 right-4 flex gap-2">
-
+              <div className="absolute top-6 right-6 flex gap-3">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-10 w-10 p-0 bg-background/90 hover:bg-background shadow-sm"
+                  className="h-12 w-12 p-0 bg-background/95 hover:bg-background shadow-lg backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110"
                 >
                   <Share2 className="h-5 w-5 text-muted-foreground" />
                 </Button>
               </div>
             </div>
 
-            {/* Title and Rating */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
+            {/* Enhanced Title and Rating */}
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-8">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-foreground mb-4">
+                  <h1 className="text-4xl font-bold text-foreground mb-6 leading-tight">
                     {listing.title}
                   </h1>
-                  <div className="flex items-center gap-6 text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      {listing.location}
+                  <div className="flex items-center gap-8 text-muted-foreground">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-full">
+                        <MapPin className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="font-medium">{listing.location}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {listing.postedDate}
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-full">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="font-medium">{listing.postedDate}</span>
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* Description */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Açıklama</h2>
+            {/* Enhanced Description */}
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <div className="w-2 h-8 bg-primary rounded-full"></div>
+                Açıklama
+              </h2>
               <p className="text-muted-foreground leading-relaxed text-lg">
                 {listing.description}
               </p>
             </div>
 
-            {/* Details */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Detaylar</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex items-center gap-4">
-                  <User className="h-6 w-6 text-primary" />
+            {/* Enhanced Details */}
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-8">
+              <h2 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
+                <div className="w-2 h-8 bg-primary rounded-full"></div>
+                Detaylar
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/30 hover:bg-background/50 transition-colors duration-200">
+                  <div className="p-3 bg-primary/10 rounded-2xl">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">İlan Sahibi</p>
+                    <p className="text-sm text-muted-foreground mb-1">İlan Sahibi</p>
                     <p className="font-semibold text-foreground text-lg">{listing.author}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Award className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/30 hover:bg-background/50 transition-colors duration-200">
+                  <div className="p-3 bg-primary/10 rounded-2xl">
+                    <Award className="h-6 w-6 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Deneyim</p>
-                    <Badge variant="outline" className="text-sm border-border bg-primary/10 text-primary">
+                    <p className="text-sm text-muted-foreground mb-1">Deneyim</p>
+                    <Badge variant="outline" className="text-sm border-primary/20 bg-primary/10 text-primary px-3 py-1">
                       {listing.experience}
                     </Badge>
                   </div>
@@ -145,60 +156,27 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Contact Card */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
-              <h3 className="text-xl font-bold text-foreground mb-6">İletişim</h3>
-              {isLoggedIn ? (
-                <div className="space-y-4">
-                  <Button className="w-full bg-primary hover:bg-primary/90">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Mesaj Gönder
-                  </Button>
-                  <Button variant="outline" className="w-full border-border hover:bg-accent">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Telefon Et
-                  </Button>
-                  <Button variant="outline" className="w-full border-border hover:bg-accent">
-                    <Mail className="h-4 w-4 mr-2" />
-                    E-posta Gönder
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">İletişim kurmak için giriş yapın</p>
-                  <Button className="w-full bg-primary hover:bg-primary/90">
-                    Giriş Yap
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Category Info */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
-              <h3 className="text-xl font-bold text-foreground mb-4">Kategori</h3>
-              <Badge className="text-sm bg-primary/10 text-primary border-primary/20">
-                {listing.category}
-              </Badge>
-            </div>
-
-            {/* Similar Listings */}
-            <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-8 shadow-sm">
-              <h3 className="text-xl font-bold text-foreground mb-6">Benzer İlanlar</h3>
+          {/* Enhanced Sidebar */}
+          <div className="space-y-8">
+            {/* Enhanced Similar Listings */}
+            <div className="bg-card/50 backdrop-blur rounded-3xl p-6">
+              <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+                Benzer İlanlar
+              </h3>
               <div className="space-y-4">
                 {listingsData
                   .filter(item => item.category === listing.category && item.id !== listing.id)
                   .slice(0, 3)
                   .map(item => (
-                    <div key={item.id} className="flex gap-4 p-4 rounded-xl hover:bg-accent/50 cursor-pointer border border-border/50 transition-colors">
+                    <div key={item.id} className="flex gap-4 p-4 rounded-2xl hover:bg-background/30 cursor-pointer transition-all duration-200 hover:scale-[1.02] group">
                       <img 
                         src={item.image} 
                         alt={item.title}
-                        className="w-20 h-16 object-cover rounded-lg"
+                        className="w-20 h-16 object-cover rounded-xl group-hover:rounded-2xl transition-all duration-200"
                       />
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-foreground truncate">
+                        <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
                           {item.title}
                         </h4>
                         <p className="text-xs text-muted-foreground">{item.location}</p>
