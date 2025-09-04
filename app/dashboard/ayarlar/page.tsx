@@ -1,6 +1,16 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { 
+  getSettingsAdmin, 
+  updateSettings, 
+  createSettings,
+  getSettingsStats 
+} from "@/redux/actions/settingsActions";
+import { getAllCategories } from "@/redux/actions/userActions";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +51,7 @@ interface HeaderMenuItem {
 }
 
 interface CategoryItem {
-  id: number;
+  _id: string;
   name: string;
 }
 
@@ -59,8 +69,8 @@ interface ContactInfo {
 
 interface SettingsData {
   logo: {
-    current: string;
-    new?: File;
+    light: string;
+    dark: string;
   };
   metadata: {
     title: string;
@@ -70,7 +80,7 @@ interface SettingsData {
   };
   header: {
     mainMenu: HeaderMenuItem[];
-    categories: CategoryItem[];
+    categories: string[];
   };
   footer: {
     main: FooterLink[];
@@ -90,106 +100,182 @@ interface SettingsData {
     workingHours: string;
     companyDescription: string;
   };
+  seo: {
+    googleAnalytics: string;
+    googleTagManager: string;
+    metaTags: string;
+  };
+
 }
 
 export default function SettingsPage() {
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const { 
+    settings, 
+    stats, 
+    loading, 
+    error, 
+    message 
+  } = useSelector((state: RootState) => state.settings);
   
-  // Hazır kategoriler
-  const availableCategories: CategoryItem[] = [
-    { id: 1, name: "Müzik Prodüksiyon" },
-    { id: 2, name: "Enstrüman" },
-    { id: 3, name: "Müzik Eğitimi" },
-    { id: 4, name: "Grup Kurma" },
-    { id: 5, name: "Stüdyo Hizmetleri" },
-    { id: 6, name: "Müzik Etkinlikleri" },
-    { id: 7, name: "Müzik Teknolojisi" },
-    { id: 8, name: "Müzik Tarihi" },
-    { id: 9, name: "Müzik Terapisi" },
-    { id: 10, name: "Müzik Endüstrisi" }
-  ];
+  const { categories } = useSelector((state: RootState) => state.user);
 
-  const [settings, setSettings] = useState<SettingsData>({
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  const [localSettings, setLocalSettings] = useState<SettingsData>({
     logo: {
-      current: "/bandbul-logo.png"
+      light: "",
+      dark: ""
     },
     metadata: {
-      title: "Bandbul - Müzik Platformu",
-      description: "Müzik tutkunları için tasarlanmış platform. Grup bulma, enstrüman alım-satım ve müzik prodüksiyonu için tek adres.",
-      keywords: "müzik, grup, enstrüman, prodüksiyon, müzisyen",
-      author: "Bandbul Team"
+      title: "",
+      description: "",
+      keywords: "",
+      author: ""
     },
     header: {
-      mainMenu: [
-        { name: "Anasayfa", href: "/" },
-        { name: "İlanlar", href: "/ilanlar" },
-        { name: "Blog", href: "/blog" },
-        { name: "İletişim", href: "/iletisim" }
-      ],
-      categories: [
-        { id: 1, name: "Müzik Prodüksiyon" },
-        { id: 2, name: "Enstrüman" },
-        { id: 3, name: "Müzik Eğitimi" },
-        { id: 4, name: "Grup Kurma" },
-        { id: 5, name: "Stüdyo Hizmetleri" },
-        { id: 6, name: "Müzik Etkinlikleri" }
-      ]
+      mainMenu: [],
+      categories: []
     },
     footer: {
-      main: [
-        { name: "Anasayfa", href: "/" },
-        { name: "İlanlar", href: "/ilanlar" },
-        { name: "Blog", href: "/blog" },
-        { name: "İletişim", href: "/iletisim" }
-      ],
-      listings: [
-        { name: "Grup Arıyorum", href: "/grup-arirorum" },
-        { name: "Müzisyen Arıyorum", href: "/muzisyen-arirorum" },
-        { name: "Ders Almak İstiyorum", href: "/ders-almak-istiyorum" }
-      ],
-      support: [
-        { name: "S.S.S.", href: "/sss" },
-        { name: "İlan Kuralları", href: "/ilan-kurallari" },
-        { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
-        { name: "KVKK", href: "/kvkk" }
-      ],
+      main: [],
+      listings: [],
+      support: [],
       social: {
-        facebook: "#",
-        twitter: "#",
-        instagram: "#",
-        youtube: "#"
+        facebook: "",
+        twitter: "",
+        instagram: "",
+        youtube: ""
       }
     },
     contact: {
-      email: "info@bandbul.com",
-      phone: "+90 212 123 45 67",
-      address: "İstanbul, Türkiye",
-      workingHours: "Pazartesi - Cuma, 09:00 - 18:00",
-      companyDescription: "Müzik endüstrisinde profesyonel hizmet veren platformumuz, müzisyenler ve müzik severler için güvenilir bir ortam sağlar."
-    }
+      email: "",
+      phone: "",
+      address: "",
+      workingHours: "",
+      companyDescription: ""
+    },
+    seo: {
+      googleAnalytics: "",
+      googleTagManager: "",
+      metaTags: ""
+    },
+
   });
 
-  const [isSaving, setIsSaving] = useState(false);
+  // Load settings and categories on component mount
+  useEffect(() => {
+    dispatch(getSettingsAdmin());
+    dispatch(getAllCategories({}));
+    dispatch(getSettingsStats());
+  }, [dispatch]);
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle success and error messages with Sonner
+  useEffect(() => {
+    if (message) {
+      toast.success(message);
+    }
+    if (error) {
+      toast.error(error);
+    }
+  }, [message, error]);
+
+  // Update local settings when Redux settings change
+  useEffect(() => {
+    if (settings) {
+      // Use backend settings directly, only add defaults for missing fields
+      setLocalSettings({
+        logo: {
+          light: settings.logo?.light || "",
+          dark: settings.logo?.dark || ""
+        },
+        metadata: {
+          title: settings.metadata?.title || "",
+          description: settings.metadata?.description || "",
+          keywords: settings.metadata?.keywords || "",
+          author: settings.metadata?.author || ""
+        },
+        header: {
+          mainMenu: settings.header?.mainMenu || [],
+          categories: settings.header?.categories || []
+        },
+        footer: {
+          main: settings.footer?.main || [],
+          listings: settings.footer?.listings || [],
+          support: settings.footer?.support || [],
+          social: {
+            facebook: settings.footer?.social?.facebook || "",
+            twitter: settings.footer?.social?.twitter || "",
+            instagram: settings.footer?.social?.instagram || "",
+            youtube: settings.footer?.social?.youtube || ""
+          }
+        },
+        contact: {
+          email: settings.contact?.email || "",
+          phone: settings.contact?.phone || "",
+          address: settings.contact?.address || "",
+          workingHours: settings.contact?.workingHours || "",
+          companyDescription: settings.contact?.companyDescription || ""
+        },
+        seo: {
+          googleAnalytics: settings.seo?.googleAnalytics || "",
+          googleTagManager: settings.seo?.googleTagManager || "",
+          metaTags: settings.seo?.metaTags || ""
+        },
+
+      });
+    } else {
+      // If no settings exist, keep the empty state
+      setLocalSettings(prev => prev);
+    }
+  }, [settings]);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState<{ light: boolean; dark: boolean }>({
+    light: false,
+    dark: false
+  });
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>, logoType: 'light' | 'dark') => {
     const file = e.target.files?.[0];
     if (file) {
-      setSettings(prev => ({
-        ...prev,
-        logo: { ...prev.logo, new: file }
-      }));
+      try {
+        // Set loading state
+        setLogoUploading(prev => ({ ...prev, [logoType]: true }));
+        
+        // Show immediate feedback
+        toast.info(`${logoType === 'light' ? 'Açık' : 'Koyu'} logo yükleniyor: ${file.name}`);
+        
+        // Import and use your Cloudinary utility
+        const { uploadImageToCloudinary } = await import('@/utils/cloudinary');
+        const cloudinaryUrl = await uploadImageToCloudinary(file);
+        
+        // Update local settings with Cloudinary URL
+        setLocalSettings(prev => ({
+          ...prev,
+          logo: { ...prev.logo, [logoType]: cloudinaryUrl }
+        }));
+        
+        toast.success(`${logoType === 'light' ? 'Açık' : 'Koyu'} logo başarıyla yüklendi`);
+      } catch (error) {
+        console.error('Logo upload error:', error);
+        toast.error('Logo yüklenirken bir hata oluştu');
+      } finally {
+        // Clear loading state
+        setLogoUploading(prev => ({ ...prev, [logoType]: false }));
+      }
     }
   };
 
   const handleMetadataChange = (field: keyof SettingsData['metadata'], value: string) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       metadata: { ...prev.metadata, [field]: value }
     }));
   };
 
   const handleHeaderMenuChange = (index: number, field: keyof HeaderMenuItem, value: string) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
@@ -200,20 +286,8 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleCategoryChange = (index: number, field: keyof CategoryItem, value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      header: {
-        ...prev.header,
-        categories: prev.header.categories.map((item, i) => 
-          i === index ? { ...item, [field]: value } : item
-        )
-      }
-    }));
-  };
-
   const handleFooterLinkChange = (section: keyof Omit<SettingsData['footer'], 'social'>, index: number, field: keyof FooterLink, value: string) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       footer: {
         ...prev.footer,
@@ -225,7 +299,7 @@ export default function SettingsPage() {
   };
 
   const handleSocialChange = (platform: keyof SettingsData['footer']['social'], value: string) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       footer: {
         ...prev.footer,
@@ -235,7 +309,7 @@ export default function SettingsPage() {
   };
 
   const handleContactChange = (field: keyof SettingsData['contact'], value: string) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       contact: { ...prev.contact, [field]: value }
     }));
@@ -243,14 +317,50 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate save operation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSaving(false);
-    // Here you would typically save to your backend
+    try {
+      if (settings?._id) {
+        // Update existing settings
+        const updateData = {
+          logo: {
+            light: localSettings.logo.light,
+            dark: localSettings.logo.dark
+          },
+          metadata: localSettings.metadata,
+          header: localSettings.header,
+          footer: localSettings.footer,
+          contact: localSettings.contact,
+          seo: localSettings.seo
+        };
+        console.log('Updating settings with:', updateData);
+        await dispatch(updateSettings({ id: settings._id, formData: updateData })).unwrap();
+        toast.success('Ayarlar başarıyla güncellendi');
+      } else {
+        // Create new settings
+        const createData = {
+          logo: {
+            light: localSettings.logo.light,
+            dark: localSettings.logo.dark
+          },
+          metadata: localSettings.metadata,
+          header: localSettings.header,
+          footer: localSettings.footer,
+          contact: localSettings.contact,
+          seo: localSettings.seo
+        };
+        console.log('Creating settings with:', createData);
+        await dispatch(createSettings(createData)).unwrap();
+        toast.success('Ayarlar başarıyla oluşturuldu');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Ayarlar kaydedilirken bir hata oluştu');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addHeaderMenuItem = () => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
@@ -259,8 +369,43 @@ export default function SettingsPage() {
     }));
   };
 
+  const addDefaultMenuItems = () => {
+    setLocalSettings(prev => ({
+      ...prev,
+      header: {
+        ...prev.header,
+        mainMenu: [
+          { name: "Anasayfa", href: "/" },
+          { name: "İlanlar", href: "/ilanlar" },
+          { name: "Blog", href: "/blog" },
+          { name: "İletişim", href: "/iletisim" }
+        ]
+      },
+      footer: {
+        ...prev.footer,
+        main: [
+          { name: "Anasayfa", href: "/" },
+          { name: "İlanlar", href: "/ilanlar" },
+          { name: "Blog", href: "/blog" },
+          { name: "İletişim", href: "/iletisim" }
+        ],
+        listings: [
+          { name: "Grup Arıyorum", href: "/grup-arirorum" },
+          { name: "Müzisyen Arıyorum", href: "/muzisyen-arirorum" },
+          { name: "Ders Almak İstiyorum", href: "/ders-almak-istiyorum" }
+        ],
+        support: [
+          { name: "S.S.S.", href: "/sss" },
+          { name: "İlan Kuralları", href: "/ilan-kurallari" },
+          { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
+          { name: "KVKK", href: "/kvkk" }
+        ]
+      }
+    }));
+  };
+
   const removeHeaderMenuItem = (index: number) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
@@ -269,17 +414,17 @@ export default function SettingsPage() {
     }));
   };
 
-  const addCategoryFromModal = (category: CategoryItem) => {
+  const addCategoryFromModal = (category: any) => {
     // Kategori zaten ekli mi kontrol et
-    if (settings.header.categories.find(cat => cat.id === category.id)) {
+    if (localSettings.header.categories.find((cat: any) => cat._id === category._id)) {
       return;
     }
     
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
-        categories: [...prev.header.categories, category]
+        categories: [...prev.header.categories, category._id]
       }
     }));
     
@@ -287,7 +432,7 @@ export default function SettingsPage() {
   };
 
   const removeCategoryItem = (index: number) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
@@ -298,7 +443,7 @@ export default function SettingsPage() {
 
   const moveCategoryUp = (index: number) => {
     if (index === 0) return;
-    setSettings(prev => {
+    setLocalSettings(prev => {
       const newCategories = [...prev.header.categories];
       [newCategories[index], newCategories[index - 1]] = [newCategories[index - 1], newCategories[index]];
       return {
@@ -312,8 +457,8 @@ export default function SettingsPage() {
   };
 
   const moveCategoryDown = (index: number) => {
-    if (index === settings.header.categories.length - 1) return;
-    setSettings(prev => {
+    if (index === localSettings.header.categories.length - 1) return;
+    setLocalSettings(prev => {
       const newCategories = [...prev.header.categories];
       [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
       return {
@@ -383,32 +528,98 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-                {settings.logo.current ? (
-                  <img 
-                    src={settings.logo.current} 
-                    alt="Current Logo" 
-                    className="w-20 h-20 object-contain"
-                  />
-                ) : (
-                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                )}
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="logo-upload">Logo Yükle</Label>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Light Logo */}
+              <div className="text-center">
+                <Label htmlFor="light-logo-upload" className="block mb-2">Açık Tema Logo</Label>
+                <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center mx-auto mb-3">
+                  {localSettings.logo.light ? (
+                    <img 
+                      src={localSettings.logo.light} 
+                      alt="Light Logo" 
+                      className="w-20 h-20 object-contain"
+                    />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
                 <Input
-                  id="logo-upload"
+                  id="light-logo-upload"
                   type="file"
                   accept="image/*"
-                  onChange={handleLogoChange}
-                  className="mt-2"
+                  onChange={(e) => handleLogoChange(e, 'light')}
+                  className="text-sm"
+                  disabled={logoUploading.light}
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  PNG, JPG veya SVG formatında logo yükleyin
-                </p>
+                {logoUploading.light && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 justify-center">
+                      <div className="w-3 h-3 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+                      Logo yükleniyor...
+                    </div>
+                  </div>
+                )}
+                {localSettings.logo.light && (
+                  <div className="mt-2">
+                    <Label className="text-xs text-muted-foreground">Cloudinary URL:</Label>
+                    <Input
+                      value={localSettings.logo.light}
+                      readOnly
+                      className="text-xs mt-1"
+                      placeholder="Cloudinary URL burada görünecek"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Dark Logo */}
+              <div className="text-center">
+                <Label htmlFor="dark-logo-upload" className="block mb-2">Koyu Tema Logo</Label>
+                <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center mx-auto mb-3 bg-gray-800">
+                  {localSettings.logo.dark ? (
+                    <img 
+                      src={localSettings.logo.dark} 
+                      alt="Dark Logo" 
+                      className="w-20 h-20 object-contain"
+                    />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <Input
+                  id="dark-logo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleLogoChange(e, 'dark')}
+                  className="text-sm"
+                  disabled={logoUploading.dark}
+                />
+                {logoUploading.dark && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 justify-center">
+                      <div className="w-3 h-3 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+                      Logo yükleniyor...
+                    </div>
+                  </div>
+                )}
+                {localSettings.logo.dark && (
+                  <div className="mt-2">
+                    <Label className="text-xs text-muted-foreground">Cloudinary URL:</Label>
+                    <Input
+                      value={localSettings.logo.dark}
+                      readOnly
+                      className="text-xs mt-1"
+                      placeholder="Cloudinary URL burada görünecek"
+                    />
+                  </div>
+                )}
+              </div>
+
+
             </div>
+            <p className="text-sm text-muted-foreground text-center mt-4">
+              PNG, JPG veya SVG formatında logo yükleyin. Açık ve koyu tema için ayrı logolar önerilir.
+            </p>
           </CardContent>
         </Card>
 
@@ -424,43 +635,43 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title">Site Başlığı</Label>
-                <Input
-                  id="title"
-                  value={settings.metadata.title}
-                  onChange={(e) => handleMetadataChange('title', e.target.value)}
+                                  <Input
+                    id="title"
+                    value={localSettings.metadata.title}
+                    onChange={(e) => handleMetadataChange('title', e.target.value)}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="author">Yazar</Label>
+                  <Input
+                    id="author"
+                    value={localSettings.metadata.author}
+                    onChange={(e) => handleMetadataChange('author', e.target.value)}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="description">Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={localSettings.metadata.description}
+                  onChange={(e) => handleMetadataChange('description', e.target.value)}
                   className="mt-2"
+                  rows={3}
                 />
               </div>
               <div>
-                <Label htmlFor="author">Yazar</Label>
+                <Label htmlFor="keywords">Anahtar Kelimeler</Label>
                 <Input
-                  id="author"
-                  value={settings.metadata.author}
-                  onChange={(e) => handleMetadataChange('author', e.target.value)}
+                  id="keywords"
+                  value={localSettings.metadata.keywords}
+                  onChange={(e) => handleMetadataChange('keywords', e.target.value)}
                   className="mt-2"
+                  placeholder="Virgülle ayırarak yazın"
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={settings.metadata.description}
-                onChange={(e) => handleMetadataChange('description', e.target.value)}
-                className="mt-2"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="keywords">Anahtar Kelimeler</Label>
-              <Input
-                id="keywords"
-                value={settings.metadata.keywords}
-                onChange={(e) => handleMetadataChange('keywords', e.target.value)}
-                className="mt-2"
-                placeholder="Virgülle ayırarak yazın"
-              />
-            </div>
           </CardContent>
         </Card>
 
@@ -477,12 +688,19 @@ export default function SettingsPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Ana Menü</h3>
-                <Button onClick={addHeaderMenuItem} size="sm">
-                  Menü Ekle
-                </Button>
+                <div className="flex gap-2">
+                  {localSettings.header.mainMenu.length === 0 && (
+                    <Button onClick={addDefaultMenuItems} size="sm" variant="outline">
+                      Varsayılan Menüleri Ekle
+                    </Button>
+                  )}
+                  <Button onClick={addHeaderMenuItem} size="sm">
+                    Menü Ekle
+                  </Button>
+                </div>
               </div>
               <div className="space-y-3">
-                {settings.header.mainMenu.map((item, index) => (
+                {localSettings.header.mainMenu.map((item: HeaderMenuItem, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <Input
@@ -530,10 +748,10 @@ export default function SettingsPage() {
                     </DialogHeader>
                     
                     <div className="max-h-96 overflow-y-auto space-y-3">
-                      {availableCategories.map((category) => {
-                        const isAlreadyAdded = settings.header.categories.find(cat => cat.id === category.id);
+                      {categories.map((category: any) => {
+                        const isAlreadyAdded = localSettings.header.categories.find((cat: any) => cat === category._id);
                         return (
-                          <div key={category.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div key={category._id} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex-1">
                               <div className="font-medium">{category.name}</div>
                             </div>
@@ -559,44 +777,47 @@ export default function SettingsPage() {
                 </Dialog>
               </div>
                               <div className="space-y-3">
-                  {settings.header.categories.map((item, index) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <Input
-                          value={item.name}
-                          onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
-                          placeholder="Kategori Adı"
-                        />
+                  {localSettings.header.categories.map((categoryId: string, index: number) => {
+                    const category = categories.find((cat: any) => cat._id === categoryId);
+                    return (
+                      <div key={categoryId} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <Input
+                            value={category?.name || ''}
+                            disabled
+                            placeholder="Kategori Adı"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => moveCategoryUp(index)}
+                            disabled={index === 0}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => moveCategoryDown(index)}
+                            disabled={index === localSettings.header.categories.length - 1}
+                            className="h-8 w-8 p-0"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeCategoryItem(index)}
+                          >
+                            Sil
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => moveCategoryUp(index)}
-                          disabled={index === 0}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => moveCategoryDown(index)}
-                          disabled={index === settings.header.categories.length - 1}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeCategoryItem(index)}
-                        >
-                          Sil
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
             </div>
           </CardContent>
@@ -615,7 +836,7 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Ana Linkler</h3>
               <div className="space-y-3">
-                {settings.footer.main.map((item, index) => (
+                {localSettings.footer.main.map((item: FooterLink, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <Input
@@ -640,7 +861,7 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">İlan Linkleri</h3>
               <div className="space-y-3">
-                {settings.footer.listings.map((item, index) => (
+                {localSettings.footer.listings.map((item: FooterLink, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <Input
@@ -665,7 +886,7 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Destek Linkleri</h3>
               <div className="space-y-3">
-                {settings.footer.support.map((item, index) => (
+                {localSettings.footer.support.map((item: FooterLink, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <Input
@@ -694,7 +915,7 @@ export default function SettingsPage() {
                   <Label htmlFor="facebook">Facebook</Label>
                   <Input
                     id="facebook"
-                    value={settings.footer.social.facebook}
+                    value={localSettings.footer.social.facebook}
                     onChange={(e) => handleSocialChange('facebook', e.target.value)}
                     className="mt-2"
                     placeholder="Facebook URL"
@@ -704,7 +925,7 @@ export default function SettingsPage() {
                   <Label htmlFor="twitter">Twitter</Label>
                   <Input
                     id="twitter"
-                    value={settings.footer.social.twitter}
+                    value={localSettings.footer.social.twitter}
                     onChange={(e) => handleSocialChange('twitter', e.target.value)}
                     className="mt-2"
                     placeholder="Twitter URL"
@@ -714,7 +935,7 @@ export default function SettingsPage() {
                   <Label htmlFor="instagram">Instagram</Label>
                   <Input
                     id="instagram"
-                    value={settings.footer.social.instagram}
+                    value={localSettings.footer.social.instagram}
                     onChange={(e) => handleSocialChange('instagram', e.target.value)}
                     className="mt-2"
                     placeholder="Instagram URL"
@@ -724,7 +945,7 @@ export default function SettingsPage() {
                   <Label htmlFor="youtube">YouTube</Label>
                   <Input
                     id="youtube"
-                    value={settings.footer.social.youtube}
+                    value={localSettings.footer.social.youtube}
                     onChange={(e) => handleSocialChange('youtube', e.target.value)}
                     className="mt-2"
                     placeholder="YouTube URL"
@@ -747,58 +968,116 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="contact-email">E-posta</Label>
+                                  <Input
+                    id="contact-email"
+                    value={localSettings.contact.email}
+                    onChange={(e) => handleContactChange('email', e.target.value)}
+                    className="mt-2"
+                    placeholder="info@bandbul.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-phone">Telefon</Label>
+                  <Input
+                    id="contact-phone"
+                    value={localSettings.contact.phone}
+                    onChange={(e) => handleContactChange('phone', e.target.value)}
+                    className="mt-2"
+                    placeholder="+90 212 123 45 67"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="contact-address">Adres</Label>
                 <Input
-                  id="contact-email"
-                  value={settings.contact.email}
-                  onChange={(e) => handleContactChange('email', e.target.value)}
+                  id="contact-address"
+                  value={localSettings.contact.address}
+                  onChange={(e) => handleContactChange('address', e.target.value)}
                   className="mt-2"
-                  placeholder="info@bandbul.com"
+                  placeholder="İstanbul, Türkiye"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-phone">Telefon</Label>
+                <Label htmlFor="contact-hours">Çalışma Saatleri</Label>
                 <Input
-                  id="contact-phone"
-                  value={settings.contact.phone}
-                  onChange={(e) => handleContactChange('phone', e.target.value)}
+                  id="contact-hours"
+                  value={localSettings.contact.workingHours}
+                  onChange={(e) => handleContactChange('workingHours', e.target.value)}
                   className="mt-2"
-                  placeholder="+90 212 123 45 67"
+                  placeholder="Pazartesi - Cuma, 09:00 - 18:00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contact-description">Şirket Açıklaması</Label>
+                <Textarea
+                  id="contact-description"
+                  value={localSettings.contact.companyDescription}
+                  onChange={(e) => handleContactChange('companyDescription', e.target.value)}
+                  className="mt-2"
+                  rows={3}
+                  placeholder="Şirket hakkında kısa açıklama"
+                />
+              </div>
+          </CardContent>
+        </Card>
+
+        {/* SEO Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              SEO Ayarları
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="google-analytics">Google Analytics ID</Label>
+                <Input
+                  id="google-analytics"
+                  value={localSettings.seo.googleAnalytics}
+                  onChange={(e) => setLocalSettings(prev => ({
+                    ...prev,
+                    seo: { ...prev.seo, googleAnalytics: e.target.value }
+                  }))}
+                  className="mt-2"
+                  placeholder="GA-XXXXXXXXX-X"
+                />
+              </div>
+              <div>
+                <Label htmlFor="google-tag-manager">Google Tag Manager ID</Label>
+                <Input
+                  id="google-tag-manager"
+                  value={localSettings.seo.googleTagManager}
+                  onChange={(e) => setLocalSettings(prev => ({
+                    ...prev,
+                    seo: { ...prev.seo, googleTagManager: e.target.value }
+                  }))}
+                  className="mt-2"
+                  placeholder="GTM-XXXXXXX"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="contact-address">Adres</Label>
-              <Input
-                id="contact-address"
-                value={settings.contact.address}
-                onChange={(e) => handleContactChange('address', e.target.value)}
-                className="mt-2"
-                placeholder="İstanbul, Türkiye"
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact-hours">Çalışma Saatleri</Label>
-              <Input
-                id="contact-hours"
-                value={settings.contact.workingHours}
-                onChange={(e) => handleContactChange('workingHours', e.target.value)}
-                className="mt-2"
-                placeholder="Pazartesi - Cuma, 09:00 - 18:00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact-description">Şirket Açıklaması</Label>
+              <Label htmlFor="meta-tags">Ek Meta Etiketleri</Label>
               <Textarea
-                id="contact-description"
-                value={settings.contact.companyDescription}
-                onChange={(e) => handleContactChange('companyDescription', e.target.value)}
+                id="meta-tags"
+                value={localSettings.seo.metaTags}
+                onChange={(e) => setLocalSettings(prev => ({
+                  ...prev,
+                  seo: { ...prev.seo, metaTags: e.target.value }
+                }))}
                 className="mt-2"
                 rows={3}
-                placeholder="Şirket hakkında kısa açıklama"
+                placeholder="Ek meta etiketleri buraya ekleyin..."
               />
             </div>
           </CardContent>
         </Card>
+
+
+
+
 
 
       </div>
