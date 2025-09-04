@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getAllBlogs } from "@/redux/actions/blogActions";
+import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions";
+import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,22 +21,23 @@ import {
   ArrowRight,
   ChevronDown
 } from "lucide-react";
-import { 
-  blogPosts, 
-  getCategories, 
-  searchPosts, 
-  getPostsByCategory,
-  BlogPost 
-} from "@/lib/blogData";
 
 export default function BlogPage() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
+  const { categories: blogCategories } = useSelector((state: RootState) => state.blogCategory)
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [visiblePosts, setVisiblePosts] = useState(6);
   const postsPerLoad = 6;
 
-  const categories = getCategories();
+  useEffect(() => {
+    dispatch(getAllBlogs({}))
+    dispatch(getAllBlogCategories({}))
+  }, [dispatch])
+
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -55,10 +61,17 @@ export default function BlogPage() {
 
   // Filter posts based on search and category
   const filteredPosts = useCallback(() => {
-    let posts = blogPosts;
+    let posts = blogs;
 
     if (searchQuery) {
-      posts = searchPosts(searchQuery);
+      const lowercaseQuery = searchQuery.toLowerCase();
+      posts = posts.filter(post => 
+        post.title.toLowerCase().includes(lowercaseQuery) ||
+        post.excerpt.toLowerCase().includes(lowercaseQuery) ||
+        post.content.toLowerCase().includes(lowercaseQuery) ||
+        post.author.toLowerCase().includes(lowercaseQuery) ||
+        post.tags.some((tag: string) => tag.toLowerCase().includes(lowercaseQuery))
+      );
     }
 
     if (selectedCategory) {
@@ -66,7 +79,7 @@ export default function BlogPage() {
     }
 
     return posts;
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, blogs]);
 
   const posts = filteredPosts();
   const displayedPosts = posts.slice(0, visiblePosts);
@@ -124,9 +137,9 @@ export default function BlogPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {blogCategories.filter(cat => cat.active).map((category) => (
+                    <SelectItem key={category._id} value={category.name}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -164,11 +177,19 @@ export default function BlogPage() {
         </div>
 
         {/* Blog Posts Grid */}
-        {displayedPosts.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-muted-foreground">Yükleniyor...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-destructive">Hata: {error}</div>
+          </div>
+        ) : displayedPosts.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
               {displayedPosts.map((post) => (
-                <article key={post.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                <article key={post._id} className="bg-card border border-border rounded-lg overflow-hidden">
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <Link href={`/${post.slug}`}>
                       <img

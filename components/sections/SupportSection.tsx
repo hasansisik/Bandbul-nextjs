@@ -3,16 +3,50 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, HelpCircle, Clock, Shield, Users, MessageCircle } from "lucide-react";
+import { Send, HelpCircle, Clock, Shield, Users, MessageCircle, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { createContact } from "@/redux/actions/contactActions";
 
 const SupportSection = () => {
-  const [message, setMessage] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, message, error } = useSelector((state: RootState) => state.contact);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: ""
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle message submission
-    setMessage("");
+
+    try {
+      await dispatch(createContact(formData)).unwrap();
+      setIsSubmitted(true);
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: ""
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Contact submission error:', error);
+    }
   };
 
   return (
@@ -44,78 +78,111 @@ const SupportSection = () => {
               </p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+            {isSubmitted ? (
+              <div className="text-center py-12">
+                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-foreground mb-2">Mesajınız Gönderildi!</h3>
+                <p className="text-muted-foreground">
+                  Teşekkür ederiz. En kısa sürede size dönüş yapacağız.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Ad Soyad *
+                    </label>
+                    <Input 
+                      placeholder="Adınız ve soyadınız" 
+                      value={formData.name}
+                      onChange={(e) => handleChange("name", e.target.value)}
+                      className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      E-posta *
+                    </label>
+                    <Input 
+                      type="email" 
+                      placeholder="ornek@email.com"
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Ad Soyad *
+                    Telefon Numarası
                   </label>
                   <Input 
-                    placeholder="Adınız ve soyadınız" 
+                    type="tel"
+                    placeholder="+90 5XX XXX XX XX"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
                     className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Konu *
+                  </label>
+                  <Input 
+                    placeholder="Mesajınızın konusu"
+                    value={formData.subject}
+                    onChange={(e) => handleChange("subject", e.target.value)}
+                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                    disabled={loading}
                     required
                   />
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    E-posta *
+                    Mesajınız *
                   </label>
-                  <Input 
-                    type="email" 
-                    placeholder="ornek@email.com"
-                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
+                  <Textarea 
+                    placeholder="Bize iletmek istediğiniz mesajı buraya yazabilirsiniz..."
+                    rows={5}
+                    value={formData.message}
+                    onChange={(e) => handleChange("message", e.target.value)}
+                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 resize-none bg-background/50 backdrop-blur"
+                    disabled={loading}
                     required
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Telefon Numarası
-                </label>
-                <Input 
-                  type="tel"
-                  placeholder="+90 5XX XXX XX XX"
-                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Konu *
-                </label>
-                <Input 
-                  placeholder="Mesajınızın konusu"
-                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Mesajınız *
-                </label>
-                <Textarea 
-                  placeholder="Bize iletmek istediğiniz mesajı buraya yazabilirsiniz..."
-                  rows={5}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 resize-none bg-background/50 backdrop-blur"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-center pt-4">
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
-                >
-                  <Send className="h-5 w-5 mr-2" />
-                  Mesaj Gönder
-                </Button>
-              </div>
-            </form>
+                <div className="flex justify-center pt-4">
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    disabled={loading}
+                    className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Gönderiliyor...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Send className="h-5 w-5" />
+                        Mesaj Gönder
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Support Features */}

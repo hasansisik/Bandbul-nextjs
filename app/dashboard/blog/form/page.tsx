@@ -3,8 +3,13 @@
 import { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { useSearchParams, useRouter } from "next/navigation"
-import { blogPosts, BlogPost } from "@/lib/blogData"
-import { categories, Category } from "@/lib/categoriesData"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "@/redux/store"
+import { getBlogById, createBlog, updateBlog, deleteBlog } from "@/redux/actions/blogActions"
+import { BlogPost, CreateBlogPayload, UpdateBlogPayload } from "@/redux/actions/blogActions"
+import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions"
+import { uploadImageToCloudinary } from "@/utils/cloudinary"
+import { toast } from "sonner"
 import { Button } from "../../../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card"
 import { Input } from "../../../../components/ui/input"
@@ -39,6 +44,9 @@ import {
 import CategoryManagementModal from "../../../../components/CategoryManagementModal"
 
 function BlogFormPageContent() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { currentBlog, loading, error } = useSelector((state: RootState) => state.blog)
+  const { categories: blogCategories, loading: categoriesLoading } = useSelector((state: RootState) => state.blogCategory)
   const searchParams = useSearchParams()
   const router = useRouter()
   const editId = searchParams.get('id')
@@ -52,105 +60,97 @@ function BlogFormPageContent() {
     category: "",
     tags: [] as string[],
     image: "",
-    featured: false
+    featured: false,
+    status: "published"
   })
 
-  const [loading, setLoading] = useState(false)
-  const [post, setPost] = useState<BlogPost | null>(null)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
-  const [categoriesList, setCategoriesList] = useState<Category[]>(categories)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
+    // Load blog categories
+    dispatch(getAllBlogCategories({}))
+    
     if (isEditing && editId) {
-      const foundPost = blogPosts.find(p => p.id === parseInt(editId))
-      if (foundPost) {
-        setPost(foundPost)
-        setFormData({
-          title: foundPost.title,
-          excerpt: foundPost.excerpt,
-          content: foundPost.content,
-          author: foundPost.author,
-          category: foundPost.category,
-          tags: foundPost.tags,
-          image: foundPost.image,
-          featured: foundPost.featured || false
-        })
-        setSelectedTags(foundPost.tags)
-      }
+      dispatch(getBlogById(editId))
     }
-  }, [editId, isEditing])
+  }, [editId, isEditing, dispatch])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
-    if (isEditing && post) {
-      // Güncelleme işlemi
-      const updatedPost = {
-        ...post,
-        title: formData.title,
-        excerpt: formData.excerpt,
-        content: formData.content,
-        author: formData.author,
-        category: formData.category,
-        tags: selectedTags,
-        image: formData.image,
-        featured: formData.featured,
-        slug: formData.title.toLowerCase()
-          .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-          .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
-        categorySlug: formData.category.toLowerCase()
-          .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-          .replace(/\s+/g, '-')
-      }
-
-      // Blog yazısını güncelle
-      const postIndex = blogPosts.findIndex(p => p.id === post.id)
-      if (postIndex !== -1) {
-        blogPosts[postIndex] = updatedPost
-      }
-
-      console.log("Güncellenmiş blog yazısı:", updatedPost)
-      alert("Blog yazısı başarıyla güncellendi!")
-    } else {
-      // Yeni ekleme işlemi
-      const newPost = {
-        id: Date.now(),
-        slug: formData.title.toLowerCase()
-          .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-          .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
-        publishedDate: new Date().toISOString().split('T')[0],
-        readTime: "5 dk",
-        categorySlug: formData.category.toLowerCase()
-          .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
-          .replace(/\s+/g, '-'),
-        ...formData,
-        tags: selectedTags
-      }
-
-      // Yeni blog yazısını ekle
-      blogPosts.push(newPost)
-
-      console.log("Yeni blog yazısı:", newPost)
-      alert("Blog yazısı başarıyla oluşturuldu!")
+  useEffect(() => {
+    if (currentBlog && isEditing) {
+      setFormData({
+        title: currentBlog.title,
+        excerpt: currentBlog.excerpt,
+        content: currentBlog.content,
+        author: currentBlog.author,
+        category: currentBlog.category,
+        tags: currentBlog.tags,
+        image: currentBlog.image,
+        featured: currentBlog.featured || false,
+        status: currentBlog.status || "published"
+      })
+      setSelectedTags(currentBlog.tags)
     }
-    
-    setLoading(false)
-    router.replace("/dashboard/blog", { scroll: false })
+  }, [currentBlog, isEditing])
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const imageUrl = await uploadImageToCloudinary(file)
+      setFormData(prev => ({ ...prev, image: imageUrl }))
+      toast.success("Görsel başarıyla yüklendi!")
+    } catch (error) {
+      console.error('Image upload error:', error)
+      toast.error('Görsel yükleme başarısız. Lütfen tekrar deneyin.')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  const handleDelete = () => {
-    if (post && confirm("Bu blog yazısını silmek istediğinizden emin misiniz?")) {
-      // Blog yazısını sil
-      const postIndex = blogPosts.findIndex(p => p.id === post.id)
-      if (postIndex !== -1) {
-        blogPosts.splice(postIndex, 1)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const blogData = {
+      title: formData.title,
+      excerpt: formData.excerpt,
+      content: formData.content,
+      author: formData.author,
+      category: formData.category,
+      tags: selectedTags,
+      image: formData.image,
+      featured: formData.featured,
+      status: formData.status
+    }
+
+    try {
+      if (isEditing && editId) {
+        // Güncelleme işlemi
+        await dispatch(updateBlog({ id: editId, formData: blogData }))
+        toast.success("Blog yazısı başarıyla güncellendi!")
+      } else {
+        // Yeni ekleme işlemi
+        await dispatch(createBlog(blogData))
+        toast.success("Blog yazısı başarıyla oluşturuldu!")
       }
       
-      console.log("Blog yazısı silindi:", post.id)
-      alert("Blog yazısı silindi!")
       router.replace("/dashboard/blog", { scroll: false })
+    } catch (error) {
+      console.error("Blog işlemi hatası:", error)
+      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.")
+    }
+  }
+
+  const handleDelete = async () => {
+    if (editId && confirm("Bu blog yazısını silmek istediğinizden emin misiniz?")) {
+      try {
+        await dispatch(deleteBlog(editId))
+        toast.success("Blog yazısı silindi!")
+        router.replace("/dashboard/blog", { scroll: false })
+      } catch (error) {
+        console.error("Silme hatası:", error)
+        toast.error("Bir hata oluştu. Lütfen tekrar deneyin.")
+      }
     }
   }
 
@@ -211,7 +211,7 @@ function BlogFormPageContent() {
           </h1>
           <p className="text-muted-foreground">
             {isEditing 
-              ? `"${post?.title}" yazısını düzenleyin` 
+              ? `"${currentBlog?.title}" yazısını düzenleyin` 
               : "Yeni bir blog yazısı oluşturun"
             }
           </p>
@@ -231,7 +231,7 @@ function BlogFormPageContent() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Blog Yazısını Sil</AlertDialogTitle>
                 <AlertDialogDescription>
-                  "{post?.title}" başlıklı blog yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                  "{currentBlog?.title}" başlıklı blog yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -295,9 +295,32 @@ function BlogFormPageContent() {
               ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                   <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Görsel eklemek için URL girin</p>
+                  <p className="text-gray-600 mb-2">Görsel eklemek için dosya seçin</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file)
+                    }}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <Button 
+                      variant="outline" 
+                      className="cursor-pointer"
+                      disabled={uploading}
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                    >
+                      {uploading ? "Yükleniyor..." : "Görsel Seç"}
+                    </Button>
+                  </label>
                 </div>
               )}
+              <div className="text-xs text-muted-foreground">
+                Veya manuel olarak URL girin:
+              </div>
               <Input
                 placeholder="Görsel URL'si girin..."
                 value={formData.image}
@@ -369,8 +392,8 @@ function BlogFormPageContent() {
                       <SelectValue placeholder="Kategori seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categoriesList.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
+                      {blogCategories.filter(cat => cat.active).map((category) => (
+                        <SelectItem key={category._id} value={category.name}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -378,8 +401,8 @@ function BlogFormPageContent() {
                   </Select>
                   
                   <CategoryManagementModal
-                    categories={categoriesList}
-                    onCategoriesChange={setCategoriesList}
+                    categories={blogCategories}
+                    onCategoriesChange={() => dispatch(getAllBlogCategories({}))}
                     triggerButton={
                       <Button variant="outline" size="sm" className="px-3">
                         <Plus className="h-4 w-4" />
@@ -438,6 +461,21 @@ function BlogFormPageContent() {
                   onCheckedChange={(checked) => handleChange("featured", checked)}
                 />
                 <Label htmlFor="featured">Öne çıkan yazı olarak işaretle</Label>
+              </div>
+
+              {/* Durum */}
+              <div className="space-y-2">
+                <Label htmlFor="status">Durum</Label>
+                <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Durum seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="published">Yayınlanmış</SelectItem>
+                    <SelectItem value="draft">Taslak</SelectItem>
+                    <SelectItem value="archived">Arşivlenmiş</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

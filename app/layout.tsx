@@ -7,6 +7,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { Providers } from "@/redux/provider";
 import { UserLoader } from "@/components/UserLoader";
 import { getSettings } from "@/redux/actions/settingsActions";
+import { server } from "@/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,7 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   try {
     // Fetch settings from the API directly (since this runs on the server)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3040'}/v1/settings/public`);
+    const response = await fetch(`${server}/settings/public`);
     const data = await response.json();
     
     if (data.success && data.settings) {

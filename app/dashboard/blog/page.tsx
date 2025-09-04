@@ -1,8 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { blogPosts, BlogPost } from "@/lib/blogData"
-import { categories, Category } from "@/lib/categoriesData"
+import { useState, useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "@/redux/store"
+import { getAllBlogs, deleteBlog } from "@/redux/actions/blogActions"
+import { BlogPost } from "@/redux/actions/blogActions"
+import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions"
+import { toast } from "sonner"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
@@ -26,11 +30,25 @@ import { DataTable } from "../../../components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>(blogPosts)
-  const [categoriesList, setCategoriesList] = useState<Category[]>(categories)
+  const dispatch = useDispatch<AppDispatch>()
+  const { blogs, loading, error, blogStats } = useSelector((state: RootState) => state.blog)
+  const { categories: blogCategories } = useSelector((state: RootState) => state.blogCategory)
 
-  const handleDelete = (id: number) => {
-    setPosts(posts.filter(post => post.id !== id))
+  useEffect(() => {
+    dispatch(getAllBlogs({}))
+    dispatch(getAllBlogCategories({}))
+  }, [dispatch])
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Bu blog yazısını silmek istediğinizden emin misiniz?")) {
+      try {
+        await dispatch(deleteBlog(id))
+        toast.success("Blog yazısı başarıyla silindi!")
+      } catch (error) {
+        console.error("Delete error:", error)
+        toast.error("Blog yazısı silinirken bir hata oluştu.")
+      }
+    }
   }
 
 
@@ -47,17 +65,20 @@ export default function BlogPage() {
         const post = row.original
         return (
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted/50 border">
-            {post.image ? (
+            {post.image && post.image !== "/blogexample.jpg" ? (
               <img
                 src={post.image}
                 alt={post.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
               />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Görsel Yok</span>
-              </div>
-            )}
+            ) : null}
+            <div className={`w-full h-full bg-muted flex items-center justify-center ${post.image && post.image !== "/blogexample.jpg" ? 'hidden' : ''}`}>
+              <span className="text-xs text-muted-foreground">Görsel Yok</span>
+            </div>
           </div>
         )
       },
@@ -109,7 +130,7 @@ export default function BlogPage() {
         const post = row.original
         return (
           <div className="flex gap-2">
-            <Link href={`/dashboard/blog/form?id=${post.id}`}>
+            <Link href={`/dashboard/blog/form?id=${post._id}`}>
               <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
                 <Edit className="h-3 w-3" />
               </Button>
@@ -134,7 +155,7 @@ export default function BlogPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>İptal</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => handleDelete(post.id)}
+                    onClick={() => handleDelete(post._id!)}
                     className="bg-destructive text-white hover:bg-destructive/90"
                   >
                     Sil
@@ -174,8 +195,8 @@ export default function BlogPage() {
         </div>
         <div className="flex gap-2">
           <CategoryManagementModal
-            categories={categoriesList}
-            onCategoriesChange={setCategoriesList}
+            categories={blogCategories}
+            onCategoriesChange={() => dispatch(getAllBlogCategories({}))}
           />
           
           <Link href="/dashboard/blog/form">
@@ -188,38 +209,39 @@ export default function BlogPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground mb-1">Toplam Yazı</div>
-            <div className="text-2xl font-bold">{posts.length}</div>
+            <div className="text-2xl font-bold">{blogStats?.total || 0}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground mb-1">Öne Çıkan</div>
-            <div className="text-2xl font-bold">{posts.filter(p => p.featured).length}</div>
+            <div className="text-2xl font-bold">{blogStats?.featured || 0}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground mb-1">Yayınlanan</div>
+            <div className="text-2xl font-bold">{blogStats?.published || 0}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground mb-1">Taslak</div>
+            <div className="text-2xl font-bold">{blogStats?.draft || 0}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground mb-1">Kategoriler</div>
-            <div className="text-2xl font-bold">{categoriesList.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground mb-1">Bu Ay</div>
-            <div className="text-2xl font-bold">
-              {posts.filter(p => {
-                const postDate = new Date(p.publishedDate)
-                const now = new Date()
-                return postDate.getMonth() === now.getMonth() && postDate.getFullYear() === now.getFullYear()
-              }).length}
-            </div>
+            <div className="text-2xl font-bold">{blogCategories.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -232,7 +254,17 @@ export default function BlogPage() {
           <h2 className="text-lg font-semibold">Blog Yazıları</h2>
           <p className="text-sm text-muted-foreground">Tüm blog yazılarınızı görüntüleyin, düzenleyin ve yönetin</p>
         </div>
-        <DataTable columns={columns} data={posts} />
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">Yükleniyor...</div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-destructive">Hata: {error}</div>
+          </div>
+        ) : (
+          <DataTable columns={columns} data={blogs} />
+        )}
       </div>
       </div>
     )

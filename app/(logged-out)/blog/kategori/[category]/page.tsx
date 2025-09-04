@@ -1,6 +1,12 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getAllBlogs } from "@/redux/actions/blogActions";
+import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions";
+import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,34 +17,37 @@ import {
   User,
   ArrowRight
 } from "lucide-react";
-import { getPostsByCategory, getCategories, BlogPost, blogPosts } from "@/lib/blogData";
 import { notFound } from "next/navigation";
 
 export default function BlogCategoryPage() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
+  const { categories: blogCategories } = useSelector((state: RootState) => state.blogCategory)
+  
   const params = useParams();
   const router = useRouter();
   const categorySlug = params.category as string;
 
-  // Create a mapping from categorySlug to category name
-  const categorySlugToName: { [key: string]: string } = {
-    "produksiyon": "Prodüksiyon",
-    "grup-muzigi": "Grup Müziği",
-    "enstruman": "Enstrüman",
-    "muzik-teorisi": "Müzik Teorisi",
-    "performans": "Performans",
-    "dijital-muzik": "Dijital Müzik",
-    "egitim": "Eğitim",
-    "saglik": "Sağlık",
-    "jazz": "Jazz",
-    "hukuk": "Hukuk",
-    "kultur": "Kültür"
-  };
+  useEffect(() => {
+    dispatch(getAllBlogs({}))
+    dispatch(getAllBlogCategories({}))
+  }, [dispatch])
 
-  const category = categorySlugToName[categorySlug];
-  const categories = getCategories();
-  const posts = category ? getPostsByCategory(category) : [];
+  // Find category by slug
+  const category = blogCategories.find(cat => 
+    cat.name.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-') === categorySlug
+  );
 
-  if (!category || !categories.includes(category)) {
+  const posts = category ? blogs.filter(post => post.category === category.name) : [];
+
+  if (!category) {
     notFound();
   }
 
@@ -52,20 +61,7 @@ export default function BlogCategoryPage() {
   };
 
   const getCategoryDescription = (cat: string) => {
-    const descriptions: { [key: string]: string } = {
-      "Prodüksiyon": "Müzik prodüksiyonu, kayıt teknikleri ve stüdyo teknolojileri hakkında detaylı rehberler.",
-      "Grup Müziği": "Grup kurma, yönetim ve grup içi iletişim konularında pratik ipuçları.",
-      "Enstrüman": "Enstrüman seçimi, bakımı ve öğrenme süreçleri hakkında kapsamlı bilgiler.",
-      "Müzik Teorisi": "Müzik teorisinin temelleri ve pratik uygulamaları.",
-      "Performans": "Sahne performansı, sahne korkusu ve performans teknikleri.",
-      "Dijital Müzik": "Dijital platformlar, teknoloji ve modern müzik endüstrisi.",
-      "Eğitim": "Müzik eğitimi ve öğrenme süreçleri hakkında rehberler.",
-      "Sağlık": "Müzik terapisinin sağlığa katkıları ve uygulamaları.",
-      "Jazz": "Jazz müziği ve improvisasyon teknikleri.",
-      "Hukuk": "Müzik endüstrisinde telif hakları ve yasal konular.",
-      "Kültür": "Dünya müzikleri ve kültürel müzik türleri."
-    };
-    return descriptions[cat] || `${cat} kategorisindeki en güncel yazılar ve rehberler.`;
+    return `${cat} kategorisindeki en güncel yazılar ve rehberler.`;
   };
 
   return (
@@ -88,14 +84,14 @@ export default function BlogCategoryPage() {
           <div className="text-center mb-16">
             <div className="mb-6">
               <Badge variant="outline" className="text-lg border-border font-medium px-6 py-3">
-                {category}
+                {category.name}
               </Badge>
             </div>
             <h1 className="text-5xl font-bold text-foreground mb-6">
-              {category} Kategorisi
+              {category.name} Kategorisi
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {getCategoryDescription(category)}
+              {category.description || getCategoryDescription(category.name)}
             </p>
             <p className="text-lg text-muted-foreground mt-4">
               <span className="font-semibold text-foreground">{posts.length}</span> yazı bulundu
@@ -103,10 +99,18 @@ export default function BlogCategoryPage() {
           </div>
 
           {/* Blog Posts Grid */}
-          {posts.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-muted-foreground">Yükleniyor...</div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-destructive">Hata: {error}</div>
+            </div>
+          ) : posts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {posts.map((post) => (
-                <article key={post.id} className="group">
+                <article key={post._id} className="group">
                   <Link href={`/${post.slug}`}>
                     <div className="bg-card/50 backdrop-blur border border-border/50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
                       <div className="aspect-[4/3] overflow-hidden">
@@ -191,23 +195,30 @@ export default function BlogCategoryPage() {
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.filter(cat => cat !== category).map((cat) => {
-                const categoryPosts = getPostsByCategory(cat);
-                const catSlug = blogPosts.find(post => post.category === cat)?.categorySlug || cat.toLowerCase().replace(/\s+/g, '-');
+              {blogCategories.filter(cat => cat.active && cat.name !== category.name).map((cat) => {
+                const categoryPosts = blogs.filter(post => post.category === cat.name);
+                const catSlug = cat.name.toLowerCase()
+                  .replace(/ğ/g, 'g')
+                  .replace(/ü/g, 'u')
+                  .replace(/ş/g, 's')
+                  .replace(/ı/g, 'i')
+                  .replace(/ö/g, 'o')
+                  .replace(/ç/g, 'c')
+                  .replace(/\s+/g, '-');
                 return (
-                  <Link key={cat} href={`/blog/kategori/${catSlug}`}>
+                  <Link key={cat._id} href={`/blog/kategori/${catSlug}`}>
                     <div className="bg-card/50 backdrop-blur border border-border/50 p-6 hover:shadow-lg transition-all duration-300 group rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
                         <Badge variant="outline" className="text-sm border-border font-medium">
-                          {cat}
+                          {cat.name}
                         </Badge>
                         <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                       </div>
                       <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                        {cat}
+                        {cat.name}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        {getCategoryDescription(cat)}
+                        {cat.description || getCategoryDescription(cat.name)}
                       </p>
                       <p className="text-xs text-muted-foreground/70">
                         {categoryPosts.length} yazı

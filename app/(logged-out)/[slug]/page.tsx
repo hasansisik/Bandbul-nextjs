@@ -1,6 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getBlogBySlug, getAllBlogs } from "@/redux/actions/blogActions";
+import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,18 +18,46 @@ import {
   Tag,
   ChevronRight
 } from "lucide-react";
-import { getPostBySlug, getRecentPosts, BlogPost } from "@/lib/blogData";
 import { notFound } from "next/navigation";
 
 export default function BlogDetailPage() {
+  const dispatch = useDispatch<AppDispatch>()
+  const { currentBlog, blogs, loading, error } = useSelector((state: RootState) => state.blog)
+  
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
 
-  const post = getPostBySlug(slug);
-  const recentPosts = getRecentPosts(3).filter(p => p.slug !== slug);
+  useEffect(() => {
+    if (slug) {
+      dispatch(getBlogBySlug(slug))
+      dispatch(getAllBlogs({}))
+    }
+  }, [dispatch, slug])
 
-  if (!post) {
+  const post = currentBlog;
+  const recentPosts = blogs
+    .filter(p => p.slug !== slug)
+    .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
+    .slice(0, 3);
+
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-center py-20">
+              <div className="text-muted-foreground">Yükleniyor...</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+
+  if (error || (!post && !loading)) {
     notFound();
   }
 
@@ -65,7 +98,17 @@ export default function BlogDetailPage() {
             </span>
             <ChevronRight className="h-4 w-4" />
             <span 
-              onClick={() => router.push(`/blog/kategori/${post.categorySlug}`)} 
+              onClick={() => {
+                const categorySlug = post.category.toLowerCase()
+                  .replace(/ğ/g, 'g')
+                  .replace(/ü/g, 'u')
+                  .replace(/ş/g, 's')
+                  .replace(/ı/g, 'i')
+                  .replace(/ö/g, 'o')
+                  .replace(/ç/g, 'c')
+                  .replace(/\s+/g, '-');
+                router.push(`/blog/kategori/${categorySlug}`)
+              }} 
               className="hover:text-foreground cursor-pointer transition-colors"
             >
               {post.category}
@@ -125,7 +168,7 @@ export default function BlogDetailPage() {
                   <span className="text-sm font-medium text-foreground">Etiketler</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag, index) => (
+                  {post.tags.map((tag: string, index: number) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
@@ -157,7 +200,7 @@ export default function BlogDetailPage() {
               
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recentPosts.map((relatedPost) => (
-                  <article key={relatedPost.id} className="group">
+                  <article key={relatedPost._id} className="group">
                     <Link href={`/${relatedPost.slug}`} className="block">
                       <div className="aspect-[4/3] overflow-hidden rounded-lg mb-4">
                         <img

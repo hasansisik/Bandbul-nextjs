@@ -2,21 +2,36 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
-import { getRecentPosts } from "@/lib/blogData";
 import { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { getAllBlogs } from "@/redux/actions/blogActions";
 import Link from "next/link";
 
 const BlogSection = () => {
-  const blogPosts = getRecentPosts(6);
+  const dispatch = useDispatch<AppDispatch>();
+  const { blogs, loading } = useSelector((state: RootState) => state.blog);
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
+  // Get recent published blogs (max 6)
+  const blogPosts = blogs
+    .filter(blog => blog.status === 'published')
+    .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
+    .slice(0, 6);
+
+  // Fetch blogs on component mount
+  useEffect(() => {
+    dispatch(getAllBlogs({}));
+  }, [dispatch]);
+
   // Auto-scroll effect
   useEffect(() => {
-    if (!isDragging) {
+    if (!isDragging && blogPosts.length > 0) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % Math.max(1, blogPosts.length - 3));
       }, 4000);
@@ -86,17 +101,26 @@ const BlogSection = () => {
 
           {/* Blog Posts Carousel */}
           <div className="relative">
-            <div 
-              ref={carouselRef}
-              className="overflow-hidden cursor-grab active:cursor-grabbing"
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-muted-foreground">Yükleniyor...</div>
+              </div>
+            ) : blogPosts.length === 0 ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-muted-foreground">Henüz blog yazısı bulunmuyor.</div>
+              </div>
+            ) : (
+              <div 
+                ref={carouselRef}
+                className="overflow-hidden cursor-grab active:cursor-grabbing"
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
               <div 
                 className="flex transition-transform duration-700 ease-in-out select-none"
                 style={{ 
@@ -105,7 +129,7 @@ const BlogSection = () => {
                 }}
               >
                 {blogPosts.map((post) => (
-                  <div key={post.id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
+                  <div key={post._id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
                     <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
                       <div className="aspect-[4/3] overflow-hidden relative">
                         <Link href={`/${post.slug}`}>
@@ -126,7 +150,7 @@ const BlogSection = () => {
 
                       <div className="p-6">
                         <div className="flex items-center gap-2 mb-3">
-                          <Link href={`/blog/kategori/${post.categorySlug}`}>
+                          <Link href={`/blog/kategori/${post.categorySlug || post.category.toLowerCase().replace(/\s+/g, '-')}`}>
                             <Badge 
                               variant="outline" 
                               className="text-xs border-border cursor-pointer hover:bg-muted"
@@ -162,22 +186,25 @@ const BlogSection = () => {
                 ))}
               </div>
             </div>
+            )}
 
             {/* Navigation Dots */}
-            <div className="flex justify-center mt-8 space-x-1">
-              {Array.from({ length: Math.max(1, blogPosts.length - 3) }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex 
-                      ? 'bg-primary w-4' 
-                      : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
+            {blogPosts.length > 0 && (
+              <div className="flex justify-center mt-8 space-x-1">
+                {Array.from({ length: Math.max(1, blogPosts.length - 3) }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentIndex 
+                        ? 'bg-primary w-4' 
+                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* View All Button */}
