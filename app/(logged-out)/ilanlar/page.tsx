@@ -9,16 +9,6 @@ import ListingsFilter from "@/components/listings/ListingsFilter";
 import ListingsGrid from "@/components/listings/ListingsGrid";
 import ListingsPagination from "@/components/listings/ListingsPagination";
 
-// Mapping between URL slugs and Turkish category names
-const categorySlugMap: Record<string, string> = {
-  'grup-ariyorum': 'Grup Arıyorum',
-  'muzisyen-ariyorum': 'Müzisyen Arıyorum',
-  'ders-almak-istiyorum': 'Ders Almak İstiyorum',
-  'ders-veriyorum': 'Ders Veriyorum',
-  'enstruman-satiyorum': 'Enstrüman Satıyorum',
-  'studyo-kiraliyorum': 'Stüdyo Kiralıyorum'
-};
-
 function ListingsPageContent() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -91,9 +81,9 @@ function ListingsPageContent() {
         />
 
         <div className="flex flex-col lg:flex-row gap-8 mt-8">
-          {/* Sidebar - Hidden on mobile, shown on desktop */}
+          {/* Sidebar - Show on top for mobile, sidebar for desktop */}
           {showFilters && (
-            <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1">
+            <div className="w-full lg:w-80 flex-shrink-0 order-1 lg:order-1">
               <ListingsFilter
                 onFiltersChange={handleFiltersChange}
               />
@@ -101,7 +91,7 @@ function ListingsPageContent() {
           )}
 
           {/* Main Content */}
-          <div className="flex-1 order-1 lg:order-2">
+          <div className="flex-1 order-2 lg:order-2">
             <ListingsGrid
               listings={allListings}
               listingsLoading={listingsLoading}

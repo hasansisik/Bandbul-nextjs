@@ -128,7 +128,7 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
           </Button>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center border border-border rounded-lg bg-muted/50">
+          <div className="flex items-center border border-border rounded-lg bg-muted/50 w-fit">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
