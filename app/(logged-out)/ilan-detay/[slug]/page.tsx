@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -24,6 +24,7 @@ import { useAppDispatch } from "@/redux/hook";
 
 export default function ListingDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { allListings, listingsLoading, isAuthenticated, user } = useAppSelector((state) => state.user);
   const [listing, setListing] = useState<any>(null);
@@ -45,6 +46,30 @@ export default function ListingDetailPage() {
       }
     }
   }, [params.slug, allListings]);
+
+  // Function to create category slug for URL
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
+
+  // Function to handle category click in breadcrumb
+  const handleCategoryClick = () => {
+    const categoryName = listing.categoryInfo?.name || listing.category;
+    const categorySlug = createCategorySlug(categoryName);
+    router.push(`/ilanlar?category=${categorySlug}`);
+  };
+
+  // Function to handle listings click in breadcrumb
+  const handleListingsClick = () => {
+    router.push('/ilanlar');
+  };
 
 
 
@@ -79,9 +104,19 @@ export default function ListingDetailPage() {
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-8">
-            <span className="hover:text-foreground cursor-pointer transition-colors">İlanlar</span>
+            <span 
+              onClick={handleListingsClick}
+              className="hover:text-foreground cursor-pointer transition-colors"
+            >
+              İlanlar
+            </span>
             <ChevronRight className="h-4 w-4" />
-            <span className="hover:text-foreground cursor-pointer transition-colors">{listing.categoryInfo?.name || listing.category}</span>
+            <span 
+              onClick={handleCategoryClick}
+              className="hover:text-foreground cursor-pointer transition-colors"
+            >
+              {listing.categoryInfo?.name || listing.category}
+            </span>
             <ChevronRight className="h-4 w-4" />
             <span className="text-foreground font-medium truncate max-w-xs">{listing.title}</span>
           </nav>

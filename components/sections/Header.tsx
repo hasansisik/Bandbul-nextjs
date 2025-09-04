@@ -30,14 +30,28 @@ const Header = () => {
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
+  // Function to create category slug for URL
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
+
   const categoryItems = settings?.header?.categories?.map((categoryId: string) => {
     // Find category from fetched categories
     const category = categories.find(cat => cat._id === categoryId || cat.slug === categoryId);
     
     if (category) {
+      // Use the category name to generate a proper slug
+      const categorySlug = createCategorySlug(category.name);
       return {
         name: category.name,
-        href: `/ilanlar?category=${category.slug || category._id}`
+        href: `/ilanlar?category=${categorySlug}`
       };
     }
     

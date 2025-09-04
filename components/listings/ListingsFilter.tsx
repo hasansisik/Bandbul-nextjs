@@ -147,26 +147,41 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       instruments: [] as string[]
     };
     
-    // Set category filter
+    // Set category filter from URL
     if (categorySlug && categorySlugMap[categorySlug]) {
       newFilters.categories = [categorySlugMap[categorySlug]];
     }
     
-    // Set location filter
+    // Set location filter from URL
     if (locationParam) {
-      newFilters.locations = [locationParam]; // Use actual location name
+      newFilters.locations = [locationParam];
     }
     
-    // Set instrument filter
+    // Set instrument filter from URL
     if (instrumentParam) {
-      newFilters.instruments = [instrumentParam]; // Use actual instrument name
+      newFilters.instruments = [instrumentParam];
     }
     
-    // Update state
-    setSelectedCategories(newFilters.categories);
-    setSelectedLocations(newFilters.locations);
-    setSelectedExperience(newFilters.experience);
-    setSelectedInstruments(newFilters.instruments);
+    // Only update state if there are changes to prevent unnecessary re-renders
+    setSelectedCategories(prev => {
+      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.categories);
+      return hasChanged ? newFilters.categories : prev;
+    });
+    
+    setSelectedLocations(prev => {
+      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.locations);
+      return hasChanged ? newFilters.locations : prev;
+    });
+    
+    setSelectedExperience(prev => {
+      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.experience);
+      return hasChanged ? newFilters.experience : prev;
+    });
+    
+    setSelectedInstruments(prev => {
+      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.instruments);
+      return hasChanged ? newFilters.instruments : prev;
+    });
   }, [searchParams]);
 
   const hasActiveFilters = selectedCategories.length > 0 || selectedLocations.length > 0 || selectedExperience.length > 0 || selectedInstruments.length > 0;
