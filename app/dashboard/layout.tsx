@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { UserLoader } from "@/components/UserLoader"
+import { DashboardMiddleware } from "@/components/DashboardMiddleware"
 import { Toaster } from "sonner"
 
 import {
@@ -13,15 +14,17 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <UserLoader />
-      <AppSidebar />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col gap-4 p-4 px-8">
-          {children}
-        </div>
-      </SidebarInset>
-      <Toaster />
-    </SidebarProvider>
+    <DashboardMiddleware>
+      <SidebarProvider>
+        <UserLoader />
+        <AppSidebar />
+        <SidebarInset>
+          <div className="flex flex-1 flex-col gap-4 p-4 px-8">
+            {children}
+          </div>
+        </SidebarInset>
+        <Toaster />
+      </SidebarProvider>
+    </DashboardMiddleware>
   )
 }
