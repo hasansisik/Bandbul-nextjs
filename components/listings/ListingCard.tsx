@@ -152,38 +152,55 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
 
   // List view
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
+    <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden hover:shadow-md transition-all duration-200 group">
       <Link href={`/ilan-detay/${listing._id}`} className="block">
-        <div className="flex flex-col sm:flex-row">
-          {/* Image */}
-          <div className="relative w-full sm:w-48 h-32 overflow-hidden flex-shrink-0">
-            <img 
-              src={listing.image} 
-              alt={listing.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+        <div className="flex">
+          {/* Image - Better size on mobile */}
+          <div className="relative w-24 h-24 sm:w-48 sm:h-32 overflow-hidden flex-shrink-0">
+              <img 
+                src={listing.image} 
+                alt={listing.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
             {/* Category Badge - Top Left */}
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-1 left-1 sm:top-2 sm:left-2">
               <Badge className={`text-xs border ${getCategoryColor(listing.categoryInfo?.name || listing.category)}`}>
-                {listing.categoryInfo?.name || listing.category}
+                <span className="hidden sm:inline">{listing.categoryInfo?.name || listing.category}</span>
+                <span className="sm:hidden">{(listing.categoryInfo?.name || listing.category).split(' ')[0]}</span>
               </Badge>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-3 sm:p-5">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-card-foreground text-sm sm:text-base flex-1 mr-4">
+          <div className="flex-1 p-2 sm:p-5 min-w-0 flex flex-col justify-center">
+            <div className="flex items-start justify-between mb-1 sm:mb-2">
+              <h3 className="font-semibold text-card-foreground text-sm sm:text-base flex-1 mr-2 truncate">
                 {listing.title}
               </h3>
+              <Badge variant="outline" className="text-xs border-border flex-shrink-0 ml-2">
+                {listing.experience}
+              </Badge>
             </div>
 
-            <p className="text-muted-foreground text-xs sm:text-sm mb-3 line-clamp-2">
+            <p className="text-muted-foreground text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2">
               {listing.description}
             </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+            {/* Mobile: Compact info */}
+            <div className="sm:hidden space-y-1">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{listing.location}</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Music className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{listing.instrument || 'Belirtilmemiş'}</span>
+              </div>
+            </div>
+
+            {/* Desktop: Full info */}
+            <div className="hidden sm:flex sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {listing.location}
@@ -226,24 +243,18 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
                   <span>{listing.instrument || 'Belirtilmemiş'}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-xs border-border">
-                  {listing.experience}
-                </Badge>
-              </div>
             </div>
           </div>
         </div>
       </Link>
 
-      {/* Actions */}
-      <div className="px-3 sm:px-5 pb-3">
+      {/* Actions - Only show on desktop */}
+      <div className="hidden sm:block px-5 pb-3">
         <div className="flex items-center justify-end">
           {isLoggedIn && (
-            <Button size="sm" className="h-7 sm:h-8 px-3 sm:px-4 bg-black hover:bg-gray-800 text-xs sm:text-sm">
-              <MessageCircle className="h-3 w-3 mr-1" />
-              <span className="hidden sm:inline">İletişim</span>
-              <span className="sm:hidden">Mesaj</span>
+            <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800 text-sm">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              İletişim
             </Button>
           )}
         </div>

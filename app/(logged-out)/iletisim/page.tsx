@@ -214,7 +214,7 @@ export default function ContactPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90 py-3 text-lg rounded-xl"
+                    className="w-full bg-primary hover:bg-primary/90 py-3 text-lg rounded-md"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">
@@ -245,9 +245,9 @@ export default function ContactPage() {
                   }
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="border-border">Müzik Platformu</Badge>
-                  <Badge variant="outline" className="border-border">Güvenilir</Badge>
-                  <Badge variant="outline" className="border-border">Profesyonel</Badge>
+                  <Badge variant="outline" className="border-border p-2 rounded-full">Müzik Platformu</Badge>
+                  <Badge variant="outline" className="border-border p-2 rounded-full">Güvenilir</Badge>
+                  <Badge variant="outline" className="border-border p-2 rounded-full">Profesyonel</Badge>
                 </div>
               </div>
 

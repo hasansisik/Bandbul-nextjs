@@ -31,7 +31,6 @@ export default function FAQPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <HelpCircle className="h-8 w-8 text-primary" />
             <h1 className="text-5xl font-bold text-foreground">Sıkça Sorulan Sorular</h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -79,14 +78,14 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 onClick={handleSupportContact}
-                className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
+                className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-md"
               >
                 İletişim Sayfasına Git
               </Button>
               <Button 
                 onClick={handleEmailContact}
                 variant="outline" 
-                className="border-border hover:bg-accent px-8 py-3 text-lg rounded-xl"
+                className="border-border hover:bg-accent px-8 py-3 text-lg rounded-md"
               >
                 E-posta Gönder
               </Button>
