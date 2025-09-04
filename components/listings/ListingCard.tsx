@@ -168,15 +168,6 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
                 {listing.categoryInfo?.name || listing.category}
               </Badge>
             </div>
-            
-            {/* Instrument Badge - Top Right */}
-            {listing.instrument && (
-              <div className="absolute top-2 right-2">
-                <Badge className="text-xs border bg-blue-100 text-blue-800 border-blue-200">
-                  🎵 {listing.instrument}
-                </Badge>
-              </div>
-            )}
           </div>
 
           {/* Content */}
