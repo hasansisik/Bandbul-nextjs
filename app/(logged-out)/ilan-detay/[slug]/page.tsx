@@ -19,18 +19,18 @@ import {
   Clock
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hook";
-import { getAllListings } from "@/redux/actions/userActions";
+import { getAllListings, loadUser } from "@/redux/actions/userActions";
 import { useAppDispatch } from "@/redux/hook";
 
 export default function ListingDetailPage() {
   const params = useParams();
   const dispatch = useAppDispatch();
-  const { allListings, listingsLoading } = useAppSelector((state) => state.user);
+  const { allListings, listingsLoading, isAuthenticated, user } = useAppSelector((state) => state.user);
   const [listing, setListing] = useState<any>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Load all listings if not already loaded
+    // Load user and listings
+    dispatch(loadUser());
     if (allListings.length === 0) {
       dispatch(getAllListings({}));
     }
@@ -146,23 +146,42 @@ export default function ListingDetailPage() {
                 <h2 className="text-xl font-semibold text-foreground">Detaylar</h2>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <User className="h-5 w-5 text-primary" />
+                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {listing.authorInfo?.profile?.picture ? (
+                        <img 
+                          src={listing.authorInfo.profile.picture} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : listing.user?.picture ? (
+                        <img 
+                          src={listing.user.picture} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">İlan Sahibi</p>
-                      <p className="font-medium text-foreground">{listing.authorInfo ? `${listing.authorInfo.name} ${listing.authorInfo.surname}` : 'Bilinmeyen'}</p>
+                      <p className="font-medium text-foreground">
+                        {listing.authorInfo 
+                          ? `${listing.authorInfo.name} ${listing.authorInfo.surname}` 
+                          : listing.user 
+                          ? `${listing.user.name} ${listing.user.surname}` 
+                          : 'Bilinmeyen'
+                        }
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                     <div className="p-2 bg-primary/10 rounded-lg">
-                      <Award className="h-5 w-5 text-primary" />
+                      <Award className="h-8 w-8 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Deneyim</p>
-                      <Badge variant="outline" className="text-sm">
                         {listing.experience}
-                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -174,7 +193,7 @@ export default function ListingDetailPage() {
               {/* Contact Card */}
               <div className="bg-card border rounded-xl p-6 space-y-4">
                 <h3 className="text-lg font-semibold text-foreground">İletişim</h3>
-                {isLoggedIn ? (
+                {isAuthenticated ? (
                   <div className="space-y-3">
                     <Button className="w-full" size="lg">
                       <MessageCircle className="h-4 w-4 mr-2" />
