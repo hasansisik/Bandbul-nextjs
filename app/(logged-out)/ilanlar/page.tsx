@@ -81,7 +81,7 @@ function ListingsPageContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
         <ListingsHeader
           viewMode={viewMode}
           onSearch={handleSearch}
@@ -90,10 +90,10 @@ function ListingsPageContent() {
           searchQuery={searchQuery}
         />
 
-        <div className="flex gap-8 mt-8">
-          {/* Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-8 mt-8">
+          {/* Sidebar - Hidden on mobile, shown on desktop */}
           {showFilters && (
-            <div className="w-80 flex-shrink-0">
+            <div className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1">
               <ListingsFilter
                 onFiltersChange={handleFiltersChange}
               />
@@ -101,7 +101,7 @@ function ListingsPageContent() {
           )}
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 order-1 lg:order-2">
             <ListingsGrid
               listings={allListings}
               listingsLoading={listingsLoading}

@@ -73,20 +73,20 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
   };
 
   return (
-    <div className="bg-card/50 backdrop-blur rounded-xl p-8 border border-border/50 shadow-sm">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+    <div className="bg-card/50 backdrop-blur rounded-xl p-4 sm:p-6 lg:p-8 border border-border/50 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
         {/* Title and Description */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-3">Müzik İlanları</h1>
-          <p className="text-muted-foreground text-base">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 sm:mb-3">Müzik İlanları</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Grup arayanlar, müzisyen arayanlar ve ders verenler için ilanlar
           </p>
         </div>
 
         {/* Search and View Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           {/* Search */}
-          <div className="relative flex-1 lg:flex-none lg:w-80">
+          <div className="relative flex-1 sm:flex-none sm:w-80">
             <Input
               placeholder="İlan ara..."
               value={searchQuery}
@@ -119,11 +119,12 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
           <Button 
             variant="outline" 
             size="sm" 
-            className="hidden md:flex h-12 px-6 border-border hover:bg-accent"
+            className="flex h-10 sm:h-12 px-4 sm:px-6 border-border hover:bg-accent text-sm sm:text-base"
             onClick={handleFilterClick}
           >
             <Filter className="h-4 w-4 mr-2" />
-            Filtrele
+            <span className="hidden sm:inline">Filtrele</span>
+            <span className="sm:hidden">Filtre</span>
           </Button>
 
           {/* View Mode Toggle */}
@@ -131,29 +132,29 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-10 w-10 p-0 rounded-r-none ${viewMode === 'grid' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
+              className={`h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-r-none ${viewMode === 'grid' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
               onClick={() => handleViewModeChange('grid')}
             >
-              <Grid3X3 className="h-4 w-4" />
+              <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <Button
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
-              className={`h-10 w-10 p-0 rounded-l-none ${viewMode === 'list' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
+              className={`h-8 w-8 sm:h-10 sm:w-10 p-0 rounded-l-none ${viewMode === 'list' ? 'bg-primary hover:bg-primary/90' : 'hover:bg-accent'}`}
               onClick={() => handleViewModeChange('list')}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-8 mt-8 pt-6 border-t border-border/50">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-muted-foreground/50 rounded-full"></div>
-          <span className="text-sm text-muted-foreground">Toplam:</span>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">Toplam Aktif:</span>
+          <span className="text-xs sm:text-sm font-semibold text-foreground">
             {listingsLoading ? "Yükleniyor..." : `${stats.total.toLocaleString()} ilan`}
           </span>
         </div>

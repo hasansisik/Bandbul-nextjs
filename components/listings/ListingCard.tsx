@@ -43,7 +43,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {/* Category Badge - Top Left */}
-            <div className="absolute top-3 left-3">
+            <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
               <Badge className={`text-xs border ${getCategoryColor(listing.categoryInfo?.name || listing.category)}`}>
                 {listing.categoryInfo?.name || listing.category}
               </Badge>
@@ -51,7 +51,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
             
             {/* Instrument Badge - Top Right */}
             {listing.instrument && (
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                 <Badge className="text-xs border bg-blue-100 text-blue-800 border-blue-200">
                   🎵 {listing.instrument}
                 </Badge>
@@ -60,22 +60,23 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
           </div>
 
           {/* Content */}
-          <div className="p-5">
+          <div className="p-3 sm:p-5">
             {/* Title */}
-            <h3 className="font-semibold text-card-foreground text-sm line-clamp-2 flex-1 mr-2 leading-tight mb-3">
+            <h3 className="font-semibold text-card-foreground text-sm line-clamp-2 flex-1 mr-2 leading-tight mb-2 sm:mb-3">
               {listing.title}
             </h3>
 
             {/* Description */}
-            <p className="text-muted-foreground text-xs mb-4 line-clamp-2 leading-relaxed">
+            <p className="text-muted-foreground text-xs mb-3 sm:mb-4 line-clamp-2 leading-relaxed">
               {listing.description}
             </p>
 
             {/* Location and Date */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="h-3 w-3" />
-                {listing.location}
+                <span className="hidden sm:inline">{listing.location}</span>
+                <span className="sm:hidden">{listing.location.length > 15 ? listing.location.substring(0, 15) + '...' : listing.location}</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
@@ -86,7 +87,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
             {/* Author and Experience */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                   {listing.authorInfo?.profile?.picture ? (
                     <img 
                       src={listing.authorInfo.profile.picture} 
@@ -105,11 +106,23 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
                     </span>
                   )}
                 </div>
-                <span>
+                <span className="hidden sm:inline">
                   {listing.authorInfo 
                     ? `${listing.authorInfo.name} ${listing.authorInfo.surname}` 
                     : listing.user 
                     ? `${listing.user.name} ${listing.user.surname}` 
+                    : 'Bilinmeyen'
+                  }
+                </span>
+                <span className="sm:hidden">
+                  {listing.authorInfo 
+                    ? `${listing.authorInfo.name} ${listing.authorInfo.surname}`.length > 12 
+                      ? `${listing.authorInfo.name} ${listing.authorInfo.surname}`.substring(0, 12) + '...'
+                      : `${listing.authorInfo.name} ${listing.authorInfo.surname}`
+                    : listing.user 
+                    ? `${listing.user.name} ${listing.user.surname}`.length > 12
+                      ? `${listing.user.name} ${listing.user.surname}`.substring(0, 12) + '...'
+                      : `${listing.user.name} ${listing.user.surname}`
                     : 'Bilinmeyen'
                   }
                 </span>
@@ -122,12 +135,13 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
         </Link>
 
         {/* Actions */}
-        <div className="px-5 pb-3">
+        <div className="px-3 sm:px-5 pb-3">
           <div className="flex items-center justify-end">
             {isLoggedIn && (
-              <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800">
+              <Button size="sm" className="h-7 sm:h-8 px-3 sm:px-4 bg-black hover:bg-gray-800 text-xs sm:text-sm">
                 <MessageCircle className="h-3 w-3 mr-1" />
-                İletişim
+                <span className="hidden sm:inline">İletişim</span>
+                <span className="sm:hidden">Mesaj</span>
               </Button>
             )}
           </div>
@@ -140,9 +154,9 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
   return (
     <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <Link href={`/ilan-detay/${listing._id}`} className="block">
-        <div className="flex">
+        <div className="flex flex-col sm:flex-row">
           {/* Image */}
-          <div className="relative w-48 h-32 overflow-hidden flex-shrink-0">
+          <div className="relative w-full sm:w-48 h-32 overflow-hidden flex-shrink-0">
             <img 
               src={listing.image} 
               alt={listing.title}
@@ -166,19 +180,19 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-5">
+          <div className="flex-1 p-3 sm:p-5">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-card-foreground text-base flex-1 mr-4">
+              <h3 className="font-semibold text-card-foreground text-sm sm:text-base flex-1 mr-4">
                 {listing.title}
               </h3>
             </div>
 
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+            <p className="text-muted-foreground text-xs sm:text-sm mb-3 line-clamp-2">
               {listing.description}
             </p>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
                   {listing.location}
@@ -232,12 +246,13 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
       </Link>
 
       {/* Actions */}
-      <div className="px-5 pb-3">
+      <div className="px-3 sm:px-5 pb-3">
         <div className="flex items-center justify-end">
           {isLoggedIn && (
-            <Button size="sm" className="h-8 px-4 bg-black hover:bg-gray-800">
+            <Button size="sm" className="h-7 sm:h-8 px-3 sm:px-4 bg-black hover:bg-gray-800 text-xs sm:text-sm">
               <MessageCircle className="h-3 w-3 mr-1" />
-              İletişim
+              <span className="hidden sm:inline">İletişim</span>
+              <span className="sm:hidden">Mesaj</span>
             </Button>
           )}
         </div>
