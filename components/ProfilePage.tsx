@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { 
   Edit, 
   Plus, 
@@ -52,31 +53,91 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-// Default user data structure
-const defaultUser = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  joinDate: "",
-  location: "Türkiye",
-  avatar: null,
-  bio: "Henüz bir biyografi eklenmemiş.",
-  totalReviews: 0,
-  totalListings: 0,
-  skills: ["Müzik"],
-  isOnline: false
-}
+// Skeleton components for loading states
+const ProfileHeaderSkeleton = () => (
+  <div className="bg-background border-b border-border">
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Skeleton className="w-16 h-16 rounded-full" />
+          </div>
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-20" />
+        </div>
+      </div>
+    </div>
+  </div>
+)
 
-// Available categories and types based on existing data
-const categories = [
-  "Müzisyen Arıyorum",
-  "Ders Veriyorum", 
-  "Ders Almak İstiyorum",
-  "Grup Arıyorum",
-  "Enstrüman Satıyorum",
-  "Stüdyo Kiralıyorum"
-]
+const ProfileStatsSkeleton = () => (
+  <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
+    <Skeleton className="h-6 w-32 mb-4" />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <Skeleton className="w-5 h-5 mr-3" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-4 w-8" />
+      </div>
+    </div>
+  </div>
+)
+
+const SkillsSkeleton = () => (
+  <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
+    <Skeleton className="h-6 w-20 mb-4" />
+    <div className="flex flex-wrap gap-2">
+      <Skeleton className="h-6 w-16 rounded-full" />
+      <Skeleton className="h-6 w-20 rounded-full" />
+      <Skeleton className="h-6 w-14 rounded-full" />
+    </div>
+  </div>
+)
+
+const BioSkeleton = () => (
+  <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
+    <Skeleton className="h-6 w-24 mb-4" />
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+    </div>
+  </div>
+)
+
+const ListingsGridSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {Array.from({ length: 6 }).map((_, index) => (
+      <div key={index} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <Skeleton className="w-full h-48" />
+        <div className="p-5">
+          <Skeleton className="h-6 w-3/4 mb-2" />
+          <Skeleton className="h-4 w-1/2 mb-3" />
+          <div className="space-y-2 mb-4">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)
+
 
 const experienceLevels = [
   "Başlangıç",
@@ -119,10 +180,10 @@ export function ProfilePage() {
   }
   
   // Get user data and listings from Redux
-  const { user, userListings, listingsLoading, categories, categoriesLoading } = useAppSelector((state) => state.user)
+  const { user, userListings, listingsLoading, categories, categoriesLoading, loading } = useAppSelector((state) => state.user)
   
   // Transform Redux user data to component format
-  const userData = user ? {
+  const userData = user && user.name ? {
     firstName: user.name || "",
     lastName: user.surname || "",
     email: user.email || "",
@@ -135,7 +196,7 @@ export function ProfilePage() {
     totalListings: userListings.length,
     skills: user.profile?.skills || ["Müzik"],
     isOnline: true
-  } : defaultUser
+  } : null
   
   // New listing form state
   const [newListing, setNewListing] = useState({
@@ -293,7 +354,7 @@ export function ProfilePage() {
         title: newListing.title,
         description: newListing.description,
         category: newListing.category,
-        location: newListing.location || userData.location,
+        location: newListing.location || userData?.location || "Türkiye",
         image: newListing.image || "/blogexample.jpg",
         experience: newListing.experience || "Orta",
         instrument: newListing.instrument || ""
@@ -349,6 +410,35 @@ export function ProfilePage() {
       return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Pasif</Badge>
     }
     return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aktif</Badge>
+  }
+
+  // Show loading skeleton if user data is not loaded yet
+  if (loading || !user || !userData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <ProfileHeaderSkeleton />
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Sidebar Skeletons */}
+            <div className="lg:col-span-1 space-y-6">
+              <ProfileStatsSkeleton />
+              <SkillsSkeleton />
+            </div>
+            {/* Main Content Skeletons */}
+            <div className="lg:col-span-3 space-y-6">
+              <BioSkeleton />
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-9 w-32" />
+                </div>
+                <ListingsGridSkeleton />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -485,7 +575,7 @@ export function ProfilePage() {
               <h3 className="font-semibold text-card-foreground mb-4">Yetenekler</h3>
               <div className="flex flex-wrap gap-2">
                 {userData.skills.map((skill: string, index: number) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
+                  <Badge key={index} variant="secondary" className="text-xs px-4 py-2 rounded-full">
                     {skill}
                   </Badge>
                 ))}
