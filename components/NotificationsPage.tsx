@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -10,114 +11,99 @@ import {
   X, 
   MessageCircle, 
   UserPlus, 
-  Music
+  Music,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  XCircle
 } from "lucide-react"
-
-// Mock notification data
-const mockNotifications = [
-  {
-    id: 1,
-    type: "message",
-    title: "Yeni Mesaj",
-    message: "Ayşe Demir size bir mesaj gönderdi",
-    timestamp: "5 dakika önce",
-    isRead: false,
-    icon: MessageCircle,
-    action: "Mesajı Görüntüle"
-  },
-  {
-    id: 2,
-    type: "listing",
-    title: "İlanınız Yayınlandı",
-    message: "Gitar Dersi ilanınız başarıyla yayınlandı",
-    timestamp: "1 saat önce",
-    isRead: false,
-    icon: Music,
-    action: "İlanı Görüntüle"
-  },
-  {
-    id: 3,
-    type: "welcome",
-    title: "Aramıza Hoşgeldiniz",
-    message: "Bandbul'a hoşgeldiniz! İlk ilanınızı oluşturmaya başlayabilirsiniz",
-    timestamp: "2 gün önce",
-    isRead: true,
-    icon: UserPlus,
-    action: "İlan Oluştur"
-  },
-  {
-    id: 4,
-    type: "message",
-    title: "Yeni Mesaj",
-    message: "Mehmet Kaya size bir mesaj gönderdi",
-    timestamp: "3 saat önce",
-    isRead: true,
-    icon: MessageCircle,
-    action: "Mesajı Görüntüle"
-  },
-  {
-    id: 5,
-    type: "listing",
-    title: "İlanınız Yayınlandı",
-    message: "Piyano Dersi ilanınız başarıyla yayınlandı",
-    timestamp: "1 gün önce",
-    isRead: true,
-    icon: Music,
-    action: "İlanı Görüntüle"
-  },
-  {
-    id: 6,
-    type: "message",
-    title: "Yeni Mesaj",
-    message: "Zeynep Yılmaz size bir mesaj gönderdi",
-    timestamp: "2 gün önce",
-    isRead: true,
-    icon: MessageCircle,
-    action: "Mesajı Görüntüle"
-  }
-]
+import { useAppSelector, useAppDispatch } from "@/redux/hook"
+import { 
+  getUserNotifications, 
+  markAsRead, 
+  markAllAsRead, 
+  deleteNotification,
+  getNotificationStats 
+} from "@/redux/actions/notificationActions"
 
 export function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const { notifications, loading, error, stats } = useAppSelector((state) => state.notification)
   const [filter, setFilter] = useState<"all" | "unread">("all")
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  // Load notifications on component mount
+  useEffect(() => {
+    dispatch(getUserNotifications({ page: currentPage, limit: 20 }))
+    dispatch(getNotificationStats())
+  }, [dispatch, currentPage])
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id 
-        ? { ...notification, isRead: true }
-        : notification
-    ))
+  const unreadCount = stats?.unread || 0
+
+  const handleMarkAsRead = (id: string) => {
+    dispatch(markAsRead(id))
   }
 
   const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(notification => 
-      ({ ...notification, isRead: true })
-    ))
+    dispatch(markAllAsRead())
   }
 
-  const handleDeleteNotification = (id: number) => {
-    setNotifications(notifications.filter(notification => notification.id !== id))
+  const handleDeleteNotification = (id: string) => {
+    dispatch(deleteNotification(id))
+  }
+
+  const handleViewListing = (listingId: string) => {
+    router.push(`/ilan-detay/${listingId}`)
+  }
+
+  const handleViewMessage = (conversationId: string) => {
+    router.push(`/mesajlar?conversationId=${conversationId}`)
   }
 
   const filteredNotifications = filter === "unread" 
     ? notifications.filter(n => !n.isRead)
     : notifications
 
-  const getNotificationIcon = (icon: any, type: string) => {
-    const IconComponent = icon
+  // Format timestamp
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+    
+    if (diffInMinutes < 1) return 'Az önce'
+    if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} saat önce`
+    return `${Math.floor(diffInMinutes / 1440)} gün önce`
+  }
+
+  const getNotificationIcon = (type: string) => {
     const iconClass = `w-5 h-5 ${
-      type === "message" ? "text-blue-500" :
-      type === "listing" ? "text-purple-500" :
+      type === "message_received" ? "text-blue-500" :
+      type === "listing_created" ? "text-purple-500" :
+      type === "listing_approved" ? "text-green-500" :
+      type === "listing_rejected" ? "text-red-500" :
       type === "welcome" ? "text-green-500" :
-      type === "reminder" ? "text-orange-500" :
       type === "system" ? "text-blue-600" :
-      type === "warning" ? "text-red-600" :
       "text-muted-foreground"
     }`
     
-    return <IconComponent className={iconClass} />
+    switch (type) {
+      case 'message_received':
+        return <MessageCircle className={iconClass} />
+      case 'listing_created':
+        return <FileText className={iconClass} />
+      case 'listing_approved':
+        return <CheckCircle className={iconClass} />
+      case 'listing_rejected':
+        return <XCircle className={iconClass} />
+      case 'welcome':
+        return <UserPlus className={iconClass} />
+      case 'system':
+        return <AlertCircle className={iconClass} />
+      default:
+        return <Bell className={iconClass} />
+    }
   }
 
   return (
@@ -176,91 +162,131 @@ export function NotificationsPage() {
           </div>
         </div>
 
-        {/* Notifications List */}
-        <div className="space-y-4">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`bg-card rounded-xl border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md ${
-                  !notification.isRead ? 'ring-2 ring-primary/20' : ''
-                }`}
-              >
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border shadow-sm p-4 animate-pulse">
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    {getNotificationIcon(notification.icon, notification.type)}
+                  <div className="w-5 h-5 bg-muted rounded"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="h-3 bg-muted rounded w-1/4"></div>
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold text-card-foreground">
-                            {notification.title}
-                          </h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-center">
+            <p className="text-destructive">{error}</p>
+          </div>
+        )}
+
+        {/* Notifications List */}
+        {!loading && !error && (
+          <div className="space-y-4">
+            {filteredNotifications.length > 0 ? (
+              filteredNotifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  className={`bg-card rounded-xl border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md ${
+                    !notification.isRead ? 'ring-2 ring-primary/20' : ''
+                  }`}
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-card-foreground">
+                              {notification.title}
+                            </h3>
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimestamp(notification.createdAt)}
+                            </span>
+                            {notification.conversationId && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-primary hover:text-primary"
+                                onClick={() => handleViewMessage(notification.conversationId)}
+                              >
+                                Mesajı Görüntüle
+                              </Button>
+                            )}
+                            {notification.listingId && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-primary hover:text-primary"
+                                onClick={() => handleViewListing(notification.listingId)}
+                              >
+                                İlanı Görüntüle
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-1 ml-4">
                           {!notification.isRead && (
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkAsRead(notification._id)}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
                           )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-xs text-muted-foreground">
-                            {notification.timestamp}
-                          </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs text-primary hover:text-primary"
+                            onClick={() => handleDeleteNotification(notification._id)}
+                            className="text-muted-foreground hover:text-destructive"
                           >
-                            {notification.action}
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1 ml-4">
-                        {!notification.isRead && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteNotification(notification.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
                       </div>
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="bg-card rounded-xl border border-border shadow-sm p-12 text-center">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bell className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-card-foreground mb-2">
+                  {filter === "unread" ? "Okunmamış bildirim yok" : "Henüz bildirim yok"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {filter === "unread" 
+                    ? "Tüm bildirimlerinizi okudunuz" 
+                    : "Yeni bildirimler geldiğinde burada görünecek"
+                  }
+                </p>
               </div>
-            ))
-          ) : (
-            <div className="bg-card rounded-xl border border-border shadow-sm p-12 text-center">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                {filter === "unread" ? "Okunmamış bildirim yok" : "Henüz bildirim yok"}
-              </h3>
-              <p className="text-muted-foreground">
-                {filter === "unread" 
-                  ? "Tüm bildirimlerinizi okudunuz" 
-                  : "Yeni bildirimler geldiğinde burada görünecek"
-                }
-              </p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
 
       </div>

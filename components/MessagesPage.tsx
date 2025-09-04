@@ -97,8 +97,12 @@ export function MessagesPage() {
   useEffect(() => {
     const recipientId = searchParams.get('recipientId')
     const recipientName = searchParams.get('recipientName')
+    const conversationId = searchParams.get('conversationId')
     
-    if (recipientId && recipientName && !isStartingConversation) {
+    if (conversationId && !isStartingConversation) {
+      // Direct conversation ID provided
+      setSelectedConversation(conversationId)
+    } else if (recipientId && recipientName && !isStartingConversation) {
       // Check if conversation already exists in unique conversations
       const existingConversation = uniqueConversations.find(conv => 
         conv.otherParticipant._id === recipientId
