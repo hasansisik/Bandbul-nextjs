@@ -101,9 +101,7 @@ export default function ContactPage() {
             İletişim
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            {settings?.metadata?.description ||
-              "Sorularınız, önerileriniz veya işbirliği talepleriniz için bizimle iletişime geçin. En kısa sürede size dönüş yapacağız."
-            }
+              Sorularınız, önerileriniz veya işbirliği talepleriniz için bizimle iletişime geçin. En kısa sürede size dönüş yapacağız.         
           </p>
         </div>
 
