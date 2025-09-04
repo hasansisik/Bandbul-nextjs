@@ -109,12 +109,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="/dashboard">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <SquareTerminal className="size-4" />
+                <div className="bg-orange-300 text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  B
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Bandbul</span>
-                  <span className="truncate text-xs">Dashboard</span>
+                  <span className="truncate text-xs">Admin</span>
                 </div>
               </a>
             </SidebarMenuButton>

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Providers } from "@/redux/provider";
 import { UserLoader } from "@/components/UserLoader";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSettings } from "@/redux/actions/settingsActions";
 import { server } from "@/config";
 
@@ -100,6 +101,7 @@ export default function RootLayout({
         >
           <Providers>
             <UserLoader />
+            <GoogleAnalytics />
             {children}
             
             {/* Fixed Scroll to Top Button - Bottom Right */}
