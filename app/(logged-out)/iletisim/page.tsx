@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { createContact } from "@/redux/actions/contactActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +18,9 @@ import {
 } from "lucide-react";
 
 export default function ContactPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, message, error } = useSelector((state: RootState) => state.contact);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,7 +28,6 @@ export default function ContactPage() {
     subject: "",
     message: ""
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleChange = (field: string, value: string) => {
@@ -31,25 +36,25 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: ""
-      });
-    }, 3000);
+    try {
+      await dispatch(createContact(formData)).unwrap();
+      setIsSubmitted(true);
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: ""
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Contact submission error:', error);
+    }
   };
 
   const contactInfo = [
@@ -126,7 +131,7 @@ export default function ContactPage() {
                         onChange={(e) => handleChange("name", e.target.value)}
                         placeholder="Adınız ve soyadınız"
                         className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                        disabled={isSubmitting}
+                        disabled={loading}
                         required
                       />
                     </div>
@@ -141,7 +146,7 @@ export default function ContactPage() {
                         onChange={(e) => handleChange("email", e.target.value)}
                         placeholder="ornek@email.com"
                         className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                        disabled={isSubmitting}
+                        disabled={loading}
                         required
                       />
                     </div>
@@ -151,55 +156,55 @@ export default function ContactPage() {
                     <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
                       Telefon Numarası
                     </label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      placeholder="+90 5XX XXX XX XX"
-                      className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                      disabled={isSubmitting}
-                    />
+                                          <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
+                        placeholder="+90 5XX XXX XX XX"
+                        className="border-border focus:border-ring bg-background/50 backdrop-blur"
+                        disabled={loading}
+                      />
                   </div>
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
                       Konu
                     </label>
-                    <Input
-                      id="subject"
-                      type="text"
-                      value={formData.subject}
-                      onChange={(e) => handleChange("subject", e.target.value)}
-                      placeholder="Mesajınızın konusu"
-                      className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                      disabled={isSubmitting}
-                      required
-                    />
+                                          <Input
+                        id="subject"
+                        type="text"
+                        value={formData.subject}
+                        onChange={(e) => handleChange("subject", e.target.value)}
+                        placeholder="Mesajınızın konusu"
+                        className="border-border focus:border-ring bg-background/50 backdrop-blur"
+                        disabled={loading}
+                        required
+                      />
                   </div>
 
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                       Mesaj
                     </label>
-                    <Textarea
-                      id="message"
-                      value={formData.message}
-                      onChange={(e) => handleChange("message", e.target.value)}
-                      placeholder="Mesajınızı buraya yazın..."
-                      rows={6}
-                      className="border-border focus:border-ring bg-background/50 backdrop-blur resize-none"
-                      disabled={isSubmitting}
-                      required
-                    />
+                                          <Textarea
+                        id="message"
+                        value={formData.message}
+                        onChange={(e) => handleChange("message", e.target.value)}
+                        placeholder="Mesajınızı buraya yazın..."
+                        rows={6}
+                        className="border-border focus:border-ring bg-background/50 backdrop-blur resize-none"
+                        disabled={loading}
+                        required
+                      />
                   </div>
 
                   <Button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={loading}
                     className="w-full bg-primary hover:bg-primary/90 py-3 text-lg rounded-xl"
                   >
-                    {isSubmitting ? (
+                    {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Gönderiliyor...
