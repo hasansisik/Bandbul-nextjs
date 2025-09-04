@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Grid3X3, List, X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAllListings } from "@/redux/actions/userActions";
 
 interface ListingsHeaderProps {
   onSearch?: (query: string) => void;
@@ -16,11 +18,42 @@ interface ListingsHeaderProps {
 
 const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 'grid', searchQuery: propSearchQuery = "" }: ListingsHeaderProps) => {
   const [searchQuery, setSearchQuery] = useState(propSearchQuery);
+  const dispatch = useAppDispatch();
+  const { allListings, listingsLoading } = useAppSelector((state) => state.user);
 
   // Update local state when prop changes
   React.useEffect(() => {
     setSearchQuery(propSearchQuery);
   }, [propSearchQuery]);
+
+  // Fetch listings when component mounts
+  useEffect(() => {
+    dispatch(getAllListings({}));
+  }, [dispatch]);
+
+  // Calculate statistics
+  const calculateStats = () => {
+    if (!allListings || allListings.length === 0) {
+      return { total: 0, active: 0, today: 0 };
+    }
+
+    const total = allListings.length;
+    const active = allListings.filter(listing => listing.status === 'active').length;
+    
+    // Calculate today's new listings
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayCount = allListings.filter(listing => {
+      const listingDate = new Date(listing.createdAt);
+      listingDate.setHours(0, 0, 0, 0);
+      return listingDate.getTime() === today.getTime();
+    }).length;
+
+    return { total, active, today: todayCount };
+  };
+
+  const stats = calculateStats();
 
   const handleSearch = () => {
     onSearch?.(searchQuery);
@@ -120,17 +153,23 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-muted-foreground/50 rounded-full"></div>
           <span className="text-sm text-muted-foreground">Toplam:</span>
-          <span className="text-sm font-semibold text-foreground">1,247 ilan</span>
+          <span className="text-sm font-semibold text-foreground">
+            {listingsLoading ? "Yükleniyor..." : `${stats.total.toLocaleString()} ilan`}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-primary rounded-full"></div>
           <span className="text-sm text-muted-foreground">Aktif:</span>
-          <span className="text-sm font-semibold text-foreground">892 ilan</span>
+          <span className="text-sm font-semibold text-foreground">
+            {listingsLoading ? "Yükleniyor..." : `${stats.active.toLocaleString()} ilan`}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span className="text-sm text-muted-foreground">Bugün:</span>
-          <span className="text-sm font-semibold text-foreground">23 yeni ilan</span>
+          <span className="text-sm font-semibold text-foreground">
+            {listingsLoading ? "Yükleniyor..." : `${stats.today} yeni ilan`}
+          </span>
         </div>
       </div>
     </div>
