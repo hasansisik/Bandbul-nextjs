@@ -59,7 +59,6 @@ export default function FormsPage() {
   const [filters, setFilters] = useState({
     status: "",
     priority: "",
-    search: "",
     page: 1,
     limit: 20
   });
@@ -101,16 +100,20 @@ export default function FormsPage() {
     }
   }, []);
 
-  // Update filters when local state changes
+  // Update filters when local state changes (excluding searchTerm to prevent API calls on every keystroke)
   useEffect(() => {
     setFilters(prev => ({
       ...prev,
       status: statusFilter === "all" ? "" : statusFilter,
       priority: priorityFilter === "all" ? "" : priorityFilter,
-      search: searchTerm,
       page: currentPage
     }));
-  }, [statusFilter, priorityFilter, searchTerm, currentPage]);
+  }, [statusFilter, priorityFilter, currentPage]);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Filter contacts based on search term and status
   const filteredContacts = contacts.filter(contact => {
@@ -126,8 +129,9 @@ export default function FormsPage() {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // Pagination logic
-  const totalPages = pagination ? pagination.totalPages : 1;
+  // Pagination logic - now based on filtered results
+  const totalFilteredContacts = filteredContacts.length;
+  const totalPages = Math.ceil(totalFilteredContacts / filters.limit);
   const startIndex = (currentPage - 1) * filters.limit;
   const endIndex = startIndex + filters.limit;
   const currentContacts = filteredContacts.slice(startIndex, endIndex);
@@ -525,7 +529,7 @@ export default function FormsPage() {
       {!loading && !error && totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-muted-foreground">
-            {startIndex + 1}-{Math.min(endIndex, filteredContacts.length)} / {filteredContacts.length} form
+            {startIndex + 1}-{Math.min(endIndex, totalFilteredContacts)} / {totalFilteredContacts} form
           </div>
           <Pagination>
             <PaginationContent>

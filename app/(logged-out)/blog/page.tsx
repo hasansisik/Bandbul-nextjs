@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getAllBlogs } from "@/redux/actions/blogActions";
@@ -30,6 +30,7 @@ export default function BlogPage() {
   const router = useRouter();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [visiblePosts, setVisiblePosts] = useState(6);
@@ -37,6 +38,7 @@ export default function BlogPage() {
 
   // Function to create title slug for URL
   const createTitleSlug = (title: string) => {
+    if (!title) return '';
     return title.toLowerCase()
       .replace(/ğ/g, 'g')
       .replace(/ü/g, 'u')
@@ -52,6 +54,7 @@ export default function BlogPage() {
 
   // Function to create category slug for URL
   const createCategorySlug = (categoryName: string) => {
+    if (!categoryName) return '';
     return categoryName.toLowerCase()
       .replace(/ğ/g, 'g')
       .replace(/ü/g, 'u')
@@ -67,6 +70,15 @@ export default function BlogPage() {
     dispatch(getAllBlogCategories({}))
   }, [dispatch])
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -80,6 +92,7 @@ export default function BlogPage() {
 
   const clearFilters = useCallback(() => {
     setSearchQuery("");
+    setDebouncedSearchQuery("");
     setSelectedCategory("");
     setVisiblePosts(6);
   }, []);
@@ -89,38 +102,49 @@ export default function BlogPage() {
   }, []);
 
   // Filter posts based on search and category
-  const filteredPosts = useCallback(() => {
-    let posts = blogs;
+  const posts = useMemo(() => {
+    let filteredPosts = blogs || [];
 
-    if (searchQuery) {
-      const lowercaseQuery = searchQuery.toLowerCase();
-      posts = posts.filter(post => 
-        post.title.toLowerCase().includes(lowercaseQuery) ||
-        post.excerpt.toLowerCase().includes(lowercaseQuery) ||
-        post.content.toLowerCase().includes(lowercaseQuery) ||
-        post.author.toLowerCase().includes(lowercaseQuery) ||
-        post.tags.some((tag: string) => tag.toLowerCase().includes(lowercaseQuery))
-      );
+    if (debouncedSearchQuery) {
+      const lowercaseQuery = debouncedSearchQuery.toLowerCase();
+      filteredPosts = filteredPosts.filter(post => {
+        // Safe string checks to prevent undefined errors
+        const title = post?.title || '';
+        const excerpt = post?.excerpt || '';
+        const content = post?.content || '';
+        const author = post?.author || '';
+        const tags = post?.tags || [];
+
+        return title.toLowerCase().includes(lowercaseQuery) ||
+               excerpt.toLowerCase().includes(lowercaseQuery) ||
+               content.toLowerCase().includes(lowercaseQuery) ||
+               author.toLowerCase().includes(lowercaseQuery) ||
+               tags.some((tag: string) => (tag || '').toLowerCase().includes(lowercaseQuery));
+      });
     }
 
     if (selectedCategory) {
-      posts = posts.filter(post => post.category === selectedCategory);
+      filteredPosts = filteredPosts.filter(post => post?.category === selectedCategory);
     }
 
-    return posts;
-  }, [searchQuery, selectedCategory, blogs]);
-
-  const posts = filteredPosts();
+    return filteredPosts;
+  }, [debouncedSearchQuery, selectedCategory, blogs]);
   const displayedPosts = posts.slice(0, visiblePosts);
   const hasMorePosts = visiblePosts < posts.length;
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('tr-TR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return '';
+    }
   };
 
   return (
@@ -217,70 +241,91 @@ export default function BlogPage() {
         ) : displayedPosts.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-              {displayedPosts.map((post) => (
-                <article key={post._id} className="bg-card border border-border rounded-lg overflow-hidden">
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <Link href={`/${createTitleSlug(post.title)}`}>
-                      <img
-                        src={post.image}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </Link>
-                    {/* Read Time - Top Right */}
-                    <div className="absolute top-3 right-3">
-                      <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
-                        <Clock className="h-3 w-3" />
-                        {post.readTime}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/blog/kategori/${createCategorySlug(post.category)}`);
-                        }}
-                        className="focus:outline-none"
-                      >
-                        <Badge 
-                          variant="outline" 
-                          className="text-xs border-border cursor-pointer hover:bg-muted"
-                        >
-                          {post.category}
-                        </Badge>
-                      </button>
-                      {post.featured && (
-                        <Badge className="text-xs bg-primary text-primary-foreground">
-                          Öne Çıkan
-                        </Badge>
+              {displayedPosts.map((post) => {
+                // Safe access to post properties
+                const postId = post?._id || '';
+                const postTitle = post?.title || '';
+                const postImage = post?.image || '';
+                const postReadTime = post?.readTime || '';
+                const postCategory = post?.category || '';
+                const postFeatured = post?.featured || false;
+                const postExcerpt = post?.excerpt || '';
+                const postAuthor = post?.author || '';
+                const postPublishedDate = post?.publishedDate || '';
+
+                return (
+                  <article key={postId} className="bg-card border border-border rounded-lg overflow-hidden">
+                    <div className="aspect-[4/3] overflow-hidden relative">
+                      <Link href={`/${createTitleSlug(postTitle)}`}>
+                        <img
+                          src={postImage}
+                          alt={postTitle}
+                          className="w-full h-full object-cover"
+                        />
+                      </Link>
+                      {/* Read Time - Top Right */}
+                      {postReadTime && (
+                        <div className="absolute top-3 right-3">
+                          <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                            <Clock className="h-3 w-3" />
+                            {postReadTime}
+                          </div>
+                        </div>
                       )}
                     </div>
-                    
-                    <Link href={`/${createTitleSlug(post.title)}`}>
-                      <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
-                        {post.title}
-                      </h2>
-                    </Link>
-                    
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
-                      {post.excerpt}
-                    </p>
-                    
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{post.author}</span>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        {postCategory && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/blog/kategori/${createCategorySlug(postCategory)}`);
+                            }}
+                            className="focus:outline-none"
+                          >
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs border-border cursor-pointer hover:bg-muted"
+                            >
+                              {postCategory}
+                            </Badge>
+                          </button>
+                        )}
+                        {postFeatured && (
+                          <Badge className="text-xs bg-primary text-primary-foreground">
+                            Öne Çıkan
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{formatDate(post.publishedDate)}</span>
+                      
+                      <Link href={`/${createTitleSlug(postTitle)}`}>
+                        <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
+                          {postTitle}
+                        </h2>
+                      </Link>
+                      
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+                        {postExcerpt}
+                      </p>
+                      
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border">
+                        {postAuthor && (
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            <span>{postAuthor}</span>
+                          </div>
+                        )}
+                        {postPublishedDate && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(postPublishedDate)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
 
             {/* Load More Button */}
