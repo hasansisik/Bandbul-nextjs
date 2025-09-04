@@ -4,15 +4,17 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { createContact } from "@/redux/actions/contactActions";
+import { getSettings } from "@/redux/actions/settingsActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Clock, 
+import Link from "next/link";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
   Send,
   CheckCircle
 } from "lucide-react";
@@ -20,7 +22,8 @@ import {
 export default function ContactPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, message, error } = useSelector((state: RootState) => state.contact);
-  
+  const { settings, loading: settingsLoading } = useSelector((state: RootState) => state.settings);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,17 +33,22 @@ export default function ContactPage() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Fetch settings on component mount
+  useEffect(() => {
+    dispatch(getSettings());
+  }, [dispatch]);
+
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await dispatch(createContact(formData)).unwrap();
       setIsSubmitted(true);
-      
+
       // Reset form after 3 seconds
       setTimeout(() => {
         setIsSubmitted(false);
@@ -61,25 +69,25 @@ export default function ContactPage() {
     {
       icon: <Mail className="h-6 w-6" />,
       title: "E-posta",
-      value: "info@bandbul.com",
+      value: settings?.contact?.email || "info@bandbul.com",
       description: "Genel sorularınız için"
     },
     {
       icon: <Phone className="h-6 w-6" />,
       title: "Telefon",
-      value: "+90 212 123 45 67",
+      value: settings?.contact?.phone || "+90 212 123 45 67",
       description: "Hızlı destek için"
     },
     {
       icon: <MapPin className="h-6 w-6" />,
       title: "Adres",
-      value: "İstanbul, Türkiye",
+      value: settings?.contact?.address || "İstanbul, Türkiye",
       description: "Merkez ofisimiz"
     },
     {
       icon: <Clock className="h-6 w-6" />,
-      title: "Çalışma Saatleri",
-      value: "Pazartesi - Cuma",
+      title: "Çalışma Saatları",
+      value: settings?.contact?.workingHours || "Pazartesi - Cuma, 09:00 - 18:00",
       description: "09:00 - 18:00"
     }
   ];
@@ -93,8 +101,9 @@ export default function ContactPage() {
             İletişim
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Sorularınız, önerileriniz veya işbirliği talepleriniz için bizimle iletişime geçin. 
-            En kısa sürede size dönüş yapacağız.
+            {settings?.metadata?.description ||
+              "Sorularınız, önerileriniz veya işbirliği talepleriniz için bizimle iletişime geçin. En kısa sürede size dönüş yapacağız."
+            }
           </p>
         </div>
 
@@ -105,7 +114,10 @@ export default function ContactPage() {
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-foreground mb-4">Mesaj Gönder</h2>
                 <p className="text-muted-foreground">
-                  Formu doldurun, size en kısa sürede dönüş yapalım.
+                  {settings?.contact?.companyDescription ?
+                    "Formu doldurun, size en kısa sürede dönüş yapalım." :
+                    "Formu doldurun, size en kısa sürede dönüş yapalım."
+                  }
                 </p>
               </div>
 
@@ -156,47 +168,47 @@ export default function ContactPage() {
                     <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
                       Telefon Numarası
                     </label>
-                                          <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder="+90 5XX XXX XX XX"
-                        className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                        disabled={loading}
-                      />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                      placeholder="+90 5XX XXX XX XX"
+                      className="border-border focus:border-ring bg-background/50 backdrop-blur"
+                      disabled={loading}
+                    />
                   </div>
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
                       Konu
                     </label>
-                                          <Input
-                        id="subject"
-                        type="text"
-                        value={formData.subject}
-                        onChange={(e) => handleChange("subject", e.target.value)}
-                        placeholder="Mesajınızın konusu"
-                        className="border-border focus:border-ring bg-background/50 backdrop-blur"
-                        disabled={loading}
-                        required
-                      />
+                    <Input
+                      id="subject"
+                      type="text"
+                      value={formData.subject}
+                      onChange={(e) => handleChange("subject", e.target.value)}
+                      placeholder="Mesajınızın konusu"
+                      className="border-border focus:border-ring bg-background/50 backdrop-blur"
+                      disabled={loading}
+                      required
+                    />
                   </div>
 
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                       Mesaj
                     </label>
-                                          <Textarea
-                        id="message"
-                        value={formData.message}
-                        onChange={(e) => handleChange("message", e.target.value)}
-                        placeholder="Mesajınızı buraya yazın..."
-                        rows={6}
-                        className="border-border focus:border-ring bg-background/50 backdrop-blur resize-none"
-                        disabled={loading}
-                        required
-                      />
+                    <Textarea
+                      id="message"
+                      value={formData.message}
+                      onChange={(e) => handleChange("message", e.target.value)}
+                      placeholder="Mesajınızı buraya yazın..."
+                      rows={6}
+                      className="border-border focus:border-ring bg-background/50 backdrop-blur resize-none"
+                      disabled={loading}
+                      required
+                    />
                   </div>
 
                   <Button
@@ -228,8 +240,9 @@ export default function ContactPage() {
                   <h3 className="text-xl font-semibold text-foreground">Bandbul</h3>
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  Müzik endüstrisinde profesyonel hizmet veren platformumuz, 
-                  müzisyenler ve müzik severler için güvenilir bir ortam sağlar.
+                  {settings?.contact?.companyDescription ||
+                    "Müzik endüstrisinde profesyonel hizmet veren platformumuz, müzisyenler ve müzik severler için güvenilir bir ortam sağlar."
+                  }
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="border-border">Müzik Platformu</Badge>
@@ -241,20 +254,35 @@ export default function ContactPage() {
               {/* Contact Details */}
               <div className="bg-card/50 backdrop-blur rounded-2xl border border-border/50 p-6">
                 <h3 className="text-xl font-semibold text-foreground mb-6">İletişim Bilgileri</h3>
-                <div className="space-y-6">
-                  {contactInfo.map((info, index) => (
-                    <div key={index} className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                        {info.icon}
+                {settingsLoading ? (
+                  <div className="space-y-6">
+                    {[1, 2, 3, 4].map((index) => (
+                      <div key={index} className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg animate-pulse" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded animate-pulse w-20" />
+                          <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-24" />
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-1">{info.title}</h4>
-                        <p className="text-foreground font-medium mb-1">{info.value}</p>
-                        <p className="text-sm text-muted-foreground">{info.description}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {contactInfo.map((info, index) => (
+                      <div key={index} className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                          {info.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-foreground mb-1">{info.title}</h4>
+                          <p className="text-foreground font-medium mb-1">{info.value}</p>
+                          <p className="text-sm text-muted-foreground">{info.description}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* FAQ Link */}
@@ -263,9 +291,11 @@ export default function ContactPage() {
                 <p className="text-muted-foreground mb-4">
                   Genel sorularınızın cevaplarını S.S.S. bölümümüzde bulabilirsiniz.
                 </p>
-                <Button variant="outline" className="border-border hover:bg-accent">
-                  S.S.S. Sayfasına Git
-                </Button>
+                <Link href="/sss">
+                  <Button variant="outline" className="border-border hover:bg-accent">
+                    S.S.S. Sayfasına Git
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

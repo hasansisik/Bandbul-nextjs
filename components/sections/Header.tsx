@@ -11,6 +11,8 @@ import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { logout } from "@/redux/actions/userActions";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getSettings } from "@/redux/actions/settingsActions";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,15 +20,34 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { isAuthenticated, user } = useAppSelector((state) => state.user);
+  const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
 
-  const mainMenuItems = [
+  // Fetch settings on component mount
+  useEffect(() => {
+    dispatch(getSettings());
+  }, [dispatch]);
+
+  const mainMenuItems = settings?.header?.mainMenu || [
     { name: "Anasayfa", href: "/" },
     { name: "İlanlar", href: "/ilanlar" },
     { name: "Blog", href: "/blog" },
     { name: "İletişim", href: "/iletisim" }
   ];
 
-  const categoryItems = [
+  const categoryItems = settings?.header?.categories?.map((categoryId: string) => {
+    // For now, we'll use a simple mapping since we don't have category names
+    // In the future, you might want to fetch categories separately
+    const categoryMap: { [key: string]: { name: string; href: string } } = {
+      "grup-ariyorum": { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
+      "muzisyen-ariyorum": { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
+      "ders-almak-istiyorum": { name: "Ders Almak İstiyorum", href: "/ilanlar?category=ders-almak-istiyorum" },
+      "ders-veriyorum": { name: "Ders Veriyorum", href: "/ilanlar?category=ders-veriyorum" },
+      "enstruman-satiyorum": { name: "Enstrüman Satıyorum", href: "/ilanlar?category=enstruman-satiyorum" },
+      "studyo-kiraliyorum": { name: "Stüdyo Kiralıyorum", href: "/ilanlar?category=studyo-kiraliyorum" }
+    };
+    
+    return categoryMap[categoryId] || { name: "Kategori", href: "/ilanlar" };
+  }) || [
     { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
     { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
     { name: "Ders Almak İstiyorum", href: "/ilanlar?category=ders-almak-istiyorum" },
@@ -71,7 +92,7 @@ const Header = () => {
               <div className="flex-shrink-0">
                 <Link href="/">
                   <Image
-                    src="/bandbul-logo.png"
+                    src={settings?.logo?.light || "/bandbul-logo.png"}
                     alt="Bandbul Logo"
                     width={120}
                     height={40}
@@ -117,15 +138,24 @@ const Header = () => {
             <div className="hidden md:flex items-center flex-1 justify-center">
               {/* Ana Menü */}
               <nav className="flex items-center space-x-6">
-                {mainMenuItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {settingsLoading ? (
+                  // Loading skeleton for main menu
+                  <>
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-4 bg-muted rounded animate-pulse w-16" />
+                    ))}
+                  </>
+                ) : (
+                  mainMenuItems.map((item: any) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                  ))
+                )}
               </nav>
             </div>
 
@@ -204,15 +234,24 @@ const Header = () => {
       <div className="hidden md:block">
         <div className="container mx-auto px-4">
           <nav className="flex items-center space-x-8 py-3">
-            {categoryItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {settingsLoading ? (
+              // Loading skeleton for categories
+              <>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-4 bg-muted rounded animate-pulse w-24" />
+                ))}
+              </>
+            ) : (
+              categoryItems.map((item: any, index: number) => (
+                <Link
+                  key={index}
+                  href={item.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
+                >
+                  {item.name}
+                </Link>
+              ))
+            )}
           </nav>
         </div>
       </div>
@@ -260,15 +299,24 @@ const Header = () => {
               <div>
                 <h4 className="font-semibold text-sm mb-2 text-foreground">Ana Menü</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {mainMenuItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="text-sm font-medium transition-colors hover:text-primary p-2 rounded-md hover:bg-accent"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+                  {settingsLoading ? (
+                    // Loading skeleton for mobile main menu
+                    <>
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-4 bg-muted rounded animate-pulse" />
+                      ))}
+                    </>
+                  ) : (
+                    mainMenuItems.map((item: any) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="text-sm font-medium transition-colors hover:text-primary p-2 rounded-md hover:bg-accent"
+                      >
+                        {item.name}
+                      </Link>
+                    ))
+                  )}
                 </div>
               </div>
               
@@ -276,15 +324,24 @@ const Header = () => {
               <div className="border-t border-border/50 pt-4">
                 <h4 className="font-semibold text-sm mb-2 text-foreground">Kategoriler</h4>
                 <div className="grid grid-cols-1 gap-2">
-                  {categoryItems.map((item, index) => (
-                    <Link
-                      key={index}
-                      href={item.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-md hover:bg-accent"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+                  {settingsLoading ? (
+                    // Loading skeleton for mobile categories
+                    <>
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="h-4 bg-muted rounded animate-pulse" />
+                      ))}
+                    </>
+                  ) : (
+                    categoryItems.map((item: any, index: number) => (
+                      <Link
+                        key={index}
+                        href={item.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-md hover:bg-accent"
+                      >
+                        {item.name}
+                      </Link>
+                    ))
+                  )}
                 </div>
               </div>
 

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/sections/Header";
@@ -15,10 +14,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Bandbul - Müzik için her şey",
-  description: "Müzisyen arayışları, grup ilanları, müzik dersleri ve daha fazlası için Bandbul'u ziyaret edin.",
-};
 
 export default function RootLayout({
   children,
