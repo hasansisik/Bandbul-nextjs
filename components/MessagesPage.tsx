@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useSearchParams } from "next/navigation"
 import { AppDispatch } from "@/redux/store"
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge"
 import { 
   Search, 
   Send, 
-  MoreVertical, 
   Smile, 
   User,
   Clock,
@@ -51,6 +50,8 @@ export function MessagesPage() {
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [isStartingConversation, setIsStartingConversation] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // WebSocket connection
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
@@ -292,19 +293,36 @@ export function MessagesPage() {
     }
   }
 
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom()
+  }, [currentMessages])
+
+  // Auto scroll to bottom when conversation changes
+  useEffect(() => {
+    if (selectedConversation) {
+      setTimeout(scrollToBottom, 100) // Small delay to ensure messages are rendered
+    }
+  }, [selectedConversation])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      <div className="bg-background border-b border-border flex-shrink-0">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Mesajlar</h1>
-              <p className="text-muted-foreground">Diğer müzisyenlerle iletişim kurun</p>
+              <h1 className="text-xl font-bold text-foreground">Mesajlar</h1>
+              <p className="text-sm text-muted-foreground">Diğer müzisyenlerle iletişim kurun</p>
             </div>
             <div className="flex items-center space-x-2">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {isConnected ? 'Bağlı' : 'Bağlantı yok'}
               </span>
             </div>
@@ -312,10 +330,10 @@ export function MessagesPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)] lg:h-[calc(100vh-200px)]">
+      <div className="container mx-auto px-2 lg:px-4 py-2 lg:py-4 max-w-7xl flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-4 h-full">
           {/* Conversations List */}
-          <div className={`lg:col-span-1 bg-card rounded-xl border border-border shadow-sm flex flex-col ${
+          <div className={`lg:col-span-1 bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden ${
             selectedConversation ? 'hidden lg:flex' : 'flex'
           }`}>
             {/* Search */}
@@ -332,7 +350,7 @@ export function MessagesPage() {
             </div>
 
             {/* Conversations */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               {messagesLoading && conversations.length === 0 ? (
                 <div className="flex items-center justify-center p-8">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -397,13 +415,13 @@ export function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className={`lg:col-span-2 bg-card rounded-xl border border-border shadow-sm flex flex-col ${
+          <div className={`lg:col-span-2 bg-card rounded-xl border border-border shadow-sm flex flex-col overflow-hidden ${
             selectedConversation ? 'flex' : 'hidden lg:flex'
           }`}>
             {selectedConversation && selectedConversationDetails ? (
               <>
                 {/* Chat Header */}
-                <div className="p-4 border-b border-border flex items-center justify-between">
+                <div className="p-3 lg:p-4 border-b border-border flex items-center justify-between flex-shrink-0">
                   <div className="flex items-center space-x-3">
                     {/* Mobile Back Button */}
                     <Button
@@ -439,15 +457,10 @@ export function MessagesPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </div>
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 scroll-smooth min-h-0">
                   {messagesLoading && uniqueMessages.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                       <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -457,52 +470,57 @@ export function MessagesPage() {
                       <p className="text-muted-foreground">Henüz mesaj yok. İlk mesajı siz gönderin!</p>
                     </div>
                   ) : uniqueMessages.length > 0 ? (
-                    uniqueMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'}`}
-                      >
+                    <>
+                      {uniqueMessages.map((message) => (
                         <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderId === user?._id
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
+                          key={message.id}
+                          className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'}`}
                         >
-                          <p className="text-sm">{message.content}</p>
-                          <div className="flex items-center justify-end mt-1 space-x-1">
-                            <span className="text-xs opacity-70">
-                              {message.timestamp}
-                            </span>
-                            {message.senderId === user?._id && (
-                              <div className="flex items-center">
-                                {message.isRead ? (
-                                  <CheckCheck className="w-3 h-3" />
-                                ) : (
-                                  <Check className="w-3 h-3" />
-                                )}
-                              </div>
-                            )}
+                          <div
+                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              message.senderId === user?._id
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground'
+                            }`}
+                          >
+                            <p className="text-sm">{message.content}</p>
+                            <div className="flex items-center justify-end mt-1 space-x-1">
+                              <span className="text-xs opacity-70">
+                                {message.timestamp}
+                              </span>
+                              {message.senderId === user?._id && (
+                                <div className="flex items-center">
+                                  {message.isRead ? (
+                                    <CheckCheck className="w-3 h-3" />
+                                  ) : (
+                                    <Check className="w-3 h-3" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                      
+                      {/* Typing Indicator */}
+                      {typingUsers.length > 0 && (
+                        <div className="flex justify-start">
+                          <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
+                            <p className="text-sm">
+                              {typingUsers.join(', ')} yazıyor...
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Scroll anchor */}
+                      <div ref={messagesEndRef} />
+                    </>
                   ) : null}
-                  
-                  {/* Typing Indicator */}
-                  {typingUsers.length > 0 && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
-                        <p className="text-sm">
-                          {typingUsers.join(', ')} yazıyor...
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Message Input */}
-                <div className="p-4 border-t border-border">
+                <div className="p-3 lg:p-4 border-t border-border flex-shrink-0">
                   <div className="flex items-center space-x-2">
                     <div className="flex-1 relative">
                       <Input
