@@ -20,6 +20,8 @@ import {
   updateCategory,
   deleteCategory,
   toggleCategoryStatus,
+  getAllUsers,
+  deleteUser,
 } from "../actions/userActions";
 
 interface UserState {
@@ -37,6 +39,10 @@ interface UserState {
   categories: any[];
   categoriesLoading: boolean;
   categoriesError: string | null;
+  allUsers: any[];
+  userStats: any;
+  usersLoading: boolean;
+  usersError: string | null;
 }
 
 const initialState: UserState = {
@@ -52,6 +58,10 @@ const initialState: UserState = {
   categories: [],
   categoriesLoading: false,
   categoriesError: null,
+  allUsers: [],
+  userStats: null,
+  usersLoading: false,
+  usersError: null,
 };
 
 export const userReducer = createReducer(initialState, (builder) => {
@@ -329,6 +339,33 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(toggleCategoryStatus.rejected, (state, action) => {
       state.categoriesLoading = false;
       state.categoriesError = action.payload as string;
+    })
+    // Get All Users
+    .addCase(getAllUsers.pending, (state) => {
+      state.usersLoading = true;
+    })
+    .addCase(getAllUsers.fulfilled, (state, action) => {
+      state.usersLoading = false;
+      state.allUsers = action.payload.users;
+      state.userStats = action.payload.stats;
+      state.message = action.payload.message;
+    })
+    .addCase(getAllUsers.rejected, (state, action) => {
+      state.usersLoading = false;
+      state.usersError = action.payload as string;
+    })
+    // Delete User
+    .addCase(deleteUser.pending, (state) => {
+      state.usersLoading = true;
+    })
+    .addCase(deleteUser.fulfilled, (state, action) => {
+      state.usersLoading = false;
+      state.allUsers = state.allUsers.filter(user => user._id !== action.payload.id);
+      state.message = action.payload.message;
+    })
+    .addCase(deleteUser.rejected, (state, action) => {
+      state.usersLoading = false;
+      state.usersError = action.payload as string;
     });
 });
 

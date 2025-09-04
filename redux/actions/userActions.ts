@@ -74,6 +74,15 @@ export interface UpdateCategoryPayload {
   active?: boolean;
 }
 
+export interface UserFilters {
+  role?: string;
+  status?: string;
+  search?: string;
+  page?: string;
+  limit?: string;
+  [key: string]: string | undefined;
+}
+
 export const register = createAsyncThunk(
   "user/register",
   async (payload: RegisterPayload, thunkAPI) => {
@@ -486,6 +495,56 @@ export const toggleCategoryStatus = createAsyncThunk(
         config
       );
       return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+// User Management Actions (Admin only)
+export const getAllUsers = createAsyncThunk(
+  "user/getAllUsers",
+  async (params: Record<string, string> = {}, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${server}/auth/users${queryString ? `?${queryString}` : ''}`;
+      const response = await axios.get(url, config);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const deleteUser = createAsyncThunk(
+  "user/deleteUser",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.delete(
+        `${server}/auth/users/${id}`,
+        config
+      );
+      return { id, message: response.data.message };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message
