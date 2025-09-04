@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
-import { logout } from "@/redux/actions/userActions";
+import { logout, getAllCategories } from "@/redux/actions/userActions";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
@@ -19,18 +19,29 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { isAuthenticated, user } = useAppSelector((state) => state.user);
+  const { isAuthenticated, user, categories } = useAppSelector((state) => state.user);
   const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
 
-  // Fetch settings on component mount
+  // Fetch settings and categories on component mount
   useEffect(() => {
     dispatch(getSettings());
+    dispatch(getAllCategories({}));
   }, [dispatch]);
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
   const categoryItems = settings?.header?.categories?.map((categoryId: string) => {
-    // Map category IDs to proper objects with name and href
+    // Find category from fetched categories
+    const category = categories.find(cat => cat._id === categoryId || cat.slug === categoryId);
+    
+    if (category) {
+      return {
+        name: category.name,
+        href: `/ilanlar?category=${category.slug || category._id}`
+      };
+    }
+    
+    // Fallback to static mapping if category not found
     const categoryMap: { [key: string]: { name: string; href: string } } = {
       "grup-ariyorum": { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
       "muzisyen-ariyorum": { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
