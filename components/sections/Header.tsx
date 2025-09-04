@@ -27,16 +27,10 @@ const Header = () => {
     dispatch(getSettings());
   }, [dispatch]);
 
-  const mainMenuItems = settings?.header?.mainMenu || [
-    { name: "Anasayfa", href: "/" },
-    { name: "İlanlar", href: "/ilanlar" },
-    { name: "Blog", href: "/blog" },
-    { name: "İletişim", href: "/iletisim" }
-  ];
+  const mainMenuItems = settings?.header?.mainMenu || [];
 
   const categoryItems = settings?.header?.categories?.map((categoryId: string) => {
-    // For now, we'll use a simple mapping since we don't have category names
-    // In the future, you might want to fetch categories separately
+    // Map category IDs to proper objects with name and href
     const categoryMap: { [key: string]: { name: string; href: string } } = {
       "grup-ariyorum": { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
       "muzisyen-ariyorum": { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
@@ -47,14 +41,7 @@ const Header = () => {
     };
     
     return categoryMap[categoryId] || { name: "Kategori", href: "/ilanlar" };
-  }) || [
-    { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
-    { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
-    { name: "Ders Almak İstiyorum", href: "/ilanlar?category=ders-almak-istiyorum" },
-    { name: "Ders Veriyorum", href: "/ilanlar?category=ders-veriyorum" },
-    { name: "Enstrüman Satıyorum", href: "/ilanlar?category=enstruman-satiyorum" },
-    { name: "Stüdyo Kiralıyorum", href: "/ilanlar?category=studyo-kiraliyorum" }
-  ];
+  }) || [];
 
   const handleLogout = async () => {
     try {
@@ -67,6 +54,7 @@ const Header = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
+      setIsMenuOpen(false); // Close mobile menu when searching
       window.location.href = `/ilanlar?search=${encodeURIComponent(searchQuery.trim())}`;
     }
   };
@@ -79,6 +67,10 @@ const Header = () => {
 
   const clearSearch = () => {
     setSearchQuery("");
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
   };
 
   return (
@@ -311,6 +303,7 @@ const Header = () => {
                       <Link
                         key={item.name}
                         href={item.href}
+                        onClick={closeMenu}
                         className="text-sm font-medium transition-colors hover:text-primary p-2 rounded-md hover:bg-accent"
                       >
                         {item.name}
@@ -336,6 +329,7 @@ const Header = () => {
                       <Link
                         key={index}
                         href={item.href}
+                        onClick={closeMenu}
                         className="text-sm text-muted-foreground hover:text-primary transition-colors p-2 rounded-md hover:bg-accent"
                       >
                         {item.name}
@@ -347,12 +341,12 @@ const Header = () => {
 
               {!isAuthenticated && (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-border/50">
-                  <Link href="/giris">
+                  <Link href="/giris" onClick={closeMenu}>
                     <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent">
                       Giriş Yap
                     </Button>
                   </Link>
-                  <Link href="/kayitol">
+                  <Link href="/kayitol" onClick={closeMenu}>
                     <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
                       Kayıt Ol
                     </Button>
@@ -360,7 +354,30 @@ const Header = () => {
                 </div>
               )}
               {isAuthenticated && (
-                <div className="flex flex-col space-y-2 pt-4 border-t border-border/50">
+                <div className="space-y-4 pt-4 border-t border-border/50">
+                  {/* User Actions */}
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/bildirimler" onClick={closeMenu}>
+                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start">
+                        <Bell className="h-4 w-4 mr-2" />
+                        Bildirimler
+                      </Button>
+                    </Link>
+                    <Link href="/mesajlar" onClick={closeMenu}>
+                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Mesajlar
+                      </Button>
+                    </Link>
+                    <Link href="/profil" onClick={closeMenu}>
+                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        Profil
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  {/* Logout */}
                   <Button variant="outline" size="sm" onClick={handleLogout} className="w-full border-border hover:bg-accent">
                     Çıkış Yap
                   </Button>
