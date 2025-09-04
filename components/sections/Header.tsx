@@ -13,12 +13,14 @@ import { logout, getAllCategories } from "@/redux/actions/userActions";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
+import { useTheme } from "next-themes";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { theme } = useTheme();
   const { isAuthenticated, user, categories } = useAppSelector((state) => state.user);
   const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
 
@@ -109,7 +111,11 @@ const Header = () => {
               <div className="flex-shrink-0">
                 <Link href="/">
                   <Image
-                    src={settings?.logo?.light || "/bandbul-logo.png"}
+                    src={
+                      theme === "dark" 
+                        ? (settings?.logo?.dark || settings?.logo?.light || "/bandbul-logo.png")
+                        : (settings?.logo?.light || "/bandbul-logo.png")
+                    }
                     alt="Bandbul Logo"
                     width={120}
                     height={40}

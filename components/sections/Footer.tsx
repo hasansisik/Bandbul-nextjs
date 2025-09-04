@@ -7,9 +7,11 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getSettings } from "@/redux/actions/settingsActions";
+import { useTheme } from "next-themes";
 
 const Footer = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { theme } = useTheme();
   const { settings, loading: settingsLoading } = useSelector((state: RootState) => state.settings);
 
   // Fetch settings on component mount
@@ -84,7 +86,11 @@ const Footer = () => {
                 <div className="mb-4">
                   <Link href="/">
                     <Image
-                      src={settings?.logo?.light || "/bandbul-logo.png"}
+                      src={
+                        theme === "dark" 
+                          ? (settings?.logo?.dark || settings?.logo?.light || "/bandbul-logo.png")
+                          : (settings?.logo?.light || "/bandbul-logo.png")
+                      }
                       alt="Bandbul Logo"
                       width={100}
                       height={32}
