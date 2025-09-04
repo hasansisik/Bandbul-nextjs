@@ -62,7 +62,11 @@ export const getAllBlogs = createAsyncThunk(
   "blog/getAllBlogs",
   async (params: BlogFilters = {}, thunkAPI) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values before creating URLSearchParams
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      const queryString = new URLSearchParams(filteredParams).toString();
       const url = `${server}/blogs${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url);
       return response.data;
@@ -231,7 +235,11 @@ export const searchBlogs = createAsyncThunk(
   "blog/searchBlogs",
   async (params: { q: string; page?: string; limit?: string }, thunkAPI) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values before creating URLSearchParams
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      const queryString = new URLSearchParams(filteredParams).toString();
       const response = await axios.get(`${server}/blogs/search?${queryString}`);
       return response.data;
     } catch (error: any) {

@@ -53,7 +53,13 @@ export const getAllContacts = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       };
-      const queryString = new URLSearchParams(params).toString();
+      // Convert all values to strings and filter out undefined values
+      const stringParams = Object.fromEntries(
+        Object.entries(params)
+          .filter(([_, value]) => value !== undefined)
+          .map(([key, value]) => [key, String(value)])
+      );
+      const queryString = new URLSearchParams(stringParams).toString();
       const url = `${server}/contacts${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url, config);
       return response.data;

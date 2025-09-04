@@ -32,7 +32,11 @@ export const getAllBlogCategories = createAsyncThunk(
   "blogCategory/getAllBlogCategories",
   async (params: BlogCategoryFilters = {}, thunkAPI) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values before creating URLSearchParams
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      const queryString = new URLSearchParams(filteredParams).toString();
       const url = `${server}/blog-categories${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url);
       return response.data;

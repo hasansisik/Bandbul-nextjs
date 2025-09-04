@@ -264,7 +264,11 @@ export const getAllListings = createAsyncThunk(
   "user/getAllListings",
   async (params: any = {}, thunkAPI) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values before creating URLSearchParams
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      const queryString = new URLSearchParams(filteredParams).toString();
       const url = `${server}/listings${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url);
       return response.data;
@@ -413,7 +417,11 @@ export const getAllCategories = createAsyncThunk(
   "user/getAllCategories",
   async (params: any = {}, thunkAPI) => {
     try {
-      const queryString = new URLSearchParams(params).toString();
+      // Filter out undefined values before creating URLSearchParams
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      const queryString = new URLSearchParams(filteredParams).toString();
       const url = `${server}/listing-categories${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url);
       return response.data;
