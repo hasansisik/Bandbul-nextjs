@@ -83,6 +83,45 @@ export interface UserFilters {
   [key: string]: string | undefined;
 }
 
+export interface SendMessagePayload {
+  conversationId: string;
+  content: string;
+}
+
+export interface StartConversationPayload {
+  recipientId: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+  sender?: {
+    _id: string;
+    name: string;
+    surname: string;
+    picture?: string;
+  };
+}
+
+export interface Conversation {
+  id: string;
+  name: string;
+  avatar?: string;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  isOnline: boolean;
+  otherParticipant: {
+    _id: string;
+    name: string;
+    surname: string;
+    picture?: string;
+  };
+}
+
 export const register = createAsyncThunk(
   "user/register",
   async (payload: RegisterPayload, thunkAPI) => {
@@ -553,6 +592,156 @@ export const deleteUser = createAsyncThunk(
         config
       );
       return { id, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+// Messaging Actions
+export const getConversations = createAsyncThunk(
+  "user/getConversations",
+  async (_, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(`${server}/messages/conversations`, config);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const getMessages = createAsyncThunk(
+  "user/getMessages",
+  async ({ conversationId, page = 1, limit = 50 }: { conversationId: string; page?: number; limit?: number }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(
+        `${server}/messages/conversations/${conversationId}/messages?page=${page}&limit=${limit}`,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const sendMessage = createAsyncThunk(
+  "user/sendMessage",
+  async (payload: SendMessagePayload, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.post(
+        `${server}/messages/send`,
+        payload,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const startConversation = createAsyncThunk(
+  "user/startConversation",
+  async (payload: StartConversationPayload, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.post(
+        `${server}/messages/conversations/start`,
+        payload,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const markAsRead = createAsyncThunk(
+  "user/markAsRead",
+  async (conversationId: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/messages/conversations/${conversationId}/read`,
+        {},
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const getUnreadCount = createAsyncThunk(
+  "user/getUnreadCount",
+  async (_, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(`${server}/messages/unread-count`, config);
+      return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message

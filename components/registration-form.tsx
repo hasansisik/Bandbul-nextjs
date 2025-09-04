@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { register } from "@/redux/actions/userActions"
+import { register, clearError } from "@/redux/actions/userActions"
 import { useRouter } from "next/navigation"
 
 export function RegistrationForm({
@@ -24,6 +24,19 @@ export function RegistrationForm({
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.user)
   const router = useRouter()
+
+  // Clear errors when component mounts
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
+
+  // Clear errors when user starts typing
+  const handleInputChange = (setter: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (error) {
+      dispatch(clearError())
+    }
+    setter(e.target.value)
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,7 +87,7 @@ export function RegistrationForm({
                   type="text"
                   placeholder="Adınız"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={handleInputChange(setFirstName)}
                   required
                 />
               </div>
@@ -86,7 +99,7 @@ export function RegistrationForm({
                   type="text"
                   placeholder="Soyadınız"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={handleInputChange(setLastName)}
                   required
                 />
               </div>
@@ -98,7 +111,7 @@ export function RegistrationForm({
                   type="email"
                   placeholder="ornek@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleInputChange(setEmail)}
                   required
                 />
               </div>
@@ -110,7 +123,7 @@ export function RegistrationForm({
                   type="password" 
                   placeholder="Parolanızı girin"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handleInputChange(setPassword)}
                   required 
                 />
               </div>
@@ -122,7 +135,7 @@ export function RegistrationForm({
                   type="password" 
                   placeholder="Parolanızı tekrar girin"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleInputChange(setConfirmPassword)}
                   required 
                 />
               </div>
@@ -131,7 +144,12 @@ export function RegistrationForm({
                 <Checkbox 
                   id="kvkk" 
                   checked={kvkkAccepted}
-                  onCheckedChange={(checked) => setKvkkAccepted(checked as boolean)}
+                  onCheckedChange={(checked) => {
+                    if (error) {
+                      dispatch(clearError())
+                    }
+                    setKvkkAccepted(checked as boolean)
+                  }}
                   required 
                 />
                 <Label 

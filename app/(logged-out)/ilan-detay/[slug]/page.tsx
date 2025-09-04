@@ -90,6 +90,22 @@ export default function ListingDetailPage() {
     router.push('/ilanlar');
   };
 
+  // Function to handle message button click
+  const handleMessageClick = () => {
+    if (listing && isAuthenticated) {
+      const recipientId = listing.authorInfo?._id || listing.user?._id;
+      const recipientName = listing.authorInfo 
+        ? `${listing.authorInfo.name} ${listing.authorInfo.surname}` 
+        : listing.user 
+        ? `${listing.user.name} ${listing.user.surname}` 
+        : 'Bilinmeyen';
+      
+      if (recipientId && recipientId !== user?._id) {
+        router.push(`/mesajlar?recipientId=${recipientId}&recipientName=${encodeURIComponent(recipientName)}`);
+      }
+    }
+  };
+
 
 
   if (listingsLoading) {
@@ -249,10 +265,21 @@ export default function ListingDetailPage() {
                 <h3 className="text-lg font-semibold text-foreground">İletişim</h3>
                 {isAuthenticated ? (
                   <div className="space-y-3">
-                    <Button className="w-full" size="lg">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Mesaj Gönder
-                    </Button>
+                    {/* Only show message button if not own listing */}
+                    {((listing.authorInfo?._id || listing.user?._id) !== user?._id) ? (
+                      <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={handleMessageClick}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Mesaj Gönder
+                      </Button>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-muted-foreground text-sm">Bu sizin ilanınız</p>
+                      </div>
+                    )}
                     <Button variant="outline" className="w-full" size="lg">
                       <Phone className="h-4 w-4 mr-2" />
                       Telefon Et

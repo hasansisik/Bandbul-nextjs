@@ -22,6 +22,12 @@ import {
   toggleCategoryStatus,
   getAllUsers,
   deleteUser,
+  getConversations,
+  getMessages,
+  sendMessage,
+  startConversation,
+  markAsRead,
+  getUnreadCount,
 } from "../actions/userActions";
 
 interface UserState {
@@ -43,6 +49,12 @@ interface UserState {
   userStats: any;
   usersLoading: boolean;
   usersError: string | null;
+  conversations: any[];
+  currentMessages: any[];
+  currentConversation: any;
+  messagesLoading: boolean;
+  messagesError: string | null;
+  unreadCount: number;
 }
 
 const initialState: UserState = {
@@ -62,6 +74,12 @@ const initialState: UserState = {
   userStats: null,
   usersLoading: false,
   usersError: null,
+  conversations: [],
+  currentMessages: [],
+  currentConversation: null,
+  messagesLoading: false,
+  messagesError: null,
+  unreadCount: 0,
 };
 
 export const userReducer = createReducer(initialState, (builder) => {
@@ -366,6 +384,101 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(deleteUser.rejected, (state, action) => {
       state.usersLoading = false;
       state.usersError = action.payload as string;
+    })
+    // Get Conversations
+    .addCase(getConversations.pending, (state) => {
+      state.messagesLoading = true;
+    })
+    .addCase(getConversations.fulfilled, (state, action) => {
+      state.messagesLoading = false;
+      state.conversations = action.payload.conversations;
+    })
+    .addCase(getConversations.rejected, (state, action) => {
+      state.messagesLoading = false;
+      state.messagesError = action.payload as string;
+    })
+    // Get Messages
+    .addCase(getMessages.pending, (state) => {
+      state.messagesLoading = true;
+    })
+    .addCase(getMessages.fulfilled, (state, action) => {
+      state.messagesLoading = false;
+      state.currentMessages = action.payload.messages;
+      state.currentConversation = action.payload.conversation;
+    })
+    .addCase(getMessages.rejected, (state, action) => {
+      state.messagesLoading = false;
+      state.messagesError = action.payload as string;
+    })
+    // Send Message
+    .addCase(sendMessage.pending, (state) => {
+      state.messagesLoading = true;
+    })
+    .addCase(sendMessage.fulfilled, (state, action) => {
+      state.messagesLoading = false;
+      // Don't push message here to prevent duplicates
+      // Messages will be loaded via getMessages or WebSocket
+      
+      // Update conversation in conversations list
+      const conversationIndex = state.conversations.findIndex(
+        conv => conv.id === action.payload.conversation._id
+      );
+      if (conversationIndex !== -1) {
+        state.conversations[conversationIndex].lastMessage = action.payload.message.content;
+        state.conversations[conversationIndex].timestamp = action.payload.message.timestamp;
+        // Move conversation to top
+        const updatedConversation = state.conversations.splice(conversationIndex, 1)[0];
+        state.conversations.unshift(updatedConversation);
+      }
+    })
+    .addCase(sendMessage.rejected, (state, action) => {
+      state.messagesLoading = false;
+      state.messagesError = action.payload as string;
+    })
+    // Start Conversation
+    .addCase(startConversation.pending, (state) => {
+      state.messagesLoading = true;
+    })
+    .addCase(startConversation.fulfilled, (state, action) => {
+      state.messagesLoading = false;
+      state.conversations.unshift(action.payload.conversation);
+      state.currentConversation = action.payload.conversation;
+      state.currentMessages = [];
+    })
+    .addCase(startConversation.rejected, (state, action) => {
+      state.messagesLoading = false;
+      state.messagesError = action.payload as string;
+    })
+    // Mark As Read
+    .addCase(markAsRead.pending, (state) => {
+      // No loading state needed for this action
+    })
+    .addCase(markAsRead.fulfilled, (state, action) => {
+      // Update messages as read
+      state.currentMessages = state.currentMessages.map(msg => ({
+        ...msg,
+        isRead: true
+      }));
+      // Update conversation unread count
+      const conversationIndex = state.conversations.findIndex(
+        conv => conv.id === state.currentConversation?._id
+      );
+      if (conversationIndex !== -1) {
+        state.conversations[conversationIndex].unreadCount = 0;
+      }
+    })
+    .addCase(markAsRead.rejected, (state, action) => {
+      state.messagesError = action.payload as string;
+    })
+    // Get Unread Count
+    .addCase(getUnreadCount.pending, (state) => {
+      // No loading state needed for this action
+    })
+    .addCase(getUnreadCount.fulfilled, (state, action) => {
+      state.unreadCount = action.payload.unreadCount;
+    })
+    .addCase(getUnreadCount.rejected, (state, action) => {
+      state.messagesError = action.payload as string;
     });
 });
 
