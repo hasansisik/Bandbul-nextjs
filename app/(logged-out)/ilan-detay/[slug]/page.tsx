@@ -11,8 +11,6 @@ import {
   User,
   ArrowLeft,
   Share2,
-  Phone,
-  Mail,
   Award,
   ChevronRight,
   Star,
@@ -214,7 +212,7 @@ export default function ListingDetailPage() {
               {/* Details */}
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-foreground">Detaylar</h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                     <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                       {listing.authorInfo?.profile?.picture ? (
@@ -251,9 +249,20 @@ export default function ListingDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Deneyim</p>
-                        {listing.experience}
+                      <p className="font-medium text-foreground">{listing.experience}</p>
                     </div>
                   </div>
+                  {listing.instrument && (
+                    <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Music className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Enstrüman</p>
+                        <p className="font-medium text-foreground">{listing.instrument}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -280,14 +289,6 @@ export default function ListingDetailPage() {
                         <p className="text-muted-foreground text-sm">Bu sizin ilanınız</p>
                       </div>
                     )}
-                    <Button variant="outline" className="w-full" size="lg">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Telefon Et
-                    </Button>
-                    <Button variant="outline" className="w-full" size="lg">
-                      <Mail className="h-4 w-4 mr-2" />
-                      E-posta Gönder
-                    </Button>
                   </div>
                 ) : (
                   <div className="text-center py-4">
