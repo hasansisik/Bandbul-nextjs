@@ -5,7 +5,6 @@ import { server } from "@/config";
 export interface BlogPost {
   _id?: string;
   title: string;
-  slug: string;
   excerpt: string;
   content: string;
   author: string;
@@ -97,22 +96,6 @@ export const getBlogById = createAsyncThunk(
   }
 );
 
-// Get Blog by Slug (Public)
-export const getBlogBySlug = createAsyncThunk(
-  "blog/getBlogBySlug",
-  async (slug: string, thunkAPI) => {
-    try {
-      const response = await axios.get(`${server}/blogs/slug/${slug}`);
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
-    }
-  }
-);
 
 // Create Blog (Admin only)
 export const createBlog = createAsyncThunk(

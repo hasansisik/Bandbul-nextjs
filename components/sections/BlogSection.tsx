@@ -7,16 +7,45 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getAllBlogs } from "@/redux/actions/blogActions";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const BlogSection = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { blogs, loading } = useSelector((state: RootState) => state.blog);
+  const router = useRouter();
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Function to create title slug for URL
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
+  // Function to create category slug for URL
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
 
   // Get recent published blogs (max 6)
   const blogPosts = blogs
@@ -132,7 +161,7 @@ const BlogSection = () => {
                   <div key={post._id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
                     <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
                       <div className="aspect-[4/3] overflow-hidden relative">
-                        <Link href={`/${post.slug}`}>
+                        <Link href={`/${createTitleSlug(post.title)}`}>
                           <img 
                             src={post.image} 
                             alt={post.title}
@@ -150,17 +179,23 @@ const BlogSection = () => {
 
                       <div className="p-6">
                         <div className="flex items-center gap-2 mb-3">
-                          <Link href={`/blog/kategori/${post.categorySlug || post.category.toLowerCase().replace(/\s+/g, '-')}`}>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/blog/kategori/${createCategorySlug(post.category)}`);
+                            }}
+                            className="focus:outline-none"
+                          >
                             <Badge 
                               variant="outline" 
                               className="text-xs border-border cursor-pointer hover:bg-muted"
                             >
                               {post.category}
                             </Badge>
-                          </Link>
+                          </button>
                         </div>
                         
-                        <Link href={`/${post.slug}`}>
+                        <Link href={`/${createTitleSlug(post.title)}`}>
                           <h3 className="font-semibold text-lg leading-tight mb-3 line-clamp-2 text-foreground">
                             {post.title}
                           </h3>

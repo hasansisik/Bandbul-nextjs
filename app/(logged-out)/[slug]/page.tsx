@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { getBlogBySlug, getAllBlogs } from "@/redux/actions/blogActions";
+import { getAllBlogs } from "@/redux/actions/blogActions";
 import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,26 +18,65 @@ import {
   Tag,
   ChevronRight
 } from "lucide-react";
-import { notFound } from "next/navigation";
 
 export default function BlogDetailPage() {
   const dispatch = useDispatch<AppDispatch>()
-  const { currentBlog, blogs, loading, error } = useSelector((state: RootState) => state.blog)
+  const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
   
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const [post, setPost] = useState<BlogPost | null>(null);
+
+  // Function to create title slug for URL
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
+  // Function to create category slug for URL
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
 
   useEffect(() => {
-    if (slug) {
-      dispatch(getBlogBySlug(slug))
-      dispatch(getAllBlogs({}))
+    // Load blogs
+    if (blogs.length === 0) {
+      dispatch(getAllBlogs({}));
     }
-  }, [dispatch, slug])
+  }, [dispatch, blogs.length]);
 
-  const post = currentBlog;
+  useEffect(() => {
+    // Find blog by title slug
+    if (blogs.length > 0) {
+      const foundBlog = blogs.find(blog => {
+        const titleSlug = createTitleSlug(blog.title);
+        return titleSlug === slug;
+      });
+      if (foundBlog) {
+        setPost(foundBlog);
+      }
+    }
+  }, [slug, blogs]);
+
   const recentPosts = blogs
-    .filter(p => p.slug !== slug)
+    .filter(p => createTitleSlug(p.title) !== slug)
     .sort((a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
     .slice(0, 3);
 
@@ -45,20 +84,26 @@ export default function BlogDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-center py-20">
-              <div className="text-muted-foreground">Yükleniyor...</div>
-            </div>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground text-lg">Blog yazısı yükleniyor...</p>
           </div>
         </div>
       </main>
     );
   }
 
-
-  if (error || (!post && !loading)) {
-    notFound();
+  if (!post) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">Blog yazısı bulunamadı.</p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   const formatDate = (dateString: string) => {
@@ -99,14 +144,7 @@ export default function BlogDetailPage() {
             <ChevronRight className="h-4 w-4" />
             <span 
               onClick={() => {
-                const categorySlug = post.category.toLowerCase()
-                  .replace(/ğ/g, 'g')
-                  .replace(/ü/g, 'u')
-                  .replace(/ş/g, 's')
-                  .replace(/ı/g, 'i')
-                  .replace(/ö/g, 'o')
-                  .replace(/ç/g, 'c')
-                  .replace(/\s+/g, '-');
+                const categorySlug = createCategorySlug(post.category);
                 router.push(`/blog/kategori/${categorySlug}`)
               }} 
               className="hover:text-foreground cursor-pointer transition-colors"
@@ -201,7 +239,7 @@ export default function BlogDetailPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recentPosts.map((relatedPost) => (
                   <article key={relatedPost._id} className="group">
-                    <Link href={`/${relatedPost.slug}`} className="block">
+                    <Link href={`/${createTitleSlug(relatedPost.title)}`} className="block">
                       <div className="aspect-[4/3] overflow-hidden rounded-lg mb-4">
                         <img
                           src={relatedPost.image}

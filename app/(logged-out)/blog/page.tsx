@@ -7,6 +7,7 @@ import { getAllBlogs } from "@/redux/actions/blogActions";
 import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions";
 import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,12 +27,40 @@ export default function BlogPage() {
   const dispatch = useDispatch<AppDispatch>()
   const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
   const { categories: blogCategories } = useSelector((state: RootState) => state.blogCategory)
+  const router = useRouter();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [visiblePosts, setVisiblePosts] = useState(6);
   const postsPerLoad = 6;
+
+  // Function to create title slug for URL
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
+  // Function to create category slug for URL
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
 
   useEffect(() => {
     dispatch(getAllBlogs({}))
@@ -191,7 +220,7 @@ export default function BlogPage() {
               {displayedPosts.map((post) => (
                 <article key={post._id} className="bg-card border border-border rounded-lg overflow-hidden">
                   <div className="aspect-[4/3] overflow-hidden relative">
-                    <Link href={`/${post.slug}`}>
+                    <Link href={`/${createTitleSlug(post.title)}`}>
                       <img
                         src={post.image}
                         alt={post.title}
@@ -208,14 +237,20 @@ export default function BlogPage() {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <Link href={`/blog/kategori/${post.categorySlug}`}>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/blog/kategori/${createCategorySlug(post.category)}`);
+                        }}
+                        className="focus:outline-none"
+                      >
                         <Badge 
                           variant="outline" 
                           className="text-xs border-border cursor-pointer hover:bg-muted"
                         >
                           {post.category}
                         </Badge>
-                      </Link>
+                      </button>
                       {post.featured && (
                         <Badge className="text-xs bg-primary text-primary-foreground">
                           Öne Çıkan
@@ -223,7 +258,7 @@ export default function BlogPage() {
                       )}
                     </div>
                     
-                    <Link href={`/${post.slug}`}>
+                    <Link href={`/${createTitleSlug(post.title)}`}>
                       <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
                         {post.title}
                       </h2>

@@ -2,7 +2,6 @@ import { createReducer } from "@reduxjs/toolkit";
 import {
   getAllBlogs,
   getBlogById,
-  getBlogBySlug,
   createBlog,
   updateBlog,
   deleteBlog,
@@ -76,20 +75,6 @@ export const blogReducer = createReducer(initialState, (builder) => {
       state.error = action.payload as string;
     })
     
-    // Get Blog by Slug
-    .addCase(getBlogBySlug.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    })
-    .addCase(getBlogBySlug.fulfilled, (state, action) => {
-      state.loading = false;
-      state.currentBlog = action.payload.blog;
-      state.error = null;
-    })
-    .addCase(getBlogBySlug.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    })
     
     // Create Blog
     .addCase(createBlog.pending, (state) => {

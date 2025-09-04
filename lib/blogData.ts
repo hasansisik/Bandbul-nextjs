@@ -441,7 +441,22 @@ export const getRecentPosts = (count: number = 6): BlogPost[] => {
 };
 
 export const getPostBySlug = (slug: string): BlogPost | undefined => {
-  return blogPosts.find(post => post.slug === slug);
+  // Function to create title slug for comparison
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+  
+  return blogPosts.find(post => createTitleSlug(post.title) === slug);
 };
 
 export const searchPosts = (query: string): BlogPost[] => {
