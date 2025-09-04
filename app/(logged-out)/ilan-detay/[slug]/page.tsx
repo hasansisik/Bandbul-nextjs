@@ -16,7 +16,8 @@ import {
   Award,
   ChevronRight,
   Star,
-  Clock
+  Clock,
+  Music
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hook";
 import { getAllListings, loadUser } from "@/redux/actions/userActions";
@@ -29,6 +30,21 @@ export default function ListingDetailPage() {
   const { allListings, listingsLoading, isAuthenticated, user } = useAppSelector((state) => state.user);
   const [listing, setListing] = useState<any>(null);
 
+  // Function to create title slug for URL
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
   useEffect(() => {
     // Load user and listings
     dispatch(loadUser());
@@ -38,9 +54,12 @@ export default function ListingDetailPage() {
   }, [dispatch, allListings.length]);
 
   useEffect(() => {
-    // Find listing by ID (slug parameter)
+    // Find listing by title slug
     if (allListings.length > 0) {
-      const foundListing = allListings.find(item => item._id === params.slug);
+      const foundListing = allListings.find(item => {
+        const titleSlug = createTitleSlug(item.title);
+        return titleSlug === params.slug;
+      });
       if (foundListing) {
         setListing(foundListing);
       }
@@ -255,27 +274,77 @@ export default function ListingDetailPage() {
 
               {/* Similar Listings */}
               <div className="bg-card border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Benzer İlanlar</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Benzer İlanlar</h3>
+                <div className="space-y-2">
                   {allListings
-                    .filter(item => item.category === listing.category && item._id !== listing._id)
-                    .slice(0, 3)
+                    .filter(item => (item.categoryInfo?.name || item.category) === (listing.categoryInfo?.name || listing.category) && item._id !== listing._id)
+                    .slice(0, 4)
                     .map(item => (
-                      <div key={item._id} className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                        <img 
-                          src={item.image} 
-                          alt={item.title}
-                          className="w-16 h-12 object-cover rounded-lg"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-foreground truncate hover:text-primary transition-colors">
+                      <div 
+                        key={item._id} 
+                        onClick={() => router.push(`/ilan-detay/${createTitleSlug(item.title)}`)}
+                        className="group flex items-center gap-4  rounded-lg  cursor-pointer transition-all duration-200"
+                      >
+                        {/* Image */}
+                        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
+                          <img 
+                            src={item.image} 
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
+                        </div>
+                        
+                        {/* Content - Centered with image */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200 mb-2">
                             {item.title}
                           </h4>
-                          <p className="text-xs text-muted-foreground">{item.location}</p>
+                          
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{item.location}</span>
+                            </div>
+                            
+                            {item.instrument && (
+                              <div className="flex items-center gap-1">
+                                <Music className="h-3 w-3" />
+                                <span className="truncate">{item.instrument}</span>
+                              </div>
+                            )}
+                            
+                            {item.experience && (
+                              <div className="flex items-center gap-1">
+                                <Award className="h-3 w-3" />
+                                <span className="truncate">{item.experience}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Category Badge - Centered with image */}
+                        <div className="flex-shrink-0 flex items-center">
+                          <Badge variant="secondary" className="text-xs px-2 py-1">
+                            {item.categoryInfo?.name || item.category}
+                          </Badge>
+                        </div>
+                        
+                        {/* Arrow - Centered with image */}
+                        <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
                     ))}
                 </div>
+                {allListings.filter(item => (item.categoryInfo?.name || item.category) === (listing.categoryInfo?.name || listing.category) && item._id !== listing._id).length === 0 && (
+                  <div className="text-center py-6">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted/50 flex items-center justify-center">
+                      <Music className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Bu kategoride başka ilan bulunmuyor.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

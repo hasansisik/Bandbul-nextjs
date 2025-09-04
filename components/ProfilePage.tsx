@@ -185,9 +185,24 @@ export function ProfilePage() {
     setShowCreateForm(true)
   }
 
+  // Function to create title slug for URL
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
   const handleViewListing = (listing: any) => {
-    // Navigate to listing detail page
-    window.location.href = `/ilan-detay/${listing._id}`
+    // Navigate to listing detail page using title slug
+    window.location.href = `/ilan-detay/${createTitleSlug(listing.title)}`
   }
 
   const handleCancelEdit = () => {

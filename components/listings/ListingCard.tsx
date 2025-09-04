@@ -12,6 +12,21 @@ interface ListingCardProps {
 }
 
 const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps) => {
+  // Function to create slug from title
+  const createTitleSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "Grup Arıyorum":
@@ -34,7 +49,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
   if (viewMode === 'grid') {
     return (
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-all duration-300 group">
-        <Link href={`/ilan-detay/${listing._id}`} className="block">
+        <Link href={`/ilan-detay/${createTitleSlug(listing.title)}`} className="block">
           {/* Image */}
           <div className="relative aspect-video overflow-hidden">
             <img 
@@ -153,7 +168,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
   // List view
   return (
     <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden hover:shadow-md transition-all duration-200 group">
-      <Link href={`/ilan-detay/${listing._id}`} className="block">
+      <Link href={`/ilan-detay/${createTitleSlug(listing.title)}`} className="block">
         <div className="flex">
           {/* Image - Better size on mobile */}
           <div className="relative w-24 h-24 sm:w-48 sm:h-32 overflow-hidden flex-shrink-0">
