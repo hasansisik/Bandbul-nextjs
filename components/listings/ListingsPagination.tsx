@@ -66,7 +66,7 @@ const ListingsPagination = ({ totalListings, currentPage = 1, onPageChange }: Li
   return (
     <div className="flex items-center justify-between bg-card rounded-xl p-6 shadow-sm border border-border">
       {/* Page Info */}
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground hidden md:block">
         Sayfa <span className="font-semibold text-card-foreground">{page}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">{totalListings.toLocaleString()}</span> ilan
       </div>
 
@@ -119,7 +119,7 @@ const ListingsPagination = ({ totalListings, currentPage = 1, onPageChange }: Li
 
       {/* Items Per Page */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Sayfa başına:</span>
+        <span className="text-sm text-muted-foreground hidden md:inline">Sayfa başına:</span>
         <Select defaultValue="12">
           <SelectTrigger className="w-[80px] border-border">
             <SelectValue />
