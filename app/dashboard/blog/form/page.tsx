@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/redux/store"
 import { getBlogById, createBlog, updateBlog, deleteBlog } from "@/redux/actions/blogActions"
-import { BlogPost, CreateBlogPayload, UpdateBlogPayload } from "@/redux/actions/blogActions"
 import { getAllBlogCategories } from "@/redux/actions/blogCategoryActions"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 import { toast } from "sonner"
@@ -15,14 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../../components
 import { Input } from "../../../../components/ui/input"
 import { Label } from "../../../../components/ui/label"
 import { Textarea } from "../../../../components/ui/textarea"
-const RichTextEditor = dynamic(() => import("../../../../components/ui/RichTextEditor"), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-[400px] p-4 border rounded-md bg-gray-50">
-      <div className="text-gray-400">Editör yükleniyor...</div>
-    </div>
-  ),
-})
 import { Checkbox } from "../../../../components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select"
 import { Badge } from "../../../../components/ui/badge"
@@ -42,6 +33,7 @@ import {
   AlertDialogTrigger,
 } from "../../../../components/ui/alert-dialog"
 import CategoryManagementModal from "../../../../components/CategoryManagementModal"
+import RichTextEditor from "../../../../components/ui/RichTextEditor"
 
 function BlogFormPageContent() {
   const dispatch = useDispatch<AppDispatch>()
@@ -337,7 +329,9 @@ function BlogFormPageContent() {
             <CardContent>
               <RichTextEditor
                 content={formData.content}
-                onChange={(html) => handleChange("content", html)}
+                onChange={(html) =>
+                  setFormData({ ...formData, content: html })
+                }
                 placeholder="Blog yazısının detaylı içeriğini yazın..."
                 className="min-h-[400px]"
               />
