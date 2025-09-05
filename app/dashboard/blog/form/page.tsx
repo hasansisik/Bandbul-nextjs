@@ -160,14 +160,44 @@ function BlogFormPageContent() {
     setTagInput("")
   }
 
+  const addMultipleTags = (tagsString: string) => {
+    // Virgülle ayrılmış etiketleri temizle ve ayır
+    const tags = tagsString
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0)
+    
+    // Mevcut etiketlere ekle (duplicate kontrolü ile)
+    const newTags = tags.filter(tag => !selectedTags.includes(tag))
+    if (newTags.length > 0) {
+      setSelectedTags([...selectedTags, ...newTags])
+    }
+    setTagInput("")
+  }
+
   const removeTag = (tagToRemove: string) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove))
   }
 
   const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter') {
       e.preventDefault()
-      addTag(tagInput.trim())
+      // Enter tuşuna basıldığında virgül kontrolü yap
+      if (tagInput.includes(',')) {
+        addMultipleTags(tagInput)
+      } else {
+        addTag(tagInput.trim())
+      }
+    }
+  }
+
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setTagInput(value)
+    
+    // Eğer virgül varsa otomatik olarak etiketleri ayır ve ekle
+    if (value.includes(',')) {
+      addMultipleTags(value)
     }
   }
 
@@ -426,21 +456,36 @@ function BlogFormPageContent() {
                   </div>
                   
                   {/* Etiket ekleme */}
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     <Input
-                      placeholder="Etiket ekle..."
+                      placeholder="Etiket ekle... (virgülle ayırarak toplu ekleyebilirsiniz)"
                       value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
+                      onChange={handleTagInputChange}
                       onKeyPress={handleTagInputKeyPress}
                     />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => addTag(tagInput.trim())}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          if (tagInput.includes(',')) {
+                            addMultipleTags(tagInput)
+                          } else {
+                            addTag(tagInput.trim())
+                          }
+                        }}
+                        disabled={!tagInput.trim()}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ekle
+                      </Button>
+                      {tagInput.includes(',') && (
+                        <span className="text-xs text-muted-foreground self-center">
+                          Virgülle ayrılmış etiketler otomatik eklenecek
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
 
