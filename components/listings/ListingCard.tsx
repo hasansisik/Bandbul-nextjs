@@ -59,7 +59,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
             />
             {/* Category Badge - Top Left */}
             <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-              <Badge className={`text-xs border ${getCategoryColor(listing.categoryInfo?.name || listing.category)}`}>
+              <Badge className={`text-xs border ${getCategoryColor(listing.categoryInfo?.name || listing.category)} rounded-full py-1`}>
                 {listing.categoryInfo?.name || listing.category}
               </Badge>
             </div>
@@ -67,7 +67,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
             {/* Instrument Badge - Top Right */}
             {listing.instrument && (
               <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                <Badge className="text-xs border bg-blue-100 text-blue-800 border-blue-200">
+                <Badge className="text-xs  bg-white/20 text-white  rounded-full py-1 backdrop-blur-sm">
                   🎵 {listing.instrument}
                 </Badge>
               </div>
