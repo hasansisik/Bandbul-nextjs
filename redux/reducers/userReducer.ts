@@ -155,7 +155,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(againEmail.fulfilled, (state) => {
       state.loading = false;
-      state.message = "Email successfully sent again.";
+      state.message = "E-posta başarıyla tekrar gönderildi.";
     })
     .addCase(againEmail.rejected, (state, action) => {
       state.loading = false;
@@ -167,7 +167,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(forgotPassword.fulfilled, (state) => {
       state.loading = false;
-      state.message = "Password reset email sent.";
+      state.message = "Şifre sıfırlama e-postası gönderildi.";
     })
     .addCase(forgotPassword.rejected, (state, action) => {
       state.loading = false;
@@ -179,7 +179,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(resetPassword.fulfilled, (state) => {
       state.loading = false;
-      state.message = "Password reset successful.";
+      state.message = "Şifre başarıyla sıfırlandı.";
     })
     .addCase(resetPassword.rejected, (state, action) => {
       state.loading = false;

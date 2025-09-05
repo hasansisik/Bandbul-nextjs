@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
 import { forgotPassword } from "@/redux/actions/userActions"
+import { useRouter } from "next/navigation"
 
 export function ForgotPasswordForm({
   className,
@@ -15,7 +16,8 @@ export function ForgotPasswordForm({
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const dispatch = useAppDispatch()
-  const { loading, message, error } = useAppSelector((state) => state.user)
+  const { loading, error } = useAppSelector((state) => state.user)
+  const router = useRouter()
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,7 +25,8 @@ export function ForgotPasswordForm({
     try {
       const result = await dispatch(forgotPassword(email))
       if (forgotPassword.fulfilled.match(result)) {
-        setEmail("")
+        // Redirect immediately to new password page with email parameter
+        router.push(`/yeni-sifre?email=${encodeURIComponent(email)}`)
       }
     } catch (err) {
       console.error("Forgot password error:", err)
@@ -43,11 +46,6 @@ export function ForgotPasswordForm({
                 </p>
               </div>
               
-              {message && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md text-sm">
-                  {message}
-                </div>
-              )}
               
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">

@@ -21,6 +21,7 @@ export function RegistrationForm({
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [kvkkAccepted, setKvkkAccepted] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.user)
   const router = useRouter()
@@ -30,6 +31,28 @@ export function RegistrationForm({
     dispatch(clearError())
   }, [dispatch])
 
+  // Password validation function
+  const validatePassword = (password: string) => {
+    const minLength = 5
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasSpecialChar = /[.,!]/.test(password)
+    
+    if (password.length < minLength) {
+      return "Parola en az 5 karakter olmalıdır"
+    }
+    if (!hasUpperCase) {
+      return "Parola en az bir büyük harf içermelidir"
+    }
+    if (!hasLowerCase) {
+      return "Parola en az bir küçük harf içermelidir"
+    }
+    if (!hasSpecialChar) {
+      return "Parola en az bir özel karakter (.,!) içermelidir"
+    }
+    return ""
+  }
+
   // Clear errors when user starts typing
   const handleInputChange = (setter: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     if (error) {
@@ -38,8 +61,25 @@ export function RegistrationForm({
     setter(e.target.value)
   }
 
+  // Handle password change with validation
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value
+    setPassword(newPassword)
+    setPasswordError(validatePassword(newPassword))
+    if (error) {
+      dispatch(clearError())
+    }
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate password before submission
+    const passwordValidationError = validatePassword(password)
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError)
+      return
+    }
     
     if (password !== confirmPassword) {
       return
@@ -123,9 +163,16 @@ export function RegistrationForm({
                   type="password" 
                   placeholder="Parolanızı girin"
                   value={password}
-                  onChange={handleInputChange(setPassword)}
+                  onChange={handlePasswordChange}
                   required 
+                  className={passwordError ? "border-red-500" : ""}
                 />
+                {passwordError && (
+                  <p className="text-sm text-red-600">{passwordError}</p>
+                )}
+                <div className="text-xs text-muted-foreground">
+                  Parola en az 5 karakter, büyük harf, küçük harf ve özel karakter (.,!) içermelidir
+                </div>
               </div>
               
               <div className="grid gap-3">
