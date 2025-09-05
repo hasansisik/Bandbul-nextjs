@@ -223,29 +223,12 @@ const BlogSection = () => {
             </div>
             )}
 
-            {/* Navigation Dots */}
-            {blogPosts.length > 0 && (
-              <div className="flex justify-center mt-8 space-x-1">
-                {Array.from({ length: Math.max(1, blogPosts.length - 3) }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentIndex 
-                        ? 'bg-primary w-4' 
-                        : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           {/* View All Button */}
           <div className="text-center mt-12">
             <Link href="/blog">
-              <Button variant="outline" size="lg" className="hover:bg-primary hover:text-primary-foreground transition-colors duration-300 border-border">
+              <Button variant="outline" size="default" className="hover:bg-primary hover:text-primary-foreground transition-colors duration-300 border-border">
                 Tüm Yazıları Gör
               </Button>
             </Link>

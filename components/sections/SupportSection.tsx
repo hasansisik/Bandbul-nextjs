@@ -166,7 +166,7 @@ const SupportSection = () => {
                     type="submit" 
                     size="lg" 
                     disabled={loading}
-                    className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl"
+                    className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-md text-sm"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">

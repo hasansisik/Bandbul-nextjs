@@ -88,7 +88,7 @@ export default function ContactPage() {
       icon: <Clock className="h-6 w-6" />,
       title: "Çalışma Saatları",
       value: settings?.contact?.workingHours || "Pazartesi - Cuma, 09:00 - 18:00",
-      description: "09:00 - 18:00"
+      description: "Çalışma saatlerimiz"
     }
   ];
 
@@ -212,7 +212,7 @@ export default function ContactPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90 py-3 text-lg rounded-md"
+                    className="w-full bg-primary hover:bg-primary/90 py-3 text-lg rounded-md text-sm"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">

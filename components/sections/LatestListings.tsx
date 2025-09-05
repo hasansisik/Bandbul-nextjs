@@ -47,18 +47,7 @@ const LatestListings = () => {
   const listings = getFilteredListings();
 
 
-
-
-
   const getTabCounts = () => {
-    const categoryMap: Record<string, string> = {
-      'grup-ariyorum': 'Grup Arıyorum',
-      'ders-veriyorum': 'Ders Veriyorum',
-      'enstruman-satiyorum': 'Enstrüman Satıyorum',
-      'studyo-kiraliyorum': 'Stüdyo Kiralıyorum',
-      'muzisyen-ariyorum': 'Müzisyen Arıyorum',
-      'ders-almak-istiyorum': 'Ders Almak İstiyorum'
-    };
 
     return [
       { id: "all", label: "Tümü", count: allListings.length },
@@ -135,8 +124,8 @@ const LatestListings = () => {
         {/* View All Button */}
         <div className="text-center">
           <Link href="/ilanlar">
-            <Button className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl">
-              Tüm İlanları Gör
+          <Button variant="outline" size="default" className="hover:bg-primary hover:text-primary-foreground transition-colors duration-300 border-border">
+          Tüm İlanları Gör
             </Button>
           </Link>
         </div>

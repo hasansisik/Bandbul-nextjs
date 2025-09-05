@@ -15,7 +15,9 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { 
@@ -29,7 +31,7 @@ import {
 export function NotificationsPage() {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { notifications, loading, error, stats } = useAppSelector((state) => state.notification)
+  const { notifications, loading, error, stats, pagination } = useAppSelector((state) => state.notification)
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -61,9 +63,34 @@ export function NotificationsPage() {
     router.push(`/mesajlar?conversationId=${conversationId}`)
   }
 
+  const handlePageChange = (page: number) => {
+    if (page !== currentPage) {
+      setCurrentPage(page)
+      // Scroll to top when page changes
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (pagination && currentPage > 1) {
+      handlePageChange(currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (pagination && currentPage < pagination.totalPages) {
+      handlePageChange(currentPage + 1)
+    }
+  }
+
   const filteredNotifications = filter === "unread" 
     ? notifications.filter(n => !n.isRead)
     : notifications
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter])
 
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
@@ -183,7 +210,24 @@ export function NotificationsPage() {
         {/* Error State */}
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-center">
-            <p className="text-destructive">{error}</p>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              <p className="text-destructive font-medium">Bir hata oluştu</p>
+            </div>
+            <p className="text-sm text-destructive/80">
+              {error.includes('mongoose') || error.includes('MongoDB') 
+                ? "Sunucu bağlantısında geçici bir sorun yaşanıyor. Lütfen sayfayı yenileyin."
+                : error
+              }
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-3"
+              onClick={() => window.location.reload()}
+            >
+              Sayfayı Yenile
+            </Button>
           </div>
         )}
 
@@ -288,6 +332,157 @@ export function NotificationsPage() {
           </div>
         )}
 
+        {/* Pagination */}
+        {!loading && !error && pagination && pagination.totalPages > 1 && filteredNotifications.length > 0 && (
+          <div className="mt-8">
+            {/* Mobile Pagination */}
+            <div className="flex flex-col items-center space-y-4 md:hidden">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage <= 1}
+                  className="flex items-center space-x-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Önceki</span>
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  <span className="text-sm text-muted-foreground">
+                    {currentPage} / {pagination.totalPages}
+                  </span>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage >= pagination.totalPages}
+                  className="flex items-center space-x-1"
+                >
+                  <span>Sonraki</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="text-xs text-muted-foreground text-center">
+                {pagination.totalItems} toplam bildirim
+              </div>
+            </div>
+
+            {/* Desktop Pagination */}
+            <div className="hidden md:flex items-center justify-center">
+              <div className="flex items-center space-x-2">
+                {/* Previous Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage <= 1}
+                  className="flex items-center space-x-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Önceki</span>
+                </Button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {(() => {
+                    const pages = []
+                    const totalPages = pagination.totalPages
+                    const current = currentPage
+                    
+                    // Always show first page
+                    if (current > 3) {
+                      pages.push(
+                        <Button
+                          key={1}
+                          variant={current === 1 ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(1)}
+                          className="w-8 h-8 p-0"
+                        >
+                          1
+                        </Button>
+                      )
+                      if (current > 4) {
+                        pages.push(
+                          <span key="ellipsis1" className="px-2 text-muted-foreground">
+                            ...
+                          </span>
+                        )
+                      }
+                    }
+
+                    // Show pages around current page
+                    const start = Math.max(1, current - 2)
+                    const end = Math.min(totalPages, current + 2)
+                    
+                    for (let i = start; i <= end; i++) {
+                      pages.push(
+                        <Button
+                          key={i}
+                          variant={current === i ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(i)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {i}
+                        </Button>
+                      )
+                    }
+
+                    // Always show last page
+                    if (current < totalPages - 2) {
+                      if (current < totalPages - 3) {
+                        pages.push(
+                          <span key="ellipsis2" className="px-2 text-muted-foreground">
+                            ...
+                          </span>
+                        )
+                      }
+                      pages.push(
+                        <Button
+                          key={totalPages}
+                          variant={current === totalPages ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(totalPages)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {totalPages}
+                        </Button>
+                      )
+                    }
+
+                    return pages
+                  })()}
+                </div>
+
+                {/* Next Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage >= pagination.totalPages}
+                  className="flex items-center space-x-1"
+                >
+                  <span>Sonraki</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Page Info */}
+              <div className="ml-6 text-sm text-muted-foreground">
+                Sayfa {currentPage} / {pagination.totalPages} 
+                <span className="ml-2">
+                  ({pagination.totalItems} toplam bildirim)
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

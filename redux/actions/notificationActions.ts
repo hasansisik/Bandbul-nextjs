@@ -41,11 +41,22 @@ export const getUserNotifications = createAsyncThunk(
       const response = await axios.get(url, config);
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -66,11 +77,22 @@ export const getNotificationById = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -92,11 +114,22 @@ export const markAsRead = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -118,11 +151,22 @@ export const markAllAsRead = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -143,11 +187,22 @@ export const deleteNotification = createAsyncThunk(
       );
       return { id, message: response.data.message };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -168,11 +223,22 @@ export const getNotificationStats = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
@@ -195,11 +261,22 @@ export const createNotification = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
     }
   }
 );
