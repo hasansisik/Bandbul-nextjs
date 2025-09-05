@@ -84,7 +84,7 @@ interface SettingsData {
   };
   footer: {
     main: FooterLink[];
-    listings: FooterLink[];
+    listings: string[];
     support: FooterLink[];
     social: {
       facebook: string;
@@ -121,6 +121,7 @@ export default function SettingsPage() {
   const { categories } = useSelector((state: RootState) => state.user);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isFooterListingCategoryModalOpen, setIsFooterListingCategoryModalOpen] = useState(false);
 
   const [localSettings, setLocalSettings] = useState<SettingsData>({
     logo: {
@@ -286,7 +287,7 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleFooterLinkChange = (section: keyof Omit<SettingsData['footer'], 'social'>, index: number, field: keyof FooterLink, value: string) => {
+  const handleFooterLinkChange = (section: 'main' | 'support', index: number, field: keyof FooterLink, value: string) => {
     setLocalSettings(prev => ({
       ...prev,
       footer: {
@@ -389,11 +390,7 @@ export default function SettingsPage() {
           { name: "Blog", href: "/blog" },
           { name: "İletişim", href: "/iletisim" }
         ],
-        listings: [
-          { name: "Grup Arıyorum", href: "/grup-arirorum" },
-          { name: "Müzisyen Arıyorum", href: "/muzisyen-arirorum" },
-          { name: "Ders Almak İstiyorum", href: "/ders-almak-istiyorum" }
-        ],
+        listings: [],
         support: [
           { name: "S.S.S.", href: "/sss" },
           { name: "İlan Kuralları", href: "/ilan-kurallari" },
@@ -431,12 +428,39 @@ export default function SettingsPage() {
     setIsCategoryModalOpen(false);
   };
 
+  const addFooterListingCategoryFromModal = (category: any) => {
+    // Kategori zaten ekli mi kontrol et
+    if (localSettings.footer.listings.find((cat: any) => cat === category._id)) {
+      return;
+    }
+    
+    setLocalSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        listings: [...prev.footer.listings, category._id]
+      }
+    }));
+    
+    setIsFooterListingCategoryModalOpen(false);
+  };
+
   const removeCategoryItem = (index: number) => {
     setLocalSettings(prev => ({
       ...prev,
       header: {
         ...prev.header,
         categories: prev.header.categories.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const removeFooterListingCategoryItem = (index: number) => {
+    setLocalSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        listings: prev.footer.listings.filter((_, i) => i !== index)
       }
     }));
   };
@@ -466,6 +490,36 @@ export default function SettingsPage() {
         header: {
           ...prev.header,
           categories: newCategories
+        }
+      };
+    });
+  };
+
+  const moveFooterListingCategoryUp = (index: number) => {
+    if (index === 0) return;
+    setLocalSettings(prev => {
+      const newCategories = [...prev.footer.listings];
+      [newCategories[index], newCategories[index - 1]] = [newCategories[index - 1], newCategories[index]];
+      return {
+        ...prev,
+        footer: {
+          ...prev.footer,
+          listings: newCategories
+        }
+      };
+    });
+  };
+
+  const moveFooterListingCategoryDown = (index: number) => {
+    if (index === localSettings.footer.listings.length - 1) return;
+    setLocalSettings(prev => {
+      const newCategories = [...prev.footer.listings];
+      [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
+      return {
+        ...prev,
+        footer: {
+          ...prev.footer,
+          listings: newCategories
         }
       };
     });
@@ -857,26 +911,96 @@ export default function SettingsPage() {
 
             <Separator />
 
-            {/* Listings Links */}
+            {/* Listings Categories */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">İlan Linkleri</h3>
-              <div className="space-y-3">
-                {localSettings.footer.listings.map((item: FooterLink, index: number) => (
-                  <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <div className="flex-1 grid grid-cols-2 gap-3">
-                      <Input
-                        value={item.name}
-                        onChange={(e) => handleFooterLinkChange('listings', index, 'name', e.target.value)}
-                        placeholder="Link Adı"
-                      />
-                      <Input
-                        value={item.href}
-                        onChange={(e) => handleFooterLinkChange('listings', index, 'href', e.target.value)}
-                        placeholder="Link"
-                      />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">İlan Kategorileri</h3>
+                <Dialog open={isFooterListingCategoryModalOpen} onOpenChange={setIsFooterListingCategoryModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Kategori Ekle
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>İlan Kategorisi Ekle</DialogTitle>
+                      <DialogDescription>
+                        Mevcut kategorilerden seçim yaparak ekleyin
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="max-h-96 overflow-y-auto space-y-3">
+                      {categories.map((category: any) => {
+                        const isAlreadyAdded = localSettings.footer.listings.find((cat: any) => cat === category._id);
+                        return (
+                          <div key={category._id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <div className="font-medium">{category.name}</div>
+                            </div>
+                            <div className="flex gap-2">
+                              {isAlreadyAdded ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  Zaten Eklendi
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => addFooterListingCategoryFromModal(category)}
+                                >
+                                  Ekle
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                ))}
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <div className="space-y-3">
+                {localSettings.footer.listings.map((categoryId: string, index: number) => {
+                  const category = categories.find((cat: any) => cat._id === categoryId);
+                  return (
+                    <div key={categoryId} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <Input
+                          value={category?.name || ''}
+                          disabled
+                          placeholder="Kategori Adı"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveFooterListingCategoryUp(index)}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveFooterListingCategoryDown(index)}
+                          disabled={index === localSettings.footer.listings.length - 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeFooterListingCategoryItem(index)}
+                        >
+                          Sil
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

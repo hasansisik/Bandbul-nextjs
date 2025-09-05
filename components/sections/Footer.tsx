@@ -25,11 +25,7 @@ const Footer = () => {
       { name: "Blog", href: "/blog" },
       { name: "İletişim", href: "/iletisim" }
     ],
-    listings: settings?.footer?.listings || [
-      { name: "Grup Arıyorum", href: "/grup-arirorum" },
-      { name: "Müzisyen Arıyorum", href: "/müzisyen-arirorum" },
-      { name: "Ders Almak İstiyorum", href: "/ders-almak-istiyorum" }
-    ],
+    listings: settings?.populatedFooterListings || [],
     support: settings?.footer?.support || [
       { name: "S.S.S.", href: "/sss" },
       { name: "İlan Kuralları", href: "/ilan-kurallari" },
@@ -138,13 +134,13 @@ const Footer = () => {
               <div>
                 <h3 className="font-medium text-foreground mb-3 text-sm">İlanlar</h3>
                 <ul className="space-y-2">
-                  {footerLinks.listings.map((link: any, index: number) => (
-                    <li key={index}>
+                  {footerLinks.listings.map((category: any, index: number) => (
+                    <li key={category._id || index}>
                       <Link
-                        href={link.href}
+                        href={`/ilanlar?kategori=${category._id}`}
                         className="text-muted-foreground hover:text-foreground transition-colors text-sm block"
                       >
-                        {link.name}
+                        {category.name}
                       </Link>
                     </li>
                   ))}

@@ -25,10 +25,7 @@ export interface SettingsData {
       name: string;
       href: string;
     }>;
-    listings: Array<{
-      name: string;
-      href: string;
-    }>;
+    listings: string[];
     support: Array<{
       name: string;
       href: string;
@@ -78,10 +75,7 @@ export interface UpdateSettingsPayload {
       name: string;
       href: string;
     }>;
-    listings?: Array<{
-      name: string;
-      href: string;
-    }>;
+    listings?: string[];
     support?: Array<{
       name: string;
       href: string;
