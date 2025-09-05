@@ -70,9 +70,28 @@ const ListingsGrid = ({
 
     // Apply category filters
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter(listing => 
-        selectedCategories.includes(listing.categoryInfo?.name || listing.category)
-      );
+      // Mapping between URL slugs and Turkish category names
+      const categorySlugMap: Record<string, string> = {
+        'grup-ariyorum': 'Grup Arıyorum',
+        'muzisyen-ariyorum': 'Müzisyen Arıyorum',
+        'ders-almak-istiyorum': 'Ders Almak İstiyorum',
+        'ders-veriyorum': 'Ders Veriyorum',
+        'enstruman-satiyorum': 'Enstrüman Satıyorum',
+        'studyo-kiraliyorum': 'Stüdyo Kiralıyorum'
+      };
+      
+      filtered = filtered.filter(listing => {
+        const listingCategory = listing.categoryInfo?.name || listing.category;
+        return selectedCategories.some(selectedCategory => {
+          // Check if it's a slug (contains hyphens) and convert to Turkish name
+          if (selectedCategory.includes('-')) {
+            const turkishName = categorySlugMap[selectedCategory];
+            return turkishName && listingCategory === turkishName;
+          }
+          // If it's already a Turkish name, compare directly
+          return listingCategory === selectedCategory;
+        });
+      });
     }
 
     // Apply location filters

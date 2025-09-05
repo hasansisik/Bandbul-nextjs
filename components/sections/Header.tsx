@@ -34,7 +34,10 @@ const Header = () => {
 
   // Function to create category slug for URL
   const createCategorySlug = (categoryName: string) => {
-    return categoryName.toLowerCase()
+    return categoryName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
       .replace(/ğ/g, 'g')
       .replace(/ü/g, 'u')
       .replace(/ş/g, 's')

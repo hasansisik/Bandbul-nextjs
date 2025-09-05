@@ -30,12 +30,37 @@ function ListingsPageContent() {
     }
   }, [dispatch, allListings.length]);
 
+  // Function to normalize Turkish characters for URL comparison
+  const normalizeTurkishChars = (str: string) => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
+  };
+
   // Handle URL parameters on page load
   useEffect(() => {
     const searchParam = searchParams.get('search');
+    const categoryParam = searchParams.get('category');
     
     if (searchParam) {
       setSearchQuery(searchParam);
+    }
+    
+    if (categoryParam) {
+      // Normalize the category parameter from URL
+      const normalizedCategory = decodeURIComponent(categoryParam);
+      setActiveFilters(prev => ({
+        ...prev,
+        categories: [normalizedCategory]
+      }));
     }
   }, [searchParams]);
 
