@@ -37,7 +37,7 @@ interface UserState {
   loading: boolean;
   error: string | null;
   isAuthenticated?: boolean;
-  message?: string;
+  message?: string | null;
   listings: any[];
   allListings: any[];
   userListings: any[];
