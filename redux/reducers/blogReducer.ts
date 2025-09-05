@@ -80,6 +80,7 @@ export const blogReducer = createReducer(initialState, (builder) => {
     .addCase(createBlog.pending, (state) => {
       state.loading = true;
       state.error = null;
+      state.message = null;
     })
     .addCase(createBlog.fulfilled, (state, action) => {
       state.loading = false;
@@ -90,12 +91,14 @@ export const blogReducer = createReducer(initialState, (builder) => {
     .addCase(createBlog.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
+      state.message = null;
     })
     
     // Update Blog
     .addCase(updateBlog.pending, (state) => {
       state.loading = true;
       state.error = null;
+      state.message = null;
     })
     .addCase(updateBlog.fulfilled, (state, action) => {
       state.loading = false;
@@ -112,12 +115,14 @@ export const blogReducer = createReducer(initialState, (builder) => {
     .addCase(updateBlog.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
+      state.message = null;
     })
     
     // Delete Blog
     .addCase(deleteBlog.pending, (state) => {
       state.loading = true;
       state.error = null;
+      state.message = null;
     })
     .addCase(deleteBlog.fulfilled, (state, action) => {
       state.loading = false;
@@ -131,6 +136,7 @@ export const blogReducer = createReducer(initialState, (builder) => {
     .addCase(deleteBlog.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
+      state.message = null;
     })
     
     // Get Blog Categories

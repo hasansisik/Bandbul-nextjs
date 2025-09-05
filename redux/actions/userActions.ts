@@ -277,6 +277,10 @@ export const createListing = createAsyncThunk(
   async (formData: CreateListingPayload, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -290,11 +294,28 @@ export const createListing = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Create listing error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("İstenen kaynak bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -351,6 +372,10 @@ export const updateListing = createAsyncThunk(
   async ({ id, formData }: { id: string; formData: UpdateListingPayload }, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -364,11 +389,28 @@ export const updateListing = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Update listing error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("İlan bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -378,6 +420,10 @@ export const deleteListing = createAsyncThunk(
   async (id: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -389,11 +435,28 @@ export const deleteListing = createAsyncThunk(
       );
       return { id, message: response.data.message };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Delete listing error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("İlan bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -430,6 +493,10 @@ export const createCategory = createAsyncThunk(
   async (formData: CreateCategoryPayload, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -443,11 +510,28 @@ export const createCategory = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Create category error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("İstenen kaynak bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -479,6 +563,10 @@ export const updateCategory = createAsyncThunk(
   async ({ id, formData }: { id: string; formData: UpdateCategoryPayload }, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -492,11 +580,28 @@ export const updateCategory = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Update category error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("Kategori bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -506,6 +611,10 @@ export const deleteCategory = createAsyncThunk(
   async (id: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -517,11 +626,28 @@ export const deleteCategory = createAsyncThunk(
       );
       return { id, message: response.data.message };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Delete category error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("Kategori bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -531,6 +657,10 @@ export const toggleCategoryStatus = createAsyncThunk(
   async (id: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -543,11 +673,28 @@ export const toggleCategoryStatus = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Toggle category status error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("Kategori bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );

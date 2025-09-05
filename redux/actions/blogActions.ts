@@ -102,6 +102,10 @@ export const createBlog = createAsyncThunk(
   async (formData: CreateBlogPayload, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -115,11 +119,31 @@ export const createBlog = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Create blog error:", error);
+      
+      if (error.response) {
+        // Server responded with error status
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("İstenen kaynak bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        // Network error
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        // Other error
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -130,6 +154,10 @@ export const updateBlog = createAsyncThunk(
   async ({ id, formData }: { id: string; formData: UpdateBlogPayload }, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -143,11 +171,28 @@ export const updateBlog = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Update blog error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("Blog yazısı bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );
@@ -158,6 +203,10 @@ export const deleteBlog = createAsyncThunk(
   async (id: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -169,11 +218,28 @@ export const deleteBlog = createAsyncThunk(
       );
       return { id, message: response.data.message };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
+      console.error("Delete blog error:", error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message || error.response.data?.error || "Sunucu hatası";
+        
+        if (status === 401) {
+          return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+        } else if (status === 403) {
+          return thunkAPI.rejectWithValue("Bu işlem için yetkiniz yok.");
+        } else if (status === 404) {
+          return thunkAPI.rejectWithValue("Blog yazısı bulunamadı.");
+        } else if (status === 400) {
+          return thunkAPI.rejectWithValue(message);
+        } else {
+          return thunkAPI.rejectWithValue(`Sunucu hatası (${status}): ${message}`);
+        }
+      } else if (error.request) {
+        return thunkAPI.rejectWithValue("Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.");
+      } else {
+        return thunkAPI.rejectWithValue(error.message || "Bilinmeyen bir hata oluştu.");
+      }
     }
   }
 );

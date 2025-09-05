@@ -200,15 +200,19 @@ export const userReducer = createReducer(initialState, (builder) => {
     // Create Listing
     .addCase(createListing.pending, (state) => {
       state.listingsLoading = true;
+      state.listingsError = null;
+      state.message = null;
     })
     .addCase(createListing.fulfilled, (state, action) => {
       state.listingsLoading = false;
       state.userListings.unshift(action.payload.listing);
       state.message = action.payload.message;
+      state.listingsError = null;
     })
     .addCase(createListing.rejected, (state, action) => {
       state.listingsLoading = false;
       state.listingsError = action.payload as string;
+      state.message = null;
     })
     // Get All Listings
     .addCase(getAllListings.pending, (state) => {
@@ -238,6 +242,8 @@ export const userReducer = createReducer(initialState, (builder) => {
     // Update Listing
     .addCase(updateListing.pending, (state) => {
       state.listingsLoading = true;
+      state.listingsError = null;
+      state.message = null;
     })
     .addCase(updateListing.fulfilled, (state, action) => {
       state.listingsLoading = false;
@@ -250,24 +256,30 @@ export const userReducer = createReducer(initialState, (builder) => {
         state.allListings[allIndex] = action.payload.listing;
       }
       state.message = action.payload.message;
+      state.listingsError = null;
     })
     .addCase(updateListing.rejected, (state, action) => {
       state.listingsLoading = false;
       state.listingsError = action.payload as string;
+      state.message = null;
     })
     // Delete Listing
     .addCase(deleteListing.pending, (state) => {
       state.listingsLoading = true;
+      state.listingsError = null;
+      state.message = null;
     })
     .addCase(deleteListing.fulfilled, (state, action) => {
       state.listingsLoading = false;
       state.userListings = state.userListings.filter(listing => listing._id !== action.payload.id);
       state.allListings = state.allListings.filter(listing => listing._id !== action.payload.id);
       state.message = action.payload.message;
+      state.listingsError = null;
     })
     .addCase(deleteListing.rejected, (state, action) => {
       state.listingsLoading = false;
       state.listingsError = action.payload as string;
+      state.message = null;
     })
     // Toggle Listing Status
     .addCase(toggleListingStatus.pending, (state) => {

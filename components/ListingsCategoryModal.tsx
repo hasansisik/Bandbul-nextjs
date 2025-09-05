@@ -23,6 +23,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog"
 import { Badge } from "./ui/badge"
 import { toast } from "sonner"
 
@@ -43,7 +54,7 @@ export default function ListingsCategoryModal({
   const [editName, setEditName] = useState("")
 
   const dispatch = useAppDispatch()
-  const { categories: reduxCategories, categoriesLoading, allListings, listingsLoading } = useAppSelector((state) => state.user)
+  const { categories: reduxCategories, categoriesLoading, allListings, listingsLoading, categoriesError } = useAppSelector((state) => state.user)
 
   // Load categories and listings on component mount
   useEffect(() => {
@@ -53,16 +64,29 @@ export default function ListingsCategoryModal({
     }
   }, [dispatch, isOpen])
 
+  // Error handling effect
+  useEffect(() => {
+    if (categoriesError) {
+      toast.error(categoriesError)
+    }
+  }, [categoriesError])
+
   const handleAddCategory = async () => {
     if (newCategory.trim()) {
       try {
-        await dispatch(createCategory({ name: newCategory.trim() }))
-        setNewCategory("")
-        // Refresh categories
-        dispatch(getAllCategories({}))
-        toast.success("Kategori başarıyla eklendi.")
+        const result = await dispatch(createCategory({ name: newCategory.trim() }))
+        if (createCategory.fulfilled.match(result)) {
+          setNewCategory("")
+          // Refresh categories
+          dispatch(getAllCategories({}))
+          toast.success("Kategori başarıyla eklendi.")
+        } else {
+          // Error is already handled in the action
+          return
+        }
       } catch (err) {
-        toast.error("Kategori eklenirken bir hata oluştu.")
+        console.error("Add category error:", err)
+        toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
       }
     }
   }
@@ -70,42 +94,59 @@ export default function ListingsCategoryModal({
   const handleUpdateCategory = async () => {
     if (editingCategory && editName.trim() && editName !== editingCategory.name) {
       try {
-        await dispatch(updateCategory({ 
+        const result = await dispatch(updateCategory({ 
           id: editingCategory._id, 
           formData: { name: editName.trim() } 
         }))
-        setEditingCategory(null)
-        setEditName("")
-        // Refresh categories
-        dispatch(getAllCategories({}))
-        toast.success("Kategori başarıyla güncellendi.")
+        if (updateCategory.fulfilled.match(result)) {
+          setEditingCategory(null)
+          setEditName("")
+          // Refresh categories
+          dispatch(getAllCategories({}))
+          toast.success("Kategori başarıyla güncellendi.")
+        } else {
+          // Error is already handled in the action
+          return
+        }
       } catch (err) {
-        toast.error("Kategori güncellenirken bir hata oluştu.")
+        console.error("Update category error:", err)
+        toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
       }
     }
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (confirm("Bu kategoriyi silmek istediğinizden emin misiniz?")) {
-      try {
-        await dispatch(deleteCategory(categoryId))
+    try {
+      const result = await dispatch(deleteCategory(categoryId))
+      
+      if (deleteCategory.fulfilled.match(result)) {
         // Refresh categories
         dispatch(getAllCategories({}))
         toast.success("Kategori başarıyla silindi.")
-      } catch (err) {
-        toast.error("Kategori silinirken bir hata oluştu.")
+      } else {
+        // Error is already handled in the action
+        return
       }
+    } catch (err) {
+      console.error("Delete category error:", err)
+      toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
     }
   }
 
   const handleToggleCategoryStatus = async (categoryId: string) => {
     try {
-      await dispatch(toggleCategoryStatus(categoryId))
-      // Refresh categories
-      dispatch(getAllCategories({}))
-      toast.success("Kategori durumu başarıyla değiştirildi.")
+      const result = await dispatch(toggleCategoryStatus(categoryId))
+      if (toggleCategoryStatus.fulfilled.match(result)) {
+        // Refresh categories
+        dispatch(getAllCategories({}))
+        toast.success("Kategori durumu başarıyla değiştirildi.")
+      } else {
+        // Error is already handled in the action
+        return
+      }
     } catch (err) {
-      toast.error("Kategori durumu değiştirilirken bir hata oluştu.")
+      console.error("Toggle category status error:", err)
+      toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
     }
   }
 
@@ -253,16 +294,36 @@ export default function ListingsCategoryModal({
                           >
                             {category.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteCategory(category._id)}
-                            className="text-destructive hover:text-destructive"
-                            disabled={stats.count > 0}
-                            title={stats.count > 0 ? "Bu kategoride ilan bulunduğu için silinemez" : "Kategoriyi sil"}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                disabled={stats.count > 0}
+                                title={stats.count > 0 ? "Bu kategoride ilan bulunduğu için silinemez" : "Kategoriyi sil"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Kategoriyi Sil</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  "{category.name}" kategorisini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteCategory(category._id)}
+                                  className="bg-destructive text-white hover:bg-destructive/90"
+                                >
+                                  Sil
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       )}
                     </div>

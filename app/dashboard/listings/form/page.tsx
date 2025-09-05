@@ -44,7 +44,7 @@ function ListingsFormContent() {
   const editId = searchParams.get('id')
   const isEditing = !!editId
   
-  const { categories, categoriesLoading, allListings, listingsLoading } = useAppSelector((state) => state.user)
+  const { categories, categoriesLoading, allListings, listingsLoading, listingsError } = useAppSelector((state) => state.user)
   
   const [formData, setFormData] = useState({
     title: "",
@@ -85,6 +85,13 @@ function ListingsFormContent() {
     }
   }, [editId, isEditing, allListings])
 
+  // Error handling effect
+  useEffect(() => {
+    if (listingsError) {
+      toast.error(listingsError)
+    }
+  }, [listingsError])
+
   const handleImageUpload = async (file: File) => {
     setUploading(true)
     try {
@@ -100,42 +107,69 @@ function ListingsFormContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Form validation
+    if (!formData.title.trim()) {
+      toast.error("İlan başlığı gereklidir")
+      return
+    }
+    if (!formData.description.trim()) {
+      toast.error("İlan açıklaması gereklidir")
+      return
+    }
+    if (!formData.category) {
+      toast.error("Kategori seçimi gereklidir")
+      return
+    }
+    if (!formData.location.trim()) {
+      toast.error("Konum bilgisi gereklidir")
+      return
+    }
+    if (!formData.experience) {
+      toast.error("Deneyim seviyesi seçimi gereklidir")
+      return
+    }
+    
     setLoading(true)
+    
+    const listingData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      category: formData.category,
+      location: formData.location.trim(),
+      image: formData.image,
+      experience: formData.experience,
+      instrument: formData.instrument
+    }
     
     try {
       if (isEditing && listing) {
         // Update existing listing
-        await dispatch(updateListing({
+        const result = await dispatch(updateListing({
           id: listing._id,
-          formData: {
-            title: formData.title,
-            description: formData.description,
-            category: formData.category,
-            location: formData.location,
-            image: formData.image,
-            experience: formData.experience,
-            instrument: formData.instrument
-          }
+          formData: listingData
         }))
-                  toast.success("İlan başarıyla güncellendi!")
+        if (updateListing.fulfilled.match(result)) {
+          toast.success("İlan başarıyla güncellendi!")
+          router.replace("/dashboard/listings", { scroll: false })
+        } else {
+          // Error is already handled in the action
+          return
+        }
       } else {
         // Create new listing
-        await dispatch(createListing({
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          location: formData.location,
-          image: formData.image,
-          experience: formData.experience,
-          instrument: formData.instrument
-        }))
-                  toast.success("İlan başarıyla oluşturuldu!")
+        const result = await dispatch(createListing(listingData))
+        if (createListing.fulfilled.match(result)) {
+          toast.success("İlan başarıyla oluşturuldu!")
+          router.replace("/dashboard/listings", { scroll: false })
+        } else {
+          // Error is already handled in the action
+          return
+        }
       }
-      
-      router.replace("/dashboard/listings", { scroll: false })
     } catch (err) {
       console.error("Listing operation error:", err)
-              toast.error("Bir hata oluştu. Lütfen tekrar deneyin.")
+      toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
     } finally {
       setLoading(false)
     }
@@ -374,17 +408,6 @@ function ListingsFormContent() {
                       </SelectContent>
                     </Select>
                     
-                    <ListingsCategoryModal
-                      categories={categories.map(cat => cat.name)}
-                      onCategoriesChange={(newCategories) => {
-                        console.log("Categories changed:", newCategories)
-                      }}
-                      triggerButton={
-                        <Button variant="outline" size="sm" className="px-3">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
                   </div>
                 )}
               </div>

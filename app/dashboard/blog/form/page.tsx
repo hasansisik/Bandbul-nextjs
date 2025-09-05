@@ -86,6 +86,13 @@ function BlogFormPageContent() {
     }
   }, [currentBlog, isEditing])
 
+  // Error handling effect
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
+
   const handleImageUpload = async (file: File) => {
     setUploading(true)
     try {
@@ -103,11 +110,29 @@ function BlogFormPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Form validation
+    if (!formData.title.trim()) {
+      toast.error("Blog başlığı gereklidir")
+      return
+    }
+    if (!formData.content.trim()) {
+      toast.error("Blog içeriği gereklidir")
+      return
+    }
+    if (!formData.author.trim()) {
+      toast.error("Yazar adı gereklidir")
+      return
+    }
+    if (!formData.category) {
+      toast.error("Kategori seçimi gereklidir")
+      return
+    }
+    
     const blogData = {
-      title: formData.title,
-      excerpt: formData.excerpt,
-      content: formData.content,
-      author: formData.author,
+      title: formData.title.trim(),
+      excerpt: formData.excerpt.trim(),
+      content: formData.content.trim(),
+      author: formData.author.trim(),
       category: formData.category,
       tags: selectedTags,
       image: formData.image,
@@ -118,18 +143,28 @@ function BlogFormPageContent() {
     try {
       if (isEditing && editId) {
         // Güncelleme işlemi
-        await dispatch(updateBlog({ id: editId, formData: blogData }))
-        toast.success("Blog yazısı başarıyla güncellendi!")
+        const result = await dispatch(updateBlog({ id: editId, formData: blogData }))
+        if (updateBlog.fulfilled.match(result)) {
+          toast.success("Blog yazısı başarıyla güncellendi!")
+          router.replace("/dashboard/blog", { scroll: false })
+        } else {
+          // Error is already handled in the action
+          return
+        }
       } else {
         // Yeni ekleme işlemi
-        await dispatch(createBlog(blogData))
-        toast.success("Blog yazısı başarıyla oluşturuldu!")
+        const result = await dispatch(createBlog(blogData))
+        if (createBlog.fulfilled.match(result)) {
+          toast.success("Blog yazısı başarıyla oluşturuldu!")
+          router.replace("/dashboard/blog", { scroll: false })
+        } else {
+          // Error is already handled in the action
+          return
+        }
       }
-      
-      router.replace("/dashboard/blog", { scroll: false })
     } catch (error) {
       console.error("Blog işlemi hatası:", error)
-      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.")
+      toast.error("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
     }
   }
 
