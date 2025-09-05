@@ -28,6 +28,7 @@ import {
   startConversation,
   markAsRead,
   getUnreadCount,
+  clearError,
 } from "../actions/userActions";
 
 interface UserState {
@@ -479,6 +480,14 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(getUnreadCount.rejected, (state, action) => {
       state.messagesError = action.payload as string;
+    })
+    // Clear Error
+    .addCase(clearError.fulfilled, (state) => {
+      state.error = null;
+      state.listingsError = null;
+      state.categoriesError = null;
+      state.usersError = null;
+      state.messagesError = null;
     });
 });
 

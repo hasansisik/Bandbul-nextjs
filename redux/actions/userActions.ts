@@ -752,3 +752,11 @@ export const getUnreadCount = createAsyncThunk(
   }
 );
 
+// Clear Error Action
+export const clearError = createAsyncThunk(
+  "user/clearError",
+  async () => {
+    return null;
+  }
+);
+
