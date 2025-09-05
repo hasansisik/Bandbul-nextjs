@@ -11,7 +11,6 @@ export interface BlogPost {
   publishedDate: string;
   readTime: string;
   category: string;
-  categorySlug: string;
   tags: string[];
   image: string;
   featured?: boolean;
