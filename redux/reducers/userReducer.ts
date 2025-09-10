@@ -570,20 +570,19 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(getUnreadCount.rejected, (state, action) => {
       state.messagesError = action.payload as string;
     })
-    // Update Theme
+    // Update Theme - No loading state for instant UI updates
     .addCase(updateTheme.pending, (state) => {
-      state.loading = true;
+      // No loading state - theme changes instantly
     })
     .addCase(updateTheme.fulfilled, (state, action) => {
-      state.loading = false;
+      // Update user theme silently
       if (state.user) {
         state.user.theme = action.payload.theme;
       }
-      state.message = action.payload.message;
     })
     .addCase(updateTheme.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
+      // Silent fail - don't show error to user
+      console.warn("Theme update failed:", action.payload);
     })
     // Clear Error
     .addCase(clearError.fulfilled, (state) => {

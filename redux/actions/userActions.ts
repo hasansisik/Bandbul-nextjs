@@ -1001,35 +1001,32 @@ export const getAllInstruments = createAsyncThunk(
   }
 );
 
-// Update Theme Action
+// Update Theme Action - Ultra optimized for instant UI updates
 export const updateTheme = createAsyncThunk(
   "user/updateTheme",
   async (theme: string, thunkAPI) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
-      }
-      
-      const config = {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      return { theme }; // Return theme even if no token
+    }
+    
+    // Fire and forget - don't wait for response
+    axios.post(
+      `${server}/auth/edit-profile`,
+      { theme },
+      {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-      };
-      const response = await axios.post(
-        `${server}/auth/edit-profile`,
-        { theme },
-        config
-      );
-      return { theme, message: response.data.message };
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
-    }
+        timeout: 3000, // 3 second timeout
+      }
+    ).catch((error) => {
+      console.warn("Theme update failed:", error);
+    });
+    
+    // Return immediately
+    return { theme };
   }
 );
 
