@@ -14,7 +14,7 @@ function ListingsPageContent() {
   const dispatch = useAppDispatch();
   const { allListings, listingsLoading } = useAppSelector((state) => state.user);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showFilters, setShowFilters] = useState(true);
   const [activeFilters, setActiveFilters] = useState({
     categories: [] as string[],
