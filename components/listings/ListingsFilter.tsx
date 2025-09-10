@@ -342,11 +342,6 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
           ))}
         </div>
       </div>
-
-      {/* Apply Filters */}
-      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" size="sm">
-        Filtreleri Uygula
-      </Button>
     </div>
   );
 };

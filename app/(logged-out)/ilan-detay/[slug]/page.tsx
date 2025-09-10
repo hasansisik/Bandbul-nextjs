@@ -20,6 +20,7 @@ import {
 import { useAppSelector } from "@/redux/hook";
 import { getAllListings, loadUser } from "@/redux/actions/userActions";
 import { useAppDispatch } from "@/redux/hook";
+import ShareModal from "@/components/ShareModal";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -27,6 +28,7 @@ export default function ListingDetailPage() {
   const dispatch = useAppDispatch();
   const { allListings, listingsLoading, isAuthenticated, user } = useAppSelector((state) => state.user);
   const [listing, setListing] = useState<any>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Function to create title slug for URL
   const createTitleSlug = (title: string) => {
@@ -104,6 +106,11 @@ export default function ListingDetailPage() {
     }
   };
 
+  // Function to handle share button click
+  const handleShareClick = () => {
+    setIsShareModalOpen(true);
+  };
+
 
 
   if (listingsLoading) {
@@ -174,6 +181,7 @@ export default function ListingDetailPage() {
                     variant="ghost"
                     size="sm"
                     className="h-10 w-10 p-0 bg-background/90 hover:bg-background rounded-full"
+                    onClick={handleShareClick}
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -311,10 +319,10 @@ export default function ListingDetailPage() {
                       <div 
                         key={item._id} 
                         onClick={() => router.push(`/ilan-detay/${createTitleSlug(item.title)}`)}
-                        className="group flex items-center gap-4  rounded-lg  cursor-pointer transition-all duration-200"
+                        className="group flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-all duration-200"
                       >
                         {/* Image */}
-                        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
+                        <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden rounded-lg">
                           <img 
                             src={item.image} 
                             alt={item.title}
@@ -323,42 +331,40 @@ export default function ListingDetailPage() {
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
                         </div>
                         
-                        {/* Content - Centered with image */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200 mb-2">
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors duration-200">
                             {item.title}
                           </h4>
                           
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">{item.location}</span>
                             </div>
                             
                             {item.instrument && (
-                              <div className="flex items-center gap-1">
-                                <Music className="h-3 w-3" />
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Music className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">{item.instrument}</span>
                               </div>
                             )}
                             
                             {item.experience && (
-                              <div className="flex items-center gap-1">
-                                <Award className="h-3 w-3" />
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Award className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">{item.experience}</span>
                               </div>
                             )}
+                            
+                            {/* Category as text - positioned at the bottom */}
+                            <div className="text-xs text-muted-foreground">
+                              {item.categoryInfo?.name || item.category}
+                            </div>
                           </div>
                         </div>
                         
-                        {/* Category Badge - Centered with image */}
-                        <div className="flex-shrink-0 flex items-center">
-                          <Badge variant="secondary" className="text-xs px-2 py-1">
-                            {item.categoryInfo?.name || item.category}
-                          </Badge>
-                        </div>
-                        
-                        {/* Arrow - Centered with image */}
+                        {/* Arrow */}
                         <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
@@ -378,6 +384,15 @@ export default function ListingDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={listing?.title || ''}
+        description={listing?.description || ''}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+      />
     </main>
   );
 }

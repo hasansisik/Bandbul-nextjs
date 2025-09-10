@@ -18,6 +18,7 @@ import {
   Tag,
   ChevronRight
 } from "lucide-react";
+import ShareModal from "@/components/ShareModal";
 
 export default function BlogDetailPage() {
   const dispatch = useDispatch<AppDispatch>()
@@ -27,6 +28,7 @@ export default function BlogDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const [post, setPost] = useState<BlogPost | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Function to create title slug for URL
   const createTitleSlug = (title: string) => {
@@ -116,17 +118,7 @@ export default function BlogDetailPage() {
   };
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: post.title,
-        text: post.excerpt,
-        url: window.location.href,
-      });
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link kopyalandı!');
-    }
+    setIsShareModalOpen(true);
   };
 
   return (
@@ -275,6 +267,15 @@ export default function BlogDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={post?.title || ''}
+        description={post?.excerpt || ''}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+      />
     </main>
   );
 }
