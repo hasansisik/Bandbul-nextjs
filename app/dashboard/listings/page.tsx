@@ -6,15 +6,20 @@ import {
   getAllListings, 
   deleteListing, 
   getAllCategories,
-  getAllInstruments
+  getAllInstruments,
+  approveListing,
+  rejectListing,
+  getPendingListings,
+  toggleListingStatus
 } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Badge } from "../../../components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../../../components/ui/breadcrumb"
 import { SidebarTrigger } from "../../../components/ui/sidebar"
-import { Edit, Trash2, Plus, MapPin, Calendar, User, Music } from "lucide-react"
+import { Edit, Trash2, Plus, MapPin, Calendar, User, Music, Settings, CheckCircle, XCircle, Clock, Archive } from "lucide-react"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -29,30 +34,68 @@ import {
 } from "../../../components/ui/alert-dialog"
 import ListingsCategoryModal from "../../../components/ListingsCategoryModal"
 import InstrumentManagementModal from "../../../components/InstrumentManagementModal"
+import { ListingStatusModal } from "../../../components/ListingStatusModal"
 import { DataTable } from "../../../components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 
 export default function ListingsPage() {
   const dispatch = useAppDispatch()
-  const { allListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading } = useAppSelector((state) => state.user)
+  const { allListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, user } = useAppSelector((state) => state.user)
+  
+  const [statusModalOpen, setStatusModalOpen] = useState(false)
+  const [selectedListing, setSelectedListing] = useState<any>(null)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   // Load listings, categories and instruments on component mount
   useEffect(() => {
-    dispatch(getAllListings({}))
+    dispatch(getAllListings({ status: statusFilter }))
     dispatch(getAllCategories({}))
     dispatch(getAllInstruments({}))
-  }, [dispatch])
+  }, [dispatch, statusFilter])
+
+  const handleStatusFilterChange = (newStatus: string) => {
+    setStatusFilter(newStatus)
+  }
+
+  const handleStatusChange = async (status: string, reason?: string) => {
+    if (!selectedListing) return
+
+    try {
+      if (status === 'active') {
+        await dispatch(approveListing(selectedListing._id))
+        toast.success("İlan başarıyla onaylandı.")
+      } else if (status === 'rejected') {
+        await dispatch(rejectListing({ id: selectedListing._id, reason: reason || 'Belirtilmemiş neden' }))
+        toast.success("İlan reddedildi.")
+      } else {
+        // For other status changes, use the existing toggle function
+        await dispatch(toggleListingStatus(selectedListing._id))
+        toast.success("İlan durumu güncellendi.")
+      }
+      
+      // Refresh listings
+      dispatch(getAllListings({ status: statusFilter }))
+    } catch (err) {
+      console.error("Status change error:", err)
+      toast.error("Durum değiştirilirken bir hata oluştu.")
+    }
+  }
 
   const handleDelete = async (id: string) => {
     try {
       await dispatch(deleteListing(id))
       // Refresh listings after deletion
-      dispatch(getAllListings({}))
+      dispatch(getAllListings({ status: statusFilter }))
       toast.success("İlan başarıyla silindi.")
     } catch (err) {
       console.error("Delete listing error:", err)
       toast.error("İlan silinirken bir hata oluştu.")
     }
+  }
+
+  const openStatusModal = (listing: any) => {
+    setSelectedListing(listing)
+    setStatusModalOpen(true)
   }
 
   const formatDate = (dateString: string) => {
@@ -171,10 +214,38 @@ export default function ListingsPage() {
       header: "Durum",
       cell: ({ row }) => {
         const status = row.getValue("status") as string
-        const variant = status === "active" ? "default" : "secondary"
-        const label = status === "active" ? "Aktif" : "Pasif"
+        const getStatusInfo = (status: string) => {
+          switch (status) {
+            case 'active':
+              return { label: 'Aktif', variant: 'default' as const, color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' }
+            case 'pending':
+              return { label: 'Onay Bekliyor', variant: 'secondary' as const, color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' }
+            case 'archived':
+              return { label: 'Arşivlenen', variant: 'outline' as const, color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }
+            case 'rejected':
+              return { label: 'Reddedilen', variant: 'destructive' as const, color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }
+            default:
+              return { label: 'Bilinmiyor', variant: 'secondary' as const, color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' }
+          }
+        }
         
-        return <Badge variant={variant} className="text-xs">{label}</Badge>
+        const statusInfo = getStatusInfo(status)
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Badge variant={statusInfo.variant} className={`text-xs ${statusInfo.color}`}>
+              {statusInfo.label}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => openStatusModal(row.original)}
+            >
+              <Settings className="h-3 w-3" />
+            </Button>
+          </div>
+        )
       },
     },
     {
@@ -187,41 +258,56 @@ export default function ListingsPage() {
       header: "İşlemler",
       cell: ({ row }) => {
         const listing = row.original
+        const isAdmin = user?.role === 'admin'
+        const isOwner = listing.user === user?._id || listing.user?._id === user?._id
+        
         return (
           <div className="flex gap-2">
-            <Link href={`/dashboard/listings/form?id=${listing._id}`}>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
-                <Edit className="h-3 w-3" />
-              </Button>
-            </Link>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3 w-3" />
+            {/* Edit button - only for owner or admin */}
+            {(isOwner || isAdmin) && (
+              <Link href={`/dashboard/listings/form?id=${listing._id}`}>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
+                  <Edit className="h-3 w-3" />
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>İlanı Sil</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    "{listing.title}" başlıklı ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>İptal</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDelete(listing._id)}
-                    className="bg-destructive text-white hover:bg-destructive/90"
+              </Link>
+            )}
+            
+            {/* Delete button - only for owner or admin */}
+            {(isOwner || isAdmin) && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    Sil
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>İlanı Sil</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      "{listing.title}" başlıklı ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                      {isAdmin && !isOwner && (
+                        <span className="block mt-2 text-yellow-600 dark:text-yellow-400">
+                          Bu ilan başka bir kullanıcıya ait. Admin olarak siliyorsunuz.
+                        </span>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>İptal</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDelete(listing._id)}
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                    >
+                      Sil
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )
       },
@@ -272,6 +358,25 @@ export default function ListingsPage() {
         </div>
       </div>
 
+      {/* Status Filter */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Durum Filtresi:</span>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Durum seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="active">Aktif</SelectItem>
+              <SelectItem value="pending">Onay Bekliyor</SelectItem>
+              <SelectItem value="archived">Arşivlenen</SelectItem>
+              <SelectItem value="rejected">Reddedilen</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Listings Table */}
       <div className="space-y-4">
         {listingsLoading ? (
@@ -292,6 +397,15 @@ export default function ListingsPage() {
           </div>
         )}
       </div>
+
+      {/* Status Management Modal */}
+      <ListingStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        listing={selectedListing}
+        onStatusChange={handleStatusChange}
+        isAdmin={user?.role === 'admin'}
+      />
     </div>
   )
 }

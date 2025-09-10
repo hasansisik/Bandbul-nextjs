@@ -487,6 +487,85 @@ export const toggleListingStatus = createAsyncThunk(
   }
 );
 
+// Admin listing management actions
+export const getPendingListings = createAsyncThunk(
+  "user/getPendingListings",
+  async (_, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(
+        `${server}/listings/admin/pending`,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const approveListing = createAsyncThunk(
+  "user/approveListing",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/listings/${id}/approve`,
+        {},
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const rejectListing = createAsyncThunk(
+  "user/rejectListing",
+  async ({ id, reason }: { id: string; reason: string }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/listings/${id}/reject`,
+        { reason },
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
 // Category Actions
 export const createCategory = createAsyncThunk(
   "user/createCategory",

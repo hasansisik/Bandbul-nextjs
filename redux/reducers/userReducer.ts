@@ -15,6 +15,9 @@ import {
   updateListing,
   deleteListing,
   toggleListingStatus,
+  approveListing,
+  rejectListing,
+  getPendingListings,
   createCategory,
   getAllCategories,
   updateCategory,
@@ -307,6 +310,58 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.message = action.payload.message;
     })
     .addCase(toggleListingStatus.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Approve Listing
+    .addCase(approveListing.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(approveListing.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      const index = state.userListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (index !== -1) {
+        state.userListings[index] = action.payload.listing;
+      }
+      const allIndex = state.allListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (allIndex !== -1) {
+        state.allListings[allIndex] = action.payload.listing;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(approveListing.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Reject Listing
+    .addCase(rejectListing.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(rejectListing.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      const index = state.userListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (index !== -1) {
+        state.userListings[index] = action.payload.listing;
+      }
+      const allIndex = state.allListings.findIndex(listing => listing._id === action.payload.listing._id);
+      if (allIndex !== -1) {
+        state.allListings[allIndex] = action.payload.listing;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(rejectListing.rejected, (state, action) => {
+      state.listingsLoading = false;
+      state.listingsError = action.payload as string;
+    })
+    // Get Pending Listings
+    .addCase(getPendingListings.pending, (state) => {
+      state.listingsLoading = true;
+    })
+    .addCase(getPendingListings.fulfilled, (state, action) => {
+      state.listingsLoading = false;
+      state.allListings = action.payload.listings;
+    })
+    .addCase(getPendingListings.rejected, (state, action) => {
       state.listingsLoading = false;
       state.listingsError = action.payload as string;
     })

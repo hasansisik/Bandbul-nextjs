@@ -39,7 +39,8 @@ import {
   Music,
   ImageIcon,
   X,
-  Save
+  Save,
+  AlertCircle
 } from "lucide-react"
 
 import {
@@ -53,6 +54,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { RejectionReasonModal } from "@/components/RejectionReasonModal"
 
 // Skeleton components for loading states
 const ProfileHeaderSkeleton = () => (
@@ -154,6 +156,8 @@ export function ProfilePage() {
   const [editingListing, setEditingListing] = useState<any>(null)
   const [imageUploading, setImageUploading] = useState(false)
   const [operationMessage, setOperationMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false)
+  const [selectedRejectedListing, setSelectedRejectedListing] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const dispatch = useAppDispatch()
@@ -262,6 +266,13 @@ export function ProfilePage() {
   };
 
   const handleViewListing = (listing: any) => {
+    // If listing is rejected, show rejection reason modal
+    if (listing.status === 'rejected') {
+      setSelectedRejectedListing(listing)
+      setRejectionModalOpen(true)
+      return
+    }
+    
     // Navigate to listing detail page using title slug
     window.location.href = `/ilan-detay/${createTitleSlug(listing.title)}`
   }
@@ -411,10 +422,33 @@ export function ProfilePage() {
   }
 
   const getStatusBadge = (listing: any) => {
-    if (listing.status === 'inactive') {
-      return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Pasif</Badge>
+    switch (listing.status) {
+      case 'active':
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aktif</Badge>
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Onay Bekliyor</Badge>
+      case 'archived':
+        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Arşivlenen</Badge>
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Reddedilen</Badge>
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Bilinmiyor</Badge>
     }
-    return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aktif</Badge>
+  }
+
+  const getStatusBorderColor = (listing: any) => {
+    switch (listing.status) {
+      case 'active':
+        return 'border-green-200 dark:border-green-800'
+      case 'pending':
+        return 'border-yellow-200 dark:border-yellow-800'
+      case 'archived':
+        return 'border-gray-200 dark:border-gray-800'
+      case 'rejected':
+        return 'border-red-200 dark:border-red-800'
+      default:
+        return 'border-border'
+    }
   }
 
   // Show loading skeleton if user data is not loaded yet
@@ -823,7 +857,7 @@ export function ProfilePage() {
                   </div>
                 ) : userListings.length > 0 ? (
                   userListings.map((listing) => (
-                    <div key={listing._id} className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+                    <div key={listing._id} className={`bg-card rounded-xl border-2 ${getStatusBorderColor(listing)} shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group`}>
                       <div className="relative">
                         <img 
                           src={listing.image} 
@@ -838,6 +872,13 @@ export function ProfilePage() {
                         <div className="absolute top-3 right-3">
                           {getStatusBadge(listing)}
                         </div>
+                        {listing.status === 'rejected' && (
+                          <div className="absolute top-3 left-3">
+                            <div className="bg-red-500 text-white p-1 rounded-full">
+                              <AlertCircle className="w-4 h-4" />
+                            </div>
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
                       </div>
                       <div className="p-5">
@@ -910,8 +951,13 @@ export function ProfilePage() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleViewListing(listing)}
+                            className={listing.status === 'rejected' ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : ''}
                           >
-                            <Eye className="w-4 h-4" />
+                            {listing.status === 'rejected' ? (
+                              <AlertCircle className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -963,6 +1009,13 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Rejection Reason Modal */}
+      <RejectionReasonModal
+        isOpen={rejectionModalOpen}
+        onClose={() => setRejectionModalOpen(false)}
+        listing={selectedRejectedListing}
+      />
     </div>
   )
 }
