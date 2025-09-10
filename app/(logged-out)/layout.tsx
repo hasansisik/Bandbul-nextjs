@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/sections/Header";
 import Footer from "@/components/sections/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,9 @@ export default function RootLayout({
           
           {/* Fixed Scroll to Top Button - Bottom Right */}
           <ScrollToTop />
+          
+          {/* Fixed WhatsApp Button - Bottom Left */}
+          <WhatsAppFloatingButton />
         </ThemeProvider>
       </body>
     </html>

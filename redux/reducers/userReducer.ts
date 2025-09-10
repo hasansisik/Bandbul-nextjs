@@ -92,6 +92,8 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(register.fulfilled, (state) => {
       state.loading = false;
       state.isAuthenticated = false;
+      state.message = null;
+      state.error = null;
     })
     .addCase(register.rejected, (state, action) => {
       state.loading = false;
@@ -496,6 +498,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     // Clear Error
     .addCase(clearError.fulfilled, (state) => {
       state.error = null;
+      state.message = null;
       state.listingsError = null;
       state.categoriesError = null;
       state.usersError = null;

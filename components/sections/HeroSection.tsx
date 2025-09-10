@@ -19,6 +19,9 @@ const HeroSection = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showInstrumentDropdown, setShowInstrumentDropdown] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [instrumentSearchTerm, setInstrumentSearchTerm] = useState("");
+  const [locationSearchTerm, setLocationSearchTerm] = useState("");
 
   // Refs for dropdown containers
   const categoryRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,33 @@ const HeroSection = () => {
   }));
   const instruments = Array.from(new Set(allListings.map(listing => listing.instrument).filter(Boolean)));
   const locations = Array.from(new Set(allListings.map(listing => listing.location)));
+
+  // Helper function to normalize Turkish characters for search
+  const normalizeText = (text: string) => {
+    return text
+      .normalize('NFD') // Decompose characters (İ becomes I + combining dot)
+      .replace(/[\u0300-\u036f]/g, '') // Remove combining diacritical marks
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c');
+  };
+
+  // Filter options based on search terms (case insensitive with Turkish character normalization)
+  const filteredCategoryOptions = categoryOptions.filter(category =>
+    normalizeText(category.label).includes(normalizeText(categorySearchTerm))
+  );
+  const filteredInstruments = instruments.filter(instrument =>
+    normalizeText(instrument || '').includes(normalizeText(instrumentSearchTerm))
+  );
+  const filteredLocations = locations.filter(location => {
+    const searchTerm = normalizeText(locationSearchTerm.trim());
+    const locationNormalized = normalizeText(location);
+    return locationNormalized.includes(searchTerm);
+  });
 
   const searchOptions = [
     {
@@ -170,7 +200,12 @@ const HeroSection = () => {
                   {/* Category Filter */}
                   <div className="flex-1 relative" ref={categoryRef}>
                     <div
-                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      onClick={() => {
+                        setShowCategoryDropdown(!showCategoryDropdown);
+                        if (!showCategoryDropdown) {
+                          setCategorySearchTerm("");
+                        }
+                      }}
                       className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
                     >
                       <div className="flex items-center gap-2 md:gap-3">
@@ -187,19 +222,40 @@ const HeroSection = () => {
                     {/* Category Dropdown */}
                     {showCategoryDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-3 border-b border-gray-100">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              type="text"
+                              placeholder="Kategori ara..."
+                              value={categorySearchTerm}
+                              onChange={(e) => setCategorySearchTerm(e.target.value)}
+                              className="pl-10 pr-4 py-2 text-sm border-gray-200 focus:border-gray-300 focus:ring-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                          {categoryOptions.map((category) => (
-                            <div
-                              key={category.value}
-                              onClick={() => {
-                                setSelectedCategory(category.label);
-                                setShowCategoryDropdown(false);
-                              }}
-                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
-                            >
-                              {category.label}
+                          {filteredCategoryOptions.length > 0 ? (
+                            filteredCategoryOptions.map((category) => (
+                              <div
+                                key={category.value}
+                                onClick={() => {
+                                  setSelectedCategory(category.label);
+                                  setShowCategoryDropdown(false);
+                                  setCategorySearchTerm("");
+                                }}
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                              >
+                                {category.label}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                              Kategori bulunamadı
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
@@ -208,7 +264,12 @@ const HeroSection = () => {
                   {/* Instrument Filter */}
                   <div className="flex-1 relative" ref={instrumentRef}>
                     <div
-                      onClick={() => setShowInstrumentDropdown(!showInstrumentDropdown)}
+                      onClick={() => {
+                        setShowInstrumentDropdown(!showInstrumentDropdown);
+                        if (!showInstrumentDropdown) {
+                          setInstrumentSearchTerm("");
+                        }
+                      }}
                       className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
                     >
                       <div className="flex items-center gap-2 md:gap-3">
@@ -225,19 +286,40 @@ const HeroSection = () => {
                     {/* Instrument Dropdown */}
                     {showInstrumentDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-3 border-b border-gray-100">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              type="text"
+                              placeholder="Enstrüman ara..."
+                              value={instrumentSearchTerm}
+                              onChange={(e) => setInstrumentSearchTerm(e.target.value)}
+                              className="pl-10 pr-4 py-2 text-sm border-gray-200 focus:border-gray-300 focus:ring-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                          {instruments.map((instrument) => (
-                            <div
-                              key={instrument}
-                              onClick={() => {
-                                setSelectedInstrument(instrument || '');
-                                setShowInstrumentDropdown(false);
-                              }}
-                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
-                            >
-                              {instrument}
+                          {filteredInstruments.length > 0 ? (
+                            filteredInstruments.map((instrument) => (
+                              <div
+                                key={instrument}
+                                onClick={() => {
+                                  setSelectedInstrument(instrument || '');
+                                  setShowInstrumentDropdown(false);
+                                  setInstrumentSearchTerm("");
+                                }}
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                              >
+                                {instrument}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                              Enstrüman bulunamadı
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
@@ -246,7 +328,12 @@ const HeroSection = () => {
                   {/* Location Filter */}
                   <div className="flex-1 relative" ref={locationRef}>
                     <div
-                      onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                      onClick={() => {
+                        setShowLocationDropdown(!showLocationDropdown);
+                        if (!showLocationDropdown) {
+                          setLocationSearchTerm("");
+                        }
+                      }}
                       className="bg-white/90 backdrop-blur rounded-lg px-3 md:px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-white transition-colors border border-white/20 h-10 md:h-10"
                     >
                       <div className="flex items-center gap-2 md:gap-3">
@@ -263,19 +350,40 @@ const HeroSection = () => {
                     {/* Location Dropdown */}
                     {showLocationDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-3 border-b border-gray-100">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              type="text"
+                              placeholder="Şehir ara..."
+                              value={locationSearchTerm}
+                              onChange={(e) => setLocationSearchTerm(e.target.value)}
+                              className="pl-10 pr-4 py-2 text-sm border-gray-200 focus:border-gray-300 focus:ring-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                          {locations.map((location) => (
-                            <div
-                              key={location}
-                              onClick={() => {
-                                setSelectedLocation(location);
-                                setShowLocationDropdown(false);
-                              }}
-                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
-                            >
-                              {location}
+                          {filteredLocations.length > 0 ? (
+                            filteredLocations.map((location) => (
+                              <div
+                                key={location}
+                                onClick={() => {
+                                  setSelectedLocation(location);
+                                  setShowLocationDropdown(false);
+                                  setLocationSearchTerm("");
+                                }}
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                              >
+                                {location}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                              Şehir bulunamadı
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
@@ -287,7 +395,7 @@ const HeroSection = () => {
                     className="bg-black hover:bg-gray-700 text-white px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-medium flex items-center justify-center gap-2 h-10 md:h-10 w-full md:w-auto"
                   >
                     <Filter className="h-3 w-3" />
-                    Filtrele
+                    İlan Ara
                   </Button>
                 </div>
               </CardContent>

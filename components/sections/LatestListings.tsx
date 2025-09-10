@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
-import { getAllListings } from "@/redux/actions/userActions";
+import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import ListingCard from "@/components/listings/ListingCard";
@@ -11,14 +11,17 @@ const LatestListings = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const dispatch = useAppDispatch();
-  const { allListings, listingsLoading } = useAppSelector((state) => state.user);
+  const { allListings, listingsLoading, categories, categoriesLoading } = useAppSelector((state) => state.user);
 
-  // Load listings on component mount
+  // Load listings and categories on component mount
   useEffect(() => {
     if (allListings.length === 0) {
       dispatch(getAllListings({}));
     }
-  }, [dispatch, allListings.length]);
+    if (categories.length === 0) {
+      dispatch(getAllCategories({}));
+    }
+  }, [dispatch, allListings.length, categories.length]);
 
   // Filter listings based on active tab
   const getFilteredListings = () => {
@@ -26,35 +29,63 @@ const LatestListings = () => {
       return allListings.slice(0, 6);
     }
     
-    // Map tab IDs to category names
-    const categoryMap: Record<string, string> = {
-      'grup-ariyorum': 'Grup Arıyorum',
-      'ders-veriyorum': 'Ders Veriyorum',
-      'enstruman-satiyorum': 'Enstrüman Satıyorum',
-      'studyo-kiraliyorum': 'Stüdyo Kiralıyorum',
-      'muzisyen-ariyorum': 'Müzisyen Arıyorum',
-      'ders-almak-istiyorum': 'Ders Almak İstiyorum'
-    };
+    // Find category by slug or ID
+    const category = categories.find(cat => 
+      cat.slug === activeTab || 
+      cat._id === activeTab ||
+      createCategorySlug(cat.name) === activeTab
+    );
     
-    const categoryName = categoryMap[activeTab];
-    if (!categoryName) return allListings.slice(0, 6);
+    if (!category) return allListings.slice(0, 6);
     
     return allListings
-      .filter(listing => listing.categoryInfo?.name === categoryName)
+      .filter(listing => listing.categoryInfo?.name === category.name)
       .slice(0, 6);
+  };
+
+  // Function to create category slug for URL (same as Header)
+  const createCategorySlug = (categoryName: string) => {
+    return categoryName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-');
   };
 
   const listings = getFilteredListings();
 
 
   const getTabCounts = () => {
-
-    return [
-      { id: "all", label: "Tümü", count: allListings.length },
-      { id: "grup-ariyorum", label: "Grup Arıyorum", count: allListings.filter(l => l.categoryInfo?.name === 'Grup Arıyorum').length },
-      { id: "ders-veriyorum", label: "Ders Veriyorum", count: allListings.filter(l => l.categoryInfo?.name === 'Ders Veriyorum').length },
-      { id: "enstruman-satiyorum", label: "Enstrüman Satıyorum", count: allListings.filter(l => l.categoryInfo?.name === 'Enstrüman Satıyorum').length },
+    // Always include "All" tab
+    const tabs = [
+      { id: "all", label: "Tümü", count: allListings.length }
     ];
+
+    // Add dynamic category tabs
+    if (categories && categories.length > 0) {
+      categories.forEach(category => {
+        const count = allListings.filter(listing => 
+          listing.categoryInfo?.name === category.name
+        ).length;
+        
+        // Only show categories that have listings or are important
+        if (count > 0 || ['Grup Arıyorum', 'Ders Veriyorum', 'Enstrüman Satıyorum', 'Stüdyo Kiralıyorum', 'Müzisyen Arıyorum', 'Ders Almak İstiyorum'].includes(category.name)) {
+          tabs.push({
+            id: category.slug || createCategorySlug(category.name),
+            label: category.name,
+            count: count
+          });
+        }
+      });
+    }
+
+    return tabs;
   };
 
   const tabs = getTabCounts();
@@ -72,19 +103,28 @@ const LatestListings = () => {
 
         {/* Category Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/50 text-muted-foreground hover:bg-accent"
-                }`}
-            >
-              {tab.label}
-              <span className="ml-2 text-xs opacity-75">({tab.count})</span>
-            </button>
-          ))}
+          {categoriesLoading ? (
+            // Loading skeleton for tabs
+            <>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-10 bg-muted rounded-lg animate-pulse w-24" />
+              ))}
+            </>
+          ) : (
+            tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/50 text-muted-foreground hover:bg-accent"
+                  }`}
+              >
+                {tab.label}
+                <span className="ml-2 text-xs opacity-75">({tab.count})</span>
+              </button>
+            ))
+          )}
         </div>
 
         {/* Listings Grid */}

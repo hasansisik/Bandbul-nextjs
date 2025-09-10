@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 import { Providers } from "@/redux/provider";
 import { UserLoader } from "@/components/UserLoader";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -106,6 +107,9 @@ export default function RootLayout({
             
             {/* Fixed Scroll to Top Button - Bottom Right */}
             <ScrollToTop />
+            
+            {/* Fixed WhatsApp Button - Bottom Left */}
+            <WhatsAppFloatingButton />
           </Providers>
         </ThemeProvider>
       </body>

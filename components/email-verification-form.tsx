@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { verifyEmail, againEmail } from "@/redux/actions/userActions"
+import { verifyEmail, againEmail, clearError } from "@/redux/actions/userActions"
 
 export function EmailVerificationForm({
   className,
@@ -19,7 +19,12 @@ export function EmailVerificationForm({
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
-  const { loading, message, error } = useAppSelector((state) => state.user)
+  const { loading, message, error, isAuthenticated } = useAppSelector((state) => state.user)
+
+  // Clear messages when component mounts
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
 
   const handleVerifyEmail = async (e: React.FormEvent) => {
     e.preventDefault()

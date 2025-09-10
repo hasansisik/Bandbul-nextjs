@@ -153,7 +153,7 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 lg:gap-8 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-muted-foreground/50 rounded-full"></div>
-          <span className="text-xs sm:text-sm text-muted-foreground">Toplam Aktif:</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">Toplam:</span>
           <span className="text-xs sm:text-sm font-semibold text-foreground">
             {listingsLoading ? "Yükleniyor..." : `${stats.total.toLocaleString()} ilan`}
           </span>

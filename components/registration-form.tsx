@@ -94,6 +94,8 @@ export function RegistrationForm({
       }))
       
       if (register.fulfilled.match(result)) {
+        // Clear any messages before navigating
+        dispatch(clearError())
         router.push(`/dogrulama?email=${encodeURIComponent(email)}`)
       }
     } catch (err) {
