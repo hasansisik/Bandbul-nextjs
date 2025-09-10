@@ -178,38 +178,6 @@ export default function BlogPage() {
                 />
               </div>
             </div>
-
-            {/* Category Filter */}
-            <div className="sm:w-48" style={{height: '40px'}}>
-              <Select value={selectedCategory || "all"} onValueChange={handleCategoryChange}>
-                <SelectTrigger 
-                  className="border border-border bg-background rounded-md"
-                  style={{height: '40px', minHeight: '40px'}}
-                >
-                  <SelectValue placeholder="Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  {blogCategories.filter(cat => cat.active).map((category) => (
-                    <SelectItem key={category._id} value={category.name}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Clear Filters */}
-            {(searchQuery || selectedCategory) && (
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="px-4 border border-border rounded-md"
-                style={{height: '40px', minHeight: '40px'}}
-              >
-                Temizle
-              </Button>
-            )}
           </div>
         </div>
 
