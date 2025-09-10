@@ -198,6 +198,20 @@ function ListingsFormContent() {
   }
 
   const experienceLevels = ["Başlangıç", "Orta", "İleri", "Profesyonel"]
+  
+  const turkishCities = [
+    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
+    "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
+    "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
+    "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
+    "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+    "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
+    "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
+    "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
+    "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
+    "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
+    "Düzce"
+  ]
 
   return (
     <div className="space-y-6">
@@ -453,19 +467,24 @@ function ListingsFormContent() {
                 </Select>
               </div>
 
-              {/* Konum */}
+              {/* Şehir */}
               <div className="space-y-2">
                 <Label htmlFor="location" className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  Konum *
+                  Şehir *
                 </Label>
-                <Input
-                  id="location"
-                  placeholder="Şehir, ilçe..."
-                  value={formData.location}
-                  onChange={(e) => handleChange("location", e.target.value)}
-                  required
-                />
+                <Select value={formData.location} onValueChange={(value) => handleChange("location", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Şehir seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {turkishCities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

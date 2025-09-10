@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { useSearchParams } from "next/navigation"
-import { getUserListings, createListing, updateListing, deleteListing, toggleListingStatus, getAllCategories, getAllInstruments } from "@/redux/actions/userActions"
+import { getUserListings, createListing, updateListing, deleteListing, getAllCategories, getAllInstruments } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
@@ -40,7 +40,9 @@ import {
   ImageIcon,
   X,
   Save,
-  AlertCircle
+  AlertCircle,
+  Archive,
+  Clock3
 } from "lucide-react"
 
 import {
@@ -55,6 +57,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { RejectionReasonModal } from "@/components/RejectionReasonModal"
+import { ListingRulesDialog } from "@/components/ListingRulesDialog"
 
 // Skeleton components for loading states
 const ProfileHeaderSkeleton = () => (
@@ -149,6 +152,20 @@ const experienceLevels = [
   "Profesyonel"
 ]
 
+const turkishCities = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
+  "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
+  "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
+  "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
+  "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
+  "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
+  "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
+  "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
+  "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
+  "Düzce"
+]
+
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -158,6 +175,7 @@ export function ProfilePage() {
   const [operationMessage, setOperationMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false)
   const [selectedRejectedListing, setSelectedRejectedListing] = useState<any>(null)
+  const [listingRulesDialogOpen, setListingRulesDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const dispatch = useAppDispatch()
@@ -229,6 +247,15 @@ export function ProfilePage() {
   const handleEditProfile = () => {
     // Navigate to profile editing page
     window.location.href = '/profil-duzenle'
+  }
+
+  const handleCreateListingClick = () => {
+    setListingRulesDialogOpen(true)
+  }
+
+  const handleApproveRules = () => {
+    setListingRulesDialogOpen(false)
+    setShowCreateForm(true)
   }
 
   const handleSaveProfile = () => {
@@ -308,19 +335,40 @@ export function ProfilePage() {
     }
   }
 
-  const handleToggleListingStatus = async (listingId: string) => {
+  const handleArchiveListing = async (listingId: string) => {
     try {
-      const result = await dispatch(toggleListingStatus(listingId))
-      if (toggleListingStatus.fulfilled.match(result)) {
-        showMessage('success', "İlan durumu başarıyla değiştirildi.")
-        // Refresh listings
+      const result = await dispatch(updateListing({
+        id: listingId,
+        formData: { status: 'archived' }
+      }))
+      if (updateListing.fulfilled.match(result)) {
+        showMessage('success', "İlan başarıyla arşivlendi.")
         dispatch(getUserListings())
-      } else if (toggleListingStatus.rejected.match(result)) {
+      } else if (updateListing.rejected.match(result)) {
+        const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan arşivlenirken bir hata oluştu."
+        showMessage('error', errorMessage)
+      }
+    } catch (err) {
+      console.error("Archive listing error:", err)
+      showMessage('error', "İlan arşivlenirken bir hata oluştu.")
+    }
+  }
+
+  const handleSetPendingListing = async (listingId: string) => {
+    try {
+      const result = await dispatch(updateListing({
+        id: listingId,
+        formData: { status: 'pending' }
+      }))
+      if (updateListing.fulfilled.match(result)) {
+        showMessage('success', "İlan onay bekliyor durumuna alındı.")
+        dispatch(getUserListings())
+      } else if (updateListing.rejected.match(result)) {
         const errorMessage = typeof result.payload === 'string' ? result.payload : "İlan durumu değiştirilirken bir hata oluştu."
         showMessage('error', errorMessage)
       }
     } catch (err) {
-      console.error("Toggle listing status error:", err)
+      console.error("Set pending listing error:", err)
       showMessage('error', "İlan durumu değiştirilirken bir hata oluştu.")
     }
   }
@@ -368,7 +416,8 @@ export function ProfilePage() {
         location: newListing.location || userData?.location || "Türkiye",
         image: newListing.image || "/blogexample.jpg",
         experience: newListing.experience || "Orta",
-        instrument: newListing.instrument || ""
+        instrument: newListing.instrument || "",
+        status: 'pending' // Yeni ilanlar ve güncellemeler onay bekliyor durumuna gider
       }
 
       if (editingListing) {
@@ -381,7 +430,7 @@ export function ProfilePage() {
         
         if (updateListing.fulfilled.match(result)) {
           console.log("Listing updated successfully:", result.payload)
-          showMessage('success', "İlan başarıyla güncellendi!")
+          showMessage('success', "İlan başarıyla güncellendi ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
           dispatch(getUserListings())
         } else if (updateListing.rejected.match(result)) {
@@ -397,7 +446,7 @@ export function ProfilePage() {
           console.log("Listing created successfully:", result.payload)
           console.log("Current userListings before refresh:", userListings.length)
           
-          showMessage('success', "İlan başarıyla oluşturuldu!")
+          showMessage('success', "İlan başarıyla oluşturuldu ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
           dispatch(getUserListings())
         } else if (createListing.rejected.match(result)) {
@@ -634,7 +683,7 @@ export function ProfilePage() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
-                <Button onClick={() => setShowCreateForm(!showCreateForm)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button onClick={editingListing ? () => setShowCreateForm(!showCreateForm) : handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Plus className="w-4 h-4 mr-2" />
                   {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
                 </Button>
@@ -829,18 +878,23 @@ export function ProfilePage() {
                           </Select>
                         </div>
 
-                        {/* Konum */}
+                        {/* Şehir */}
                         <div className="space-y-2">
                           <Label htmlFor="location" className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            Konum
+                            Şehir
                           </Label>
-                          <Input
-                            id="location"
-                            placeholder="Şehir, ilçe..."
-                            value={newListing.location}
-                            onChange={(e) => setNewListing({...newListing, location: e.target.value})}
-                          />
+                          <Select value={newListing.location} onValueChange={(value) => setNewListing({...newListing, location: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Şehir seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {turkishCities.map((city) => (
+                                <SelectItem key={city} value={city}>
+                                  {city}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </CardContent>
                     </Card>
@@ -911,35 +965,71 @@ export function ProfilePage() {
                         </div>
 
                         <div className="flex space-x-2">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="flex-1"
-                              >
-                                <Edit className="w-4 h-4 mr-1" />
-                                {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>İlan Durumunu Değiştir</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  "{listing.title}" başlıklı ilanın durumunu {listing.status === 'active' ? 'pasif' : 'aktif'} yapmak istediğinizden emin misiniz?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>İptal</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleToggleListingStatus(listing._id)}
-                                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          {/* Arşivle butonu - sadece aktif ve onay bekleyen ilanlar için */}
+                          {(listing.status === 'active' || listing.status === 'pending') && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1"
                                 >
-                                  {listing.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <Archive className="w-4 h-4 mr-1" />
+                                  Arşivle
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>İlanı Arşivle</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    "{listing.title}" başlıklı ilanı arşivlemek istediğinizden emin misiniz? Arşivlenen ilanlar görünmez olur.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>İptal</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleArchiveListing(listing._id)}
+                                    className="bg-orange-500 text-white hover:bg-orange-600"
+                                  >
+                                    Arşivle
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                          
+                          {/* Onay Bekliyora Al butonu - sadece arşivlenen ilanlar için */}
+                          {listing.status === 'archived' && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1"
+                                >
+                                  <Clock3 className="w-4 h-4 mr-1" />
+                                  Onay Bekliyora Al
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>İlanı Onay Bekliyora Al</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    "{listing.title}" başlıklı ilanı onay bekliyor durumuna almak istediğinizden emin misiniz? İlan tekrar moderasyon sürecine girecek.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>İptal</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleSetPendingListing(listing._id)}
+                                    className="bg-yellow-500 text-white hover:bg-yellow-600"
+                                  >
+                                    Onay Bekliyora Al
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -998,7 +1088,7 @@ export function ProfilePage() {
                     </div>
                     <h3 className="text-lg font-semibold text-card-foreground mb-2">Henüz hiç ilanınız yok</h3>
                     <p className="text-muted-foreground mb-6">İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun.</p>
-                    <Button onClick={() => setShowCreateForm(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Button onClick={handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                       <Plus className="w-4 h-4 mr-2" />
                       İlk İlanınızı Oluşturun
                     </Button>
@@ -1015,6 +1105,13 @@ export function ProfilePage() {
         isOpen={rejectionModalOpen}
         onClose={() => setRejectionModalOpen(false)}
         listing={selectedRejectedListing}
+      />
+
+      {/* Listing Rules Dialog */}
+      <ListingRulesDialog
+        isOpen={listingRulesDialogOpen}
+        onClose={() => setListingRulesDialogOpen(false)}
+        onApprove={handleApproveRules}
       />
     </div>
   )

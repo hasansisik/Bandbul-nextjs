@@ -13,6 +13,20 @@ const HeroSection = () => {
   const dispatch = useAppDispatch();
   const { allListings, categories, instruments } = useAppSelector((state) => state.user);
   
+  const turkishCities = [
+    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
+    "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
+    "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
+    "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
+    "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+    "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
+    "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
+    "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
+    "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
+    "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
+    "Düzce"
+  ];
+  
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedInstrument, setSelectedInstrument] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -77,7 +91,7 @@ const HeroSection = () => {
       count: allListings.filter(listing => listing.instrument === inst._id).length
     }));
   
-  const locations = Array.from(new Set(allListings.map(listing => listing.location)));
+  const locations = turkishCities;
 
   // Helper function to normalize Turkish characters for search
   const normalizeText = (text: string) => {
@@ -138,9 +152,9 @@ const HeroSection = () => {
     },
     {
       id: "city",
-      label: "ŞEHİR",
+      label: "Şehir",
       icon: <MapPin className="h-4 w-4 text-gray-600" />,
-      placeholder: selectedLocation || "ŞEHİR",
+      placeholder: selectedLocation || "Şehir",
       onClick: () => setShowLocationDropdown(!showLocationDropdown)
     }
   ];
@@ -350,7 +364,7 @@ const HeroSection = () => {
                       <div className="flex items-center gap-2 md:gap-3">
                         <MapPin className="h-4 w-4 text-gray-600" />
                         <div className="text-xs md:text-sm text-gray-900 font-medium">
-                          {selectedLocation || "ŞEHİR"}
+                          {selectedLocation || "Şehir"}
                         </div>
                       </div>
                       <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,17 +391,17 @@ const HeroSection = () => {
                         </div>
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
                           {filteredLocations.length > 0 ? (
-                            filteredLocations.map((location) => (
+                            filteredLocations.map((city) => (
                               <div
-                                key={location}
+                                key={city}
                                 onClick={() => {
-                                  setSelectedLocation(location);
+                                  setSelectedLocation(city);
                                   setShowLocationDropdown(false);
                                   setLocationSearchTerm("");
                                 }}
                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
                               >
-                                {location}
+                                {city}
                               </div>
                             ))
                           ) : (

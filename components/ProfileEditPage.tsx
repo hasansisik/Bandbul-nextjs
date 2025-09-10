@@ -9,8 +9,23 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Save, X, Plus, Upload, User, Loader2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeft, Save, X, Plus, Upload, User, Loader2, MapPin } from "lucide-react"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
+
+const turkishCities = [
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
+  "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
+  "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
+  "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
+  "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
+  "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
+  "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
+  "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
+  "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
+  "Düzce"
+]
 
 // User data interface for editing
 interface UserData {
@@ -279,12 +294,22 @@ export function ProfileEditPage() {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="location" className="text-sm font-medium text-card-foreground">Konum</Label>
-                <Input
-                  id="location"
-                  value={userData.location}
-                  onChange={(e) => setUserData({...userData, location: e.target.value})}
-                />
+                <Label htmlFor="location" className="text-sm font-medium text-card-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Şehir
+                </Label>
+                <Select value={userData.location} onValueChange={(value) => setUserData({...userData, location: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Şehir seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {turkishCities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
