@@ -14,6 +14,14 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface GoogleLoginPayload {
+  email: string;
+  name: string;
+  surname: string;
+  picture?: string;
+  googleId: string;
+}
+
 export interface VerifyEmailPayload {
   email: string;
   verificationCode: number;
@@ -136,11 +144,50 @@ export const register = createAsyncThunk(
   }
 );
 
+export const googleRegister = createAsyncThunk(
+  "user/googleRegister",
+  async (payload: GoogleLoginPayload, thunkAPI) => {
+    try {
+      const { data } = await axios.post(`${server}/auth/google-register`, payload);
+      localStorage.setItem("accessToken", data.user.token);
+      return data.user;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
 export const login = createAsyncThunk(
   "user/login",
   async (payload: LoginPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/login`, payload);
+      localStorage.setItem("accessToken", data.user.token);
+      return data.user;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
+export const googleAuth = createAsyncThunk(
+  "user/googleAuth",
+  async (payload: GoogleLoginPayload, thunkAPI) => {
+    try {
+      const { data } = await axios.post(`${server}/auth/google-auth`, payload);
+      localStorage.setItem("accessToken", data.user.token);
+      return data.user;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
+export const googleLogin = createAsyncThunk(
+  "user/googleLogin",
+  async (payload: GoogleLoginPayload, thunkAPI) => {
+    try {
+      const { data } = await axios.post(`${server}/auth/google-login`, payload);
       localStorage.setItem("accessToken", data.user.token);
       return data.user;
     } catch (error: any) {

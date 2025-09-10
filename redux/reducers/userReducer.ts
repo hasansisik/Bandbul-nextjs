@@ -1,7 +1,10 @@
 import { createReducer } from "@reduxjs/toolkit";
 import {
   register,
+  googleRegister,
+  googleAuth,
   login,
+  googleLogin,
   loadUser,
   logout,
   verifyEmail,
@@ -110,6 +113,36 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.loading = false;
       state.error = action.payload as string;
     })
+    // Google Register
+    .addCase(googleRegister.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(googleRegister.fulfilled, (state, action) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.user = action.payload;
+      state.message = null;
+      state.error = null;
+    })
+    .addCase(googleRegister.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    // Google Auth (Unified)
+    .addCase(googleAuth.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(googleAuth.fulfilled, (state, action) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.user = action.payload;
+      state.message = null;
+      state.error = null;
+    })
+    .addCase(googleAuth.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
     // Login
     .addCase(login.pending, (state) => {
       state.loading = true;
@@ -120,6 +153,19 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.user = action.payload;
     })
     .addCase(login.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    // Google Login
+    .addCase(googleLogin.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(googleLogin.fulfilled, (state, action) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.user = action.payload;
+    })
+    .addCase(googleLogin.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     })

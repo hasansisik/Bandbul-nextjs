@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
 import { register, clearError } from "@/redux/actions/userActions"
 import { useRouter } from "next/navigation"
+import { GoogleAuthButton } from "@/components/GoogleAuthButton"
 
 export function RegistrationForm({
   className,
@@ -213,7 +214,19 @@ export function RegistrationForm({
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Hesap Oluşturuluyor..." : "Hesap Oluştur"}
               </Button>
-              
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Veya
+                  </span>
+                </div>
+              </div>
+
+              <GoogleAuthButton mode="register" />
               
               <div className="text-center text-sm">
                 Zaten hesabınız var mı?{" "}
