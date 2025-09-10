@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useDispatch } from 'react-redux';
 import { server } from '@/config';
@@ -29,6 +29,12 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const dispatch = useDispatch();
   const socketRef = useRef<Socket | null>(null);
+  const onNewMessageRef = useRef(onNewMessage);
+
+  // Update ref when onNewMessage changes
+  useEffect(() => {
+    onNewMessageRef.current = onNewMessage;
+  }, [onNewMessage]);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -53,12 +59,10 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
 
     // Connection events
     newSocket.on('connect', () => {
-      console.log('Connected to WebSocket server');
       setIsConnected(true);
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
       setIsConnected(false);
     });
 
@@ -69,33 +73,27 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
 
     // Message events
     newSocket.on('new_message', (message: SocketMessage) => {
-      console.log('New message received:', message);
-      
       // Callback ile yeni mesajı handle et
-      if (message && onNewMessage) {
-        onNewMessage(message);
+      if (message && onNewMessageRef.current) {
+        onNewMessageRef.current(message);
       }
     });
 
     newSocket.on('conversation_updated', (data) => {
-      console.log('Conversation updated:', data);
       // Dispatch action to update conversation in Redux store
     });
 
     // Typing events
     newSocket.on('user_typing', (data) => {
-      console.log('User typing:', data);
       // Handle typing indicator
     });
 
     newSocket.on('user_stopped_typing', (data) => {
-      console.log('User stopped typing:', data);
       // Handle typing indicator
     });
 
     // User status events
     newSocket.on('user_status_changed', (data) => {
-      console.log('User status changed:', data);
       setOnlineUsers(prev => {
         if (data.isOnline) {
           return [...prev.filter(id => id !== data.userId), data.userId];
@@ -107,7 +105,6 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
 
     // Message read events
     newSocket.on('messages_read', (data) => {
-      console.log('Messages read:', data);
       // Handle message read status
     });
 
@@ -117,22 +114,22 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
       setSocket(null);
       setIsConnected(false);
     };
-  }, [token, userId, dispatch, onNewMessage]);
+  }, [token, userId, dispatch]);
 
   // Socket methods with safety checks
-  const joinConversation = (conversationId: string) => {
+  const joinConversation = useCallback((conversationId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('join_conversation', conversationId);
     }
-  };
+  }, []);
 
-  const leaveConversation = (conversationId: string) => {
+  const leaveConversation = useCallback((conversationId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('leave_conversation', conversationId);
     }
-  };
+  }, []);
 
-  const sendMessage = (conversationId: string, content: string, messageId: string) => {
+  const sendMessage = useCallback((conversationId: string, content: string, messageId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId && content && messageId) {
       socketRef.current.emit('send_message', {
         conversationId,
@@ -140,25 +137,25 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
         messageId
       });
     }
-  };
+  }, []);
 
-  const startTyping = (conversationId: string) => {
+  const startTyping = useCallback((conversationId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('typing_start', { conversationId });
     }
-  };
+  }, []);
 
-  const stopTyping = (conversationId: string) => {
+  const stopTyping = useCallback((conversationId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('typing_stop', { conversationId });
     }
-  };
+  }, []);
 
-  const markAsRead = (conversationId: string) => {
+  const markAsRead = useCallback((conversationId: string) => {
     if (socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('mark_as_read', { conversationId });
     }
-  };
+  }, []);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.includes(userId);

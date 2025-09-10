@@ -57,12 +57,15 @@ export function MessagesPage() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
   // Handle new message from WebSocket
   const handleNewMessage = useCallback((socketMessage: any) => {
-    console.log('Handling new message:', socketMessage);
+    // If it's a message for the current conversation, reload messages
+    if (selectedConversation && socketMessage.conversationId === selectedConversation) {
+      dispatch(getMessages({ conversationId: selectedConversation }));
+      // No automatic scroll - let user control their own scroll position
+    }
     
-    // Just refresh conversations list to update last message
-    // Don't reload messages here to prevent duplicates
+    // Always refresh conversations to update last message
     dispatch(getConversations());
-  }, [dispatch]);
+  }, [dispatch, selectedConversation]);
 
   const { 
     isConnected, 
@@ -103,7 +106,7 @@ export function MessagesPage() {
     if (conversationId && !isStartingConversation) {
       // Direct conversation ID provided
       setSelectedConversation(conversationId)
-    } else if (recipientId && recipientName && !isStartingConversation) {
+    } else if (recipientId && recipientName && !isStartingConversation && uniqueConversations.length > 0) {
       // Check if conversation already exists in unique conversations
       const existingConversation = uniqueConversations.find(conv => 
         conv.otherParticipant._id === recipientId
@@ -116,9 +119,17 @@ export function MessagesPage() {
         // Start new conversation only if none exists
         setIsStartingConversation(true)
         dispatch(startConversation({ recipientId }))
+          .unwrap()
+          .then(() => {
+            setIsStartingConversation(false)
+          })
+          .catch((error) => {
+            console.error('Failed to create conversation:', error)
+            setIsStartingConversation(false)
+          })
       }
     }
-  }, [searchParams, uniqueConversations, dispatch, isStartingConversation])
+  }, [searchParams, uniqueConversations.length, dispatch, isStartingConversation])
 
   // Handle conversation creation success
   useEffect(() => {
@@ -132,6 +143,14 @@ export function MessagesPage() {
       }, 1000)
     }
   }, [isStartingConversation, currentConversation, dispatch])
+
+  // Handle conversation creation error
+  useEffect(() => {
+    if (isStartingConversation && messagesError) {
+      console.error('Failed to create conversation:', messagesError)
+      setIsStartingConversation(false)
+    }
+  }, [isStartingConversation, messagesError])
 
   // Load messages when conversation is selected (only once)
   useEffect(() => {
@@ -153,7 +172,7 @@ export function MessagesPage() {
         leaveConversation(selectedConversation)
       }
     }
-  }, [selectedConversation, isConnected, joinConversation, leaveConversation, markAsReadSocket])
+  }, [selectedConversation, isConnected])
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -184,6 +203,11 @@ export function MessagesPage() {
         
         // Reload messages to show the new one
         dispatch(getMessages({ conversationId: selectedConversation }));
+        
+        // Scroll to bottom after sending message
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
         
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -298,10 +322,8 @@ export function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // Auto scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom()
-  }, [currentMessages])
+  // Auto scroll to bottom only when user sends a message
+  // We'll handle this in handleSendMessage instead
 
   // Auto scroll to bottom when conversation changes
   useEffect(() => {
