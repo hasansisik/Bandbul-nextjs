@@ -16,7 +16,6 @@ const SupportSection = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
     subject: "",
     message: ""
   });
@@ -39,7 +38,6 @@ const SupportSection = () => {
         setFormData({
           name: "",
           email: "",
-          phone: "",
           subject: "",
           message: ""
         });
@@ -118,19 +116,6 @@ const SupportSection = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Telefon Numarası
-                  </label>
-                  <Input 
-                    type="tel"
-                    placeholder="+90 5XX XXX XX XX"
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    className="border-border focus:border-ring focus:ring-1 focus:ring-ring/20 h-11 bg-background/50 backdrop-blur"
-                    disabled={loading}
-                  />
-                </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
