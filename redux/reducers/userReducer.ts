@@ -32,6 +32,7 @@ import {
   markAsRead,
   getUnreadCount,
   getAllInstruments,
+  updateTheme,
   clearError,
 } from "../actions/userActions";
 
@@ -568,6 +569,21 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(getUnreadCount.rejected, (state, action) => {
       state.messagesError = action.payload as string;
+    })
+    // Update Theme
+    .addCase(updateTheme.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(updateTheme.fulfilled, (state, action) => {
+      state.loading = false;
+      if (state.user) {
+        state.user.theme = action.payload.theme;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(updateTheme.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
     })
     // Clear Error
     .addCase(clearError.fulfilled, (state) => {

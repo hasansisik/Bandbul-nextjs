@@ -91,7 +91,7 @@ const HeroSection = () => {
       count: allListings.filter(listing => listing.instrument === inst._id).length
     }));
   
-  const locations = turkishCities;
+  const locations = ["Hepsi", ...turkishCities];
 
   // Helper function to normalize Turkish characters for search
   const normalizeText = (text: string) => {
@@ -154,7 +154,7 @@ const HeroSection = () => {
       id: "city",
       label: "Şehir",
       icon: <MapPin className="h-4 w-4 text-gray-600" />,
-      placeholder: selectedLocation || "Şehir",
+      placeholder: selectedLocation || "Hepsi",
       onClick: () => setShowLocationDropdown(!showLocationDropdown)
     }
   ];
@@ -178,7 +178,7 @@ const HeroSection = () => {
       }
     }
     
-    if (selectedLocation) {
+    if (selectedLocation && selectedLocation !== "Hepsi") {
       params.set('location', selectedLocation);
     }
     
@@ -364,7 +364,7 @@ const HeroSection = () => {
                       <div className="flex items-center gap-2 md:gap-3">
                         <MapPin className="h-4 w-4 text-gray-600" />
                         <div className="text-xs md:text-sm text-gray-900 font-medium">
-                          {selectedLocation || "Şehir"}
+                          {selectedLocation || "Hepsi"}
                         </div>
                       </div>
                       <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,7 +381,7 @@ const HeroSection = () => {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                               type="text"
-                              placeholder="Şehir ara..."
+                              placeholder="Şehir ara veya Hepsi seç..."
                               value={locationSearchTerm}
                               onChange={(e) => setLocationSearchTerm(e.target.value)}
                               className="pl-10 pr-4 py-2 text-sm border-gray-200 focus:border-gray-300 focus:ring-0"

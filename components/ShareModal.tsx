@@ -134,7 +134,7 @@ export default function ShareModal({
           </div>
 
           {/* Native Share (Mobile) */}
-          {navigator.share && (
+          {typeof navigator !== 'undefined' && 'share' in navigator && (
             <Button
               onClick={handleNativeShare}
               className="w-full"

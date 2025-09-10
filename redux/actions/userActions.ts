@@ -40,6 +40,7 @@ export interface EditProfilePayload {
   picture?: string;
   bio?: string;
   skills?: string[];
+  theme?: string;
 }
 
 export interface CreateListingPayload {
@@ -990,6 +991,38 @@ export const getAllInstruments = createAsyncThunk(
       
       const response = await axios.get(`${server}/instruments?${queryParams.toString()}`);
       return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+// Update Theme Action
+export const updateTheme = createAsyncThunk(
+  "user/updateTheme",
+  async (theme: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        return thunkAPI.rejectWithValue("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.post(
+        `${server}/auth/edit-profile`,
+        { theme },
+        config
+      );
+      return { theme, message: response.data.message };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message

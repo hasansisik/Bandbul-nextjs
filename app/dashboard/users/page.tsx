@@ -169,6 +169,17 @@ export default function UsersPage() {
     }
   };
 
+  const getThemeBadge = (theme: string) => {
+    switch (theme) {
+      case 'light':
+        return <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">Açık Tema</Badge>;
+      case 'dark':
+        return <Badge variant="outline" className="text-xs bg-gray-800 text-gray-100 border-gray-600">Koyu Tema</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">Açık Tema</Badge>;
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
@@ -425,6 +436,9 @@ export default function UsersPage() {
                       {getRoleBadge(user.role || 'user')}
                       {getStatusBadge(user.status || 'active')}
                     </div>
+                    <div className="flex justify-center gap-2 mb-3">
+                      {getThemeBadge(user.theme || 'light')}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       Kayıt: {formatDate(user.createdAt)}
                     </div>
@@ -525,6 +539,13 @@ export default function UsersPage() {
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Durum</label>
                     <div className="mt-1">{getStatusBadge(selectedUser.status || 'active')}</div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Tema Tercihi</label>
+                    <div className="mt-1">{getThemeBadge(selectedUser.theme || 'light')}</div>
                   </div>
                 </div>
 

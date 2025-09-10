@@ -38,7 +38,6 @@ export default function RootLayout({
           
           {/* Fixed Scroll to Top Button - Bottom Right */}
           <ScrollToTop />
-          
           {/* Fixed WhatsApp Button - Bottom Left */}
           <WhatsAppFloatingButton />
         </ThemeProvider>
