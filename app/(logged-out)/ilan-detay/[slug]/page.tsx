@@ -260,14 +260,14 @@ export default function ListingDetailPage() {
                       <p className="font-medium text-foreground">{listing.experience}</p>
                     </div>
                   </div>
-                  {listing.instrument && (
+                  {(listing.instrumentInfo?.name || listing.instrument) && (
                     <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                       <div className="p-2 bg-primary/10 rounded-lg">
                         <Music className="h-8 w-8 text-primary" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Enstrüman</p>
-                        <p className="font-medium text-foreground">{listing.instrument}</p>
+                        <p className="font-medium text-foreground">{listing.instrumentInfo?.name || listing.instrument}</p>
                       </div>
                     </div>
                   )}
@@ -343,10 +343,10 @@ export default function ListingDetailPage() {
                               <span className="truncate">{item.location}</span>
                             </div>
                             
-                            {item.instrument && (
+                            {(item.instrumentInfo?.name || item.instrument) && (
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Music className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{item.instrument}</span>
+                                <span className="truncate">{item.instrumentInfo?.name || item.instrument}</span>
                               </div>
                             )}
                             

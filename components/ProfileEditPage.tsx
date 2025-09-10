@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { editProfile, loadUser } from "@/redux/actions/userActions"
+import { editProfile, loadUser, getAllInstruments } from "@/redux/actions/userActions"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +30,7 @@ export function ProfileEditPage() {
   
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { user, loading } = useAppSelector((state) => state.user)
+  const { user, loading, instruments, instrumentsLoading } = useAppSelector((state) => state.user)
   
   // Transform Redux user data to component format
   const [userData, setUserData] = useState<UserData>({
@@ -59,6 +59,11 @@ export function ProfileEditPage() {
       })
     }
   }, [user])
+
+  // Load instruments on component mount
+  useEffect(() => {
+    dispatch(getAllInstruments({}))
+  }, [dispatch])
 
   const handleSave = async () => {
     if (!user) return

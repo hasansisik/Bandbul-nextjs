@@ -8,6 +8,7 @@ import {
   updateListing, 
   deleteListing, 
   getAllCategories,
+  getAllInstruments,
   getAllListings
 } from "@/redux/actions/userActions"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
@@ -44,7 +45,7 @@ function ListingsFormContent() {
   const editId = searchParams.get('id')
   const isEditing = !!editId
   
-  const { categories, categoriesLoading, allListings, listingsLoading, listingsError } = useAppSelector((state) => state.user)
+  const { categories, categoriesLoading, instruments, instrumentsLoading, allListings, listingsLoading, listingsError } = useAppSelector((state) => state.user)
   
   const [formData, setFormData] = useState({
     title: "",
@@ -60,9 +61,10 @@ function ListingsFormContent() {
   const [uploading, setUploading] = useState(false)
   const [listing, setListing] = useState<any>(null)
 
-  // Load categories and listings on component mount
+  // Load categories, instruments and listings on component mount
   useEffect(() => {
     dispatch(getAllCategories({}))
+    dispatch(getAllInstruments({}))
     dispatch(getAllListings({}))
   }, [dispatch])
 
@@ -196,7 +198,6 @@ function ListingsFormContent() {
   }
 
   const experienceLevels = ["Başlangıç", "Orta", "İleri", "Profesyonel"]
-  const instrumentTypes = ["Gitar", "Piyano", "Davul", "Vokal", "Bas Gitar", "Klavye", "Trompet", "Keman", "Diğer"]
 
   return (
     <div className="space-y-6">
@@ -415,18 +416,24 @@ function ListingsFormContent() {
               {/* Enstrüman */}
               <div className="space-y-2">
                 <Label htmlFor="instrument">Enstrüman</Label>
-                <Select value={formData.instrument} onValueChange={(value) => handleChange("instrument", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Enstrüman seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {instrumentTypes.map((instrument) => (
-                      <SelectItem key={instrument} value={instrument}>
-                        {instrument}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {instrumentsLoading ? (
+                  <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
+                ) : (
+                  <Select value={formData.instrument} onValueChange={(value) => handleChange("instrument", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Enstrüman seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {instruments
+                        .filter(inst => inst.active)
+                        .map((instrument) => (
+                          <SelectItem key={instrument._id} value={instrument._id}>
+                            {instrument.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Deneyim Seviyesi */}

@@ -104,12 +104,7 @@ export default function RootLayout({
             <UserLoader />
             <GoogleAnalytics />
             {children}
-            
-            {/* Fixed Scroll to Top Button - Bottom Right */}
-            <ScrollToTop />
-            
-            {/* Fixed WhatsApp Button - Bottom Left */}
-            <WhatsAppFloatingButton />
+                     
           </Providers>
         </ThemeProvider>
       </body>

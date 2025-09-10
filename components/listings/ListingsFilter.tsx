@@ -60,12 +60,18 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       count: allListings.filter(listing => listing.location === location).length
     }));
 
-  // Get unique instruments from Redux state
-  const instruments = Array.from(new Set(allListings.map(listing => listing.instrument).filter(Boolean)))
+  // Get unique instruments from Redux state (using populated instrumentInfo)
+  const instruments = Array.from(new Set(
+    allListings
+      .map(listing => listing.instrumentInfo?.name || listing.instrument)
+      .filter(Boolean)
+  ))
     .map(instrument => ({
       id: instrument!, // Use actual instrument name for filtering
       name: instrument!,
-      count: allListings.filter(listing => listing.instrument === instrument).length
+      count: allListings.filter(listing => 
+        (listing.instrumentInfo?.name || listing.instrument) === instrument
+      ).length
     }));
 
   const experienceLevels = [

@@ -6,6 +6,7 @@ import { settingsReducer } from "./reducers/settingsReducer";
 import { blogReducer } from "./reducers/blogReducer";
 import { blogCategoryReducer } from "./reducers/blogCategoryReducer";
 import { notificationReducer } from "./reducers/notificationReducer";
+import { instrumentReducer } from "./reducers/instrumentReducer";
 
 const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ const store = configureStore({
     blog: blogReducer,
     blogCategory: blogCategoryReducer,
     notification: notificationReducer,
+    instrument: instrumentReducer,
   },
 });
 

@@ -5,7 +5,8 @@ import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { 
   getAllListings, 
   deleteListing, 
-  getAllCategories 
+  getAllCategories,
+  getAllInstruments
 } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { Button } from "../../../components/ui/button"
@@ -27,17 +28,19 @@ import {
   AlertDialogTrigger,
 } from "../../../components/ui/alert-dialog"
 import ListingsCategoryModal from "../../../components/ListingsCategoryModal"
+import InstrumentManagementModal from "../../../components/InstrumentManagementModal"
 import { DataTable } from "../../../components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
 
 export default function ListingsPage() {
   const dispatch = useAppDispatch()
-  const { allListings, listingsLoading, categories, categoriesLoading } = useAppSelector((state) => state.user)
+  const { allListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading } = useAppSelector((state) => state.user)
 
-  // Load listings and categories on component mount
+  // Load listings, categories and instruments on component mount
   useEffect(() => {
     dispatch(getAllListings({}))
     dispatch(getAllCategories({}))
+    dispatch(getAllInstruments({}))
   }, [dispatch])
 
   const handleDelete = async (id: string) => {
@@ -64,6 +67,11 @@ export default function ListingsPage() {
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(cat => cat._id === categoryId)
     return category ? category.name : "Bilinmeyen Kategori"
+  }
+
+  const getInstrumentName = (instrumentId: string) => {
+    const instrument = instruments.find(inst => inst._id === instrumentId)
+    return instrument ? instrument.name : "Bilinmeyen Enstrüman"
   }
 
   const columns: ColumnDef<any>[] = [
@@ -121,6 +129,18 @@ export default function ListingsPage() {
         const listing = row.original
         const categoryName = getCategoryName(listing.category)
         return <Badge variant="secondary" className="text-xs font-medium">{categoryName}</Badge>
+      },
+    },
+    {
+      accessorKey: "instrument",
+      header: "Enstrüman",
+      cell: ({ row }) => {
+        const listing = row.original
+        if (listing.instrumentInfo) {
+          return <Badge variant="outline" className="text-xs font-medium">{listing.instrumentInfo.name}</Badge>
+        }
+        const instrumentName = getInstrumentName(listing.instrument)
+        return <Badge variant="outline" className="text-xs font-medium">{instrumentName}</Badge>
       },
     },
     {
@@ -240,6 +260,8 @@ export default function ListingsPage() {
               console.log("Categories changed:", newCategories)
             }}
           />
+          
+          <InstrumentManagementModal />
           
           <Link href="/dashboard/listings/form">
             <Button className="flex items-center gap-2">

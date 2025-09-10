@@ -28,6 +28,7 @@ import {
   startConversation,
   markAsRead,
   getUnreadCount,
+  getAllInstruments,
   clearError,
 } from "../actions/userActions";
 
@@ -46,6 +47,9 @@ interface UserState {
   categories: any[];
   categoriesLoading: boolean;
   categoriesError: string | null;
+  instruments: any[];
+  instrumentsLoading: boolean;
+  instrumentsError: string | null;
   allUsers: any[];
   userStats: any;
   usersLoading: boolean;
@@ -71,6 +75,9 @@ const initialState: UserState = {
   categories: [],
   categoriesLoading: false,
   categoriesError: null,
+  instruments: [],
+  instrumentsLoading: false,
+  instrumentsError: null,
   allUsers: [],
   userStats: null,
   usersLoading: false,
@@ -327,6 +334,18 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(getAllCategories.rejected, (state, action) => {
       state.categoriesLoading = false;
       state.categoriesError = action.payload as string;
+    })
+    // Get All Instruments
+    .addCase(getAllInstruments.pending, (state) => {
+      state.instrumentsLoading = true;
+    })
+    .addCase(getAllInstruments.fulfilled, (state, action) => {
+      state.instrumentsLoading = false;
+      state.instruments = action.payload.instruments;
+    })
+    .addCase(getAllInstruments.rejected, (state, action) => {
+      state.instrumentsLoading = false;
+      state.instrumentsError = action.payload as string;
     })
     // Update Category
     .addCase(updateCategory.pending, (state) => {

@@ -60,12 +60,13 @@ const ListingsGrid = ({
 
     // Apply search
     if (searchQuery.trim()) {
-      filtered = filtered.filter(listing => 
-        listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.instrument?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter(listing => {
+        const instrumentName = listing.instrumentInfo?.name || listing.instrument;
+        return listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          listing.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          instrumentName?.toLowerCase().includes(searchQuery.toLowerCase())
+      });
     }
 
     // Apply category filters
@@ -106,9 +107,10 @@ const ListingsGrid = ({
 
     // Apply instrument filters
     if (selectedInstruments.length > 0) {
-      filtered = filtered.filter(listing => 
-        listing.instrument && selectedInstruments.includes(listing.instrument)
-      );
+      filtered = filtered.filter(listing => {
+        const instrumentName = listing.instrumentInfo?.name || listing.instrument;
+        return instrumentName && selectedInstruments.includes(instrumentName);
+      });
     }
 
     // Apply sorting

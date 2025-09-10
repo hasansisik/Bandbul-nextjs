@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter } from "lucide-react";
 import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
-import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
+import { getAllListings, getAllCategories, getAllInstruments } from "@/redux/actions/userActions";
 
 const HeroSection = () => {
   const dispatch = useAppDispatch();
-  const { allListings, categories } = useAppSelector((state) => state.user);
+  const { allListings, categories, instruments } = useAppSelector((state) => state.user);
   
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedInstrument, setSelectedInstrument] = useState("");
@@ -36,7 +36,10 @@ const HeroSection = () => {
     if (categories.length === 0) {
       dispatch(getAllCategories({}));
     }
-  }, [dispatch, allListings.length, categories.length]);
+    if (instruments.length === 0) {
+      dispatch(getAllInstruments({}));
+    }
+  }, [dispatch, allListings.length, categories.length, instruments.length]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -64,7 +67,16 @@ const HeroSection = () => {
     label: cat.name,
     count: allListings.filter(listing => listing.category === cat._id).length
   }));
-  const instruments = Array.from(new Set(allListings.map(listing => listing.instrument).filter(Boolean)));
+  
+  // Get active instruments from Redux state
+  const instrumentOptions = instruments
+    .filter(inst => inst.active)
+    .map(inst => ({
+      value: inst._id,
+      label: inst.name,
+      count: allListings.filter(listing => listing.instrument === inst._id).length
+    }));
+  
   const locations = Array.from(new Set(allListings.map(listing => listing.location)));
 
   // Helper function to normalize Turkish characters for search
@@ -85,8 +97,8 @@ const HeroSection = () => {
   const filteredCategoryOptions = categoryOptions.filter(category =>
     normalizeText(category.label).includes(normalizeText(categorySearchTerm))
   );
-  const filteredInstruments = instruments.filter(instrument =>
-    normalizeText(instrument || '').includes(normalizeText(instrumentSearchTerm))
+  const filteredInstruments = instrumentOptions.filter(instrument =>
+    normalizeText(instrument.label).includes(normalizeText(instrumentSearchTerm))
   );
   const filteredLocations = locations.filter(location => {
     const searchTerm = normalizeText(locationSearchTerm.trim());
@@ -137,20 +149,19 @@ const HeroSection = () => {
     const params = new URLSearchParams();
     
     if (selectedCategory) {
-      // Convert Turkish category name to URL slug
-      const categorySlugMap: Record<string, string> = {
-        'Grup Arıyorum': 'grup-ariyorum',
-        'Müzisyen Arıyorum': 'muzisyen-ariyorum',
-        'Ders Almak İstiyorum': 'ders-almak-istiyorum',
-        'Ders Veriyorum': 'ders-veriyorum',
-        'Enstrüman Satıyorum': 'enstruman-satiyorum',
-        'Stüdyo Kiralıyorum': 'studyo-kiraliyorum'
-      };
-      params.set('category', categorySlugMap[selectedCategory] || selectedCategory.toLowerCase().replace(/\s+/g, '-'));
+      // Find category ID by name
+      const category = categories.find(cat => cat.name === selectedCategory);
+      if (category) {
+        params.set('category', category._id);
+      }
     }
     
     if (selectedInstrument) {
-      params.set('instrument', selectedInstrument);
+      // Find instrument ID by name
+      const instrument = instruments.find(inst => inst.name === selectedInstrument);
+      if (instrument) {
+        params.set('instrument', instrument._id);
+      }
     }
     
     if (selectedLocation) {
@@ -304,15 +315,15 @@ const HeroSection = () => {
                           {filteredInstruments.length > 0 ? (
                             filteredInstruments.map((instrument) => (
                               <div
-                                key={instrument}
+                                key={instrument.value}
                                 onClick={() => {
-                                  setSelectedInstrument(instrument || '');
+                                  setSelectedInstrument(instrument.label);
                                   setShowInstrumentDropdown(false);
                                   setInstrumentSearchTerm("");
                                 }}
                                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-900 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
                               >
-                                {instrument}
+                                {instrument.label}
                               </div>
                             ))
                           ) : (

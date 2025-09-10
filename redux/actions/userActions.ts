@@ -899,6 +899,28 @@ export const getUnreadCount = createAsyncThunk(
   }
 );
 
+// Get all instruments (public - no authentication required)
+export const getAllInstruments = createAsyncThunk(
+  "user/getAllInstruments",
+  async (params: { active?: boolean } = {}, thunkAPI) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.active !== undefined) {
+        queryParams.append('active', params.active.toString());
+      }
+      
+      const response = await axios.get(`${server}/instruments?${queryParams.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
 // Clear Error Action
 export const clearError = createAsyncThunk(
   "user/clearError",

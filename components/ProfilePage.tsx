@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { useSearchParams } from "next/navigation"
-import { getUserListings, createListing, updateListing, deleteListing, toggleListingStatus, getAllCategories } from "@/redux/actions/userActions"
+import { getUserListings, createListing, updateListing, deleteListing, toggleListingStatus, getAllCategories, getAllInstruments } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
@@ -147,19 +147,6 @@ const experienceLevels = [
   "Profesyonel"
 ]
 
-const instrumentTypes = [
-  "Gitar",
-  "Piyano",
-  "Davul",
-  "Bas Gitar",
-  "Vokal",
-  "Trompet",
-  "Klavye",
-  "Keman",
-  "Saksafon",
-  "Flüt",
-  "Diğer"
-]
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -182,7 +169,7 @@ export function ProfilePage() {
   }
   
   // Get user data and listings from Redux
-  const { user, userListings, listingsLoading, categories, categoriesLoading, loading } = useAppSelector((state) => state.user)
+  const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
   
   // Transform Redux user data to component format
   const userData = user && user.name ? {
@@ -211,11 +198,12 @@ export function ProfilePage() {
     image: ""
   })
 
-  // Load user listings and categories on component mount
+  // Load user listings, categories and instruments on component mount
   useEffect(() => {
     if (user) {
       dispatch(getUserListings())
       dispatch(getAllCategories({}))
+      dispatch(getAllInstruments({}))
     }
   }, [dispatch, user])
 
@@ -415,6 +403,11 @@ export function ProfilePage() {
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(cat => cat._id === categoryId)
     return category ? category.name : "Bilinmeyen Kategori"
+  }
+
+  const getInstrumentName = (instrumentId: string) => {
+    const instrument = instruments.find(inst => inst._id === instrumentId)
+    return instrument ? instrument.name : "Bilinmeyen Enstrüman"
   }
 
   const getStatusBadge = (listing: any) => {
@@ -765,18 +758,24 @@ export function ProfilePage() {
                         {/* Enstrüman */}
                         <div className="space-y-2">
                           <Label htmlFor="instrument">Enstrüman</Label>
-                          <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Enstrüman seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {instrumentTypes.map((instrument) => (
-                                <SelectItem key={instrument} value={instrument}>
-                                  {instrument}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {instrumentsLoading ? (
+                            <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
+                          ) : (
+                            <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Enstrüman seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {instruments
+                                  .filter(inst => inst.active)
+                                  .map((instrument) => (
+                                    <SelectItem key={instrument._id} value={instrument._id}>
+                                      {instrument.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                         </div>
 
                         {/* Deneyim Seviyesi */}
@@ -860,7 +859,7 @@ export function ProfilePage() {
                             </Badge>
                             {listing.instrument && (
                               <Badge variant="secondary" className="text-xs">
-                                {listing.instrument}
+                                {getInstrumentName(listing.instrument)}
                               </Badge>
                             )}
                           </div>

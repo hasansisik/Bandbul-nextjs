@@ -65,10 +65,10 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
             </div>
             
             {/* Instrument Badge - Top Right */}
-            {listing.instrument && (
+            {(listing.instrumentInfo?.name || listing.instrument) && (
               <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                 <Badge className="text-xs  bg-white/20 text-white  rounded-full py-1 backdrop-blur-sm">
-                  🎵 {listing.instrument}
+                  🎵 {listing.instrumentInfo?.name || listing.instrument}
                 </Badge>
               </div>
             )}
@@ -209,7 +209,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
               </div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Music className="h-3 w-3 flex-shrink-0" />
-                <span className="truncate">{listing.instrument || 'Belirtilmemiş'}</span>
+                <span className="truncate">{(listing.instrumentInfo?.name || listing.instrument) || 'Belirtilmemiş'}</span>
               </div>
             </div>
 
@@ -255,7 +255,7 @@ const ListingCard = ({ listing, viewMode, isLoggedIn = false }: ListingCardProps
                 </div>
                 <div className="flex items-center gap-1">
                   <Music className="h-4 w-4" />
-                  <span>{listing.instrument || 'Belirtilmemiş'}</span>
+                  <span>{(listing.instrumentInfo?.name || listing.instrument) || 'Belirtilmemiş'}</span>
                 </div>
               </div>
             </div>
