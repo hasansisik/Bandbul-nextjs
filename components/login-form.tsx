@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/redux/hook"
-import { login } from "@/redux/actions/userActions"
-import { useRouter } from "next/navigation"
+import { login, clearError, loadUser } from "@/redux/actions/userActions"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export function LoginForm({
   className,
@@ -19,6 +19,12 @@ export function LoginForm({
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.user)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Clear any existing error when component mounts
+  useEffect(() => {
+    dispatch(clearError())
+  }, [dispatch])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,10 +32,20 @@ export function LoginForm({
     try {
       const result = await dispatch(login({ email, password }))
       if (login.fulfilled.match(result)) {
+        // Load user data after successful login
+        await dispatch(loadUser())
+        
+        // Check for redirect parameter
+        const redirectUrl = searchParams.get('redirect')
+        
         // Role-based redirect
         const userRole = result.payload.role
         if (userRole === 'admin') {
           router.push("/dashboard")
+        } else if (redirectUrl) {
+          // Decode and redirect to the originally requested page
+          const decodedUrl = decodeURIComponent(redirectUrl)
+          router.push(decodedUrl)
         } else {
           router.push("/")
         }

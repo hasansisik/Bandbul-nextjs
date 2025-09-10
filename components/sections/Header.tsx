@@ -158,6 +158,24 @@ const Header = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* İlan Ver Button */}
+              <div className="hidden md:block">
+                <Button
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      router.push("/profil?tab=listings&action=create");
+                    } else {
+                      const redirectUrl = encodeURIComponent("/profil?tab=listings&action=create");
+                      router.push(`/giris?redirect=${redirectUrl}`);
+                    }
+                  }}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium px-4 py-2 h-10 whitespace-nowrap"
+                  size="sm"
+                >
+                  İlan Ver
+                </Button>
+              </div>
             </div>
 
             {/* Desktop Content - Center */}
@@ -316,6 +334,25 @@ const Header = () => {
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+              
+              {/* Mobile İlan Ver Button */}
+              <div className="mt-3">
+                <Button
+                  onClick={() => {
+                    closeMenu();
+                    if (isAuthenticated) {
+                      router.push("/profil?tab=listings&action=create");
+                    } else {
+                      const redirectUrl = encodeURIComponent("/profil?tab=listings&action=create");
+                      router.push(`/giris?redirect=${redirectUrl}`);
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white font-medium h-12"
+                  size="sm"
+                >
+                  İlan Ver
+                </Button>
               </div>
             </div>
 

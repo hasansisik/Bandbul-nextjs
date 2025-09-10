@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
+import { useSearchParams } from "next/navigation"
 import { getUserListings, createListing, updateListing, deleteListing, toggleListingStatus, getAllCategories } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
@@ -169,6 +170,7 @@ export function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const dispatch = useAppDispatch()
+  const searchParams = useSearchParams()
   
   // Function to show operation messages and auto-clear them
   const showMessage = (type: 'success' | 'error' | 'info', text: string) => {
@@ -221,6 +223,16 @@ export function ProfilePage() {
   useEffect(() => {
     console.log("userListings changed:", userListings.length, userListings)
   }, [userListings])
+
+  // Check URL parameters for tab and action
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const action = searchParams.get('action')
+    
+    if (tab === 'listings' && action === 'create') {
+      setShowCreateForm(true)
+    }
+  }, [searchParams])
 
   const handleEditProfile = () => {
     // Navigate to profile editing page
