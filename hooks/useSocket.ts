@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { useDispatch } from 'react-redux';
 import { server } from '@/config';
-import { useSSE } from './useSSE';
+import { usePolling } from './usePolling';
 
 // Check if we're in production (Vercel)
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Dynamic import for Socket.IO (only in development)
+let io: any = null;
+let Socket: any = null;
+
+if (!isProduction) {
+  const socketIO = require('socket.io-client');
+  io = socketIO.io;
+  Socket = socketIO.Socket;
+}
 
 interface UseSocketProps {
   token: string | null;
@@ -28,15 +37,15 @@ interface SocketMessage {
 }
 
 export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const dispatch = useDispatch();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<any>(null);
   const onNewMessageRef = useRef(onNewMessage);
 
-  // Use SSE for production (Vercel)
-  const sseHook = useSSE({ token, userId, onNewMessage });
+  // Use polling for production (Vercel)
+  const pollingHook = usePolling({ token, userId, onNewMessage });
 
   // Update ref when onNewMessage changes
   useEffect(() => {
@@ -46,26 +55,13 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   useEffect(() => {
     if (!token || !userId) return;
 
-    // In production (Vercel), use polling only as WebSocket is not supported
+    // In production (Vercel), don't use Socket.IO at all
     if (isProduction) {
-      // Use polling for production environment
-      const wsServer = server.replace('/v1', '');
-      const newSocket = io(wsServer, {
-        auth: {
-          token: token
-        },
-        transports: ['polling'], // Only polling for Vercel
-        timeout: 20000,
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        forceNew: true
-      });
-      
-      socketRef.current = newSocket;
-      setSocket(newSocket);
+      // Set connected state to true for SSE
+      setIsConnected(true);
+      return;
     } else {
-      // Use WebSocket for local development
+      // Use WebSocket for local development only
       const wsServer = server.replace('/v1', '');
       const newSocket = io(wsServer, {
         auth: {
@@ -82,86 +78,88 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
       setSocket(newSocket);
     }
 
-    // Get the current socket reference
-    const currentSocket = socketRef.current;
-    if (!currentSocket) return;
+    // Only set up socket events for development
+    if (!isProduction) {
+      const currentSocket = socketRef.current;
+      if (!currentSocket) return;
 
-    // Connection events
-    currentSocket.on('connect', () => {
-      setIsConnected(true);
-    });
+      // Connection events
+      currentSocket.on('connect', () => {
+        setIsConnected(true);
+      });
 
-    currentSocket.on('disconnect', () => {
-      setIsConnected(false);
-    });
+      currentSocket.on('disconnect', () => {
+        setIsConnected(false);
+      });
 
-    currentSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-      setIsConnected(false);
-    });
+      currentSocket.on('connect_error', (error: any) => {
+        console.error('WebSocket connection error:', error);
+        setIsConnected(false);
+      });
 
-    // Message events
-    currentSocket.on('new_message', (message: SocketMessage) => {
-      // Callback ile yeni mesajı handle et
-      if (message && onNewMessageRef.current) {
-        onNewMessageRef.current(message);
-      }
-    });
-
-    currentSocket.on('conversation_updated', (data) => {
-      // Dispatch action to update conversation in Redux store
-    });
-
-    // Typing events
-    currentSocket.on('user_typing', (data) => {
-      // Handle typing indicator
-    });
-
-    currentSocket.on('user_stopped_typing', (data) => {
-      // Handle typing indicator
-    });
-
-    // User status events
-    currentSocket.on('user_status_changed', (data) => {
-      setOnlineUsers(prev => {
-        if (data.isOnline) {
-          return [...prev.filter(id => id !== data.userId), data.userId];
-        } else {
-          return prev.filter(id => id !== data.userId);
+      // Message events
+      currentSocket.on('new_message', (message: SocketMessage) => {
+        // Callback ile yeni mesajı handle et
+        if (message && onNewMessageRef.current) {
+          onNewMessageRef.current(message);
         }
       });
-    });
 
-    // Message read events
-    currentSocket.on('messages_read', (data) => {
-      // Handle message read status
-    });
+      currentSocket.on('conversation_updated', (data: any) => {
+        // Dispatch action to update conversation in Redux store
+      });
 
-    return () => {
-      if (currentSocket) {
-        currentSocket.close();
-      }
-      socketRef.current = null;
-      setSocket(null);
-      setIsConnected(false);
-    };
+      // Typing events
+      currentSocket.on('user_typing', (data: any) => {
+        // Handle typing indicator
+      });
+
+      currentSocket.on('user_stopped_typing', (data: any) => {
+        // Handle typing indicator
+      });
+
+      // User status events
+      currentSocket.on('user_status_changed', (data: any) => {
+        setOnlineUsers(prev => {
+          if (data.isOnline) {
+            return [...prev.filter(id => id !== data.userId), data.userId];
+          } else {
+            return prev.filter(id => id !== data.userId);
+          }
+        });
+      });
+
+      // Message read events
+      currentSocket.on('messages_read', (data: any) => {
+        // Handle message read status
+      });
+
+      return () => {
+        if (currentSocket) {
+          currentSocket.close();
+        }
+        socketRef.current = null;
+        setSocket(null);
+        setIsConnected(false);
+      };
+    }
   }, [token, userId, dispatch]);
 
   // Socket methods with safety checks
   const joinConversation = useCallback((conversationId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('join_conversation', conversationId);
     }
   }, []);
 
   const leaveConversation = useCallback((conversationId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('leave_conversation', conversationId);
     }
   }, []);
 
   const sendMessage = useCallback((conversationId: string, content: string, messageId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId && content && messageId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId && content && messageId) {
       socketRef.current.emit('send_message', {
         conversationId,
         content,
@@ -171,19 +169,19 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   }, []);
 
   const startTyping = useCallback((conversationId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('typing_start', { conversationId });
     }
   }, []);
 
   const stopTyping = useCallback((conversationId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('typing_stop', { conversationId });
     }
   }, []);
 
   const markAsRead = useCallback((conversationId: string) => {
-    if (socketRef.current && socketRef.current.connected && conversationId) {
+    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
       socketRef.current.emit('mark_as_read', { conversationId });
     }
   }, []);
@@ -192,10 +190,10 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
     return onlineUsers.includes(userId);
   };
 
-  // Return SSE for production, WebSocket for development
+  // Return polling for production, WebSocket for development
   if (isProduction) {
     return {
-      ...sseHook,
+      ...pollingHook,
       isUserOnline
     };
   }
