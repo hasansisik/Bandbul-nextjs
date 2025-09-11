@@ -16,9 +16,9 @@ import {
   Check, 
   Facebook, 
   Twitter, 
-  MessageCircle,
   Mail
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { toast } from "sonner";
 
 interface ShareModalProps {
@@ -172,7 +172,7 @@ export default function ShareModal({
                 variant="outline"
                 className="flex items-center gap-2"
               >
-                <MessageCircle className="h-4 w-4 text-green-600" />
+                <WhatsAppIcon className="h-4 w-4 text-green-600" />
                 WhatsApp
               </Button>
               

@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { getSettings } from "@/redux/actions/settingsActions";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export function WhatsAppFloatingButton() {
   const dispatch = useDispatch();
@@ -53,7 +53,7 @@ export function WhatsAppFloatingButton() {
             aria-label="WhatsApp ile iletişime geç"
             title={`WhatsApp: ${phoneNumber}`}
           >
-            <MessageCircle className="h-5 w-5 text-white" />
+            <WhatsAppIcon className="h-5 w-5 text-white" />
           </Button>
         </div>
       )}
