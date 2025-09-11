@@ -36,7 +36,7 @@ const Header = () => {
     if (token && (!isAuthenticated || !user)) {
       dispatch(loadUser());
     }
-  }, [dispatch, pathname]); // Trigger on every pathname change
+  }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 

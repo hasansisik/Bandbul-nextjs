@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { initializeGoogleAuth, GoogleUser } from "@/lib/googleAuth"
 import { useAppDispatch } from "@/redux/hook"
 import { googleAuth } from "@/redux/actions/userActions"
@@ -19,54 +19,7 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  useEffect(() => {
-    // Initialize Google Auth when component mounts
-    initializeGoogleAuth()
-      .then(() => {
-        setIsGoogleLoaded(true)
-        setupGoogleAuth()
-      })
-      .catch((error) => {
-        console.error('Failed to initialize Google Auth:', error)
-      })
-  }, [])
-
-  const setupGoogleAuth = () => {
-    if (typeof window === 'undefined' || !window.google || !window.google.accounts) {
-      console.error('Google Identity Services not available')
-      return
-    }
-
-    try {
-      // Initialize Google Identity Services (hidden)
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "323173892265-e9cqmdl32734c3ftk5kn7p9c7aps61n5.apps.googleusercontent.com",
-        callback: handleGoogleCallback,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      })
-
-    } catch (error) {
-      console.error('Error setting up Google Auth:', error)
-    }
-  }
-
-  const handleGoogleClick = () => {
-    if (!isGoogleLoaded) {
-      console.error('Google Auth not loaded yet')
-      return
-    }
-
-    // Trigger Google OAuth popup
-    window.google.accounts.id.prompt((notification: any) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // User closed the popup or skipped
-        return
-      }
-    })
-  }
-
-  const handleGoogleCallback = async (response: any) => {
+  const handleGoogleCallback = useCallback(async (response: any) => {
     setIsLoading(true)
     
     try {
@@ -83,7 +36,6 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         verified_email: payload.email_verified,
       }
 
-
       // Prepare payload for Redux action
       const payload_data = {
         email: googleUser.email,
@@ -93,9 +45,7 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         googleId: googleUser.id,
       }
 
-
-      let result = await dispatch(googleAuth(payload_data))
-
+      const result = await dispatch(googleAuth(payload_data))
 
       if (googleAuth.fulfilled.match(result)) {
         // Check for redirect parameter
@@ -117,11 +67,60 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
       }
     } catch (error) {
       console.error('Google authentication error:', error)
-      alert('Google ile giriş yapılırken hata oluştu: ' + error.message)
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata'
+      alert('Google ile giriş yapılırken hata oluştu: ' + errorMessage)
     } finally {
       setIsLoading(false)
     }
+  }, [dispatch, searchParams, router])
+
+  const setupGoogleAuth = useCallback(() => {
+    if (typeof window === 'undefined' || !window.google || !window.google.accounts) {
+      console.error('Google Identity Services not available')
+      return
+    }
+
+    try {
+      // Initialize Google Identity Services (hidden)
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "323173892265-e9cqmdl32734c3ftk5kn7p9c7aps61n5.apps.googleusercontent.com",
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      })
+
+    } catch (error) {
+      console.error('Error setting up Google Auth:', error)
+    }
+  }, [handleGoogleCallback])
+
+  useEffect(() => {
+    // Initialize Google Auth when component mounts
+    initializeGoogleAuth()
+      .then(() => {
+        setIsGoogleLoaded(true)
+        setupGoogleAuth()
+      })
+      .catch((error) => {
+        console.error('Failed to initialize Google Auth:', error)
+      })
+  }, [setupGoogleAuth])
+
+  const handleGoogleClick = () => {
+    if (!isGoogleLoaded) {
+      console.error('Google Auth not loaded yet')
+      return
+    }
+
+    // Trigger Google OAuth popup
+    window.google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // User closed the popup or skipped
+        return
+      }
+    })
   }
+
 
   return (
     <Button

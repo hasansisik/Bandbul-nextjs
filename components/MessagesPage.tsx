@@ -129,7 +129,7 @@ export function MessagesPage() {
           })
       }
     }
-  }, [searchParams, uniqueConversations.length, dispatch, isStartingConversation])
+  }, [searchParams, uniqueConversations, dispatch, isStartingConversation])
 
   // Handle conversation creation success
   useEffect(() => {
@@ -172,7 +172,7 @@ export function MessagesPage() {
         leaveConversation(selectedConversation)
       }
     }
-  }, [selectedConversation, isConnected])
+  }, [selectedConversation, isConnected, joinConversation, leaveConversation, markAsReadSocket])
 
   // Close emoji picker when clicking outside
   useEffect(() => {
