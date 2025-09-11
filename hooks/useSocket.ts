@@ -2,6 +2,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useDispatch } from 'react-redux';
 import { server } from '@/config';
+import { useSSE } from './useSSE';
+
+// Check if we're in production (Vercel)
+const isProduction = process.env.NODE_ENV === 'production';
 
 interface UseSocketProps {
   token: string | null;
@@ -31,6 +35,9 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   const socketRef = useRef<Socket | null>(null);
   const onNewMessageRef = useRef(onNewMessage);
 
+  // Use SSE for production (Vercel)
+  const sseHook = useSSE({ token, userId, onNewMessage });
+
   // Update ref when onNewMessage changes
   useEffect(() => {
     onNewMessageRef.current = onNewMessage;
@@ -39,61 +46,83 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   useEffect(() => {
     if (!token || !userId) return;
 
-    // Remove /v1 from server URL for WebSocket connection
-    const wsServer = server.replace('/v1', '');
+    // In production (Vercel), use polling only as WebSocket is not supported
+    if (isProduction) {
+      // Use polling for production environment
+      const wsServer = server.replace('/v1', '');
+      const newSocket = io(wsServer, {
+        auth: {
+          token: token
+        },
+        transports: ['polling'], // Only polling for Vercel
+        timeout: 20000,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        forceNew: true
+      });
+      
+      socketRef.current = newSocket;
+      setSocket(newSocket);
+    } else {
+      // Use WebSocket for local development
+      const wsServer = server.replace('/v1', '');
+      const newSocket = io(wsServer, {
+        auth: {
+          token: token
+        },
+        transports: ['websocket', 'polling'],
+        timeout: 20000,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
+      
+      socketRef.current = newSocket;
+      setSocket(newSocket);
+    }
 
-    // Create socket connection
-    const newSocket = io(wsServer, {
-      auth: {
-        token: token
-      },
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
-    });
-
-    socketRef.current = newSocket;
-    setSocket(newSocket);
+    // Get the current socket reference
+    const currentSocket = socketRef.current;
+    if (!currentSocket) return;
 
     // Connection events
-    newSocket.on('connect', () => {
+    currentSocket.on('connect', () => {
       setIsConnected(true);
     });
 
-    newSocket.on('disconnect', () => {
+    currentSocket.on('disconnect', () => {
       setIsConnected(false);
     });
 
-    newSocket.on('connect_error', (error) => {
+    currentSocket.on('connect_error', (error) => {
       console.error('WebSocket connection error:', error);
       setIsConnected(false);
     });
 
     // Message events
-    newSocket.on('new_message', (message: SocketMessage) => {
+    currentSocket.on('new_message', (message: SocketMessage) => {
       // Callback ile yeni mesajı handle et
       if (message && onNewMessageRef.current) {
         onNewMessageRef.current(message);
       }
     });
 
-    newSocket.on('conversation_updated', (data) => {
+    currentSocket.on('conversation_updated', (data) => {
       // Dispatch action to update conversation in Redux store
     });
 
     // Typing events
-    newSocket.on('user_typing', (data) => {
+    currentSocket.on('user_typing', (data) => {
       // Handle typing indicator
     });
 
-    newSocket.on('user_stopped_typing', (data) => {
+    currentSocket.on('user_stopped_typing', (data) => {
       // Handle typing indicator
     });
 
     // User status events
-    newSocket.on('user_status_changed', (data) => {
+    currentSocket.on('user_status_changed', (data) => {
       setOnlineUsers(prev => {
         if (data.isOnline) {
           return [...prev.filter(id => id !== data.userId), data.userId];
@@ -104,12 +133,14 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
     });
 
     // Message read events
-    newSocket.on('messages_read', (data) => {
+    currentSocket.on('messages_read', (data) => {
       // Handle message read status
     });
 
     return () => {
-      newSocket.close();
+      if (currentSocket) {
+        currentSocket.close();
+      }
       socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
@@ -160,6 +191,14 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
   const isUserOnline = (userId: string) => {
     return onlineUsers.includes(userId);
   };
+
+  // Return SSE for production, WebSocket for development
+  if (isProduction) {
+    return {
+      ...sseHook,
+      isUserOnline
+    };
+  }
 
   return {
     socket,
