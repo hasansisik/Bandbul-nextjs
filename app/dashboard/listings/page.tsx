@@ -121,10 +121,11 @@ export default function ListingsPage() {
     {
       accessorKey: "image",
       header: "Görsel",
+      size: 60,
       cell: ({ row }) => {
         const listing = row.original
         return (
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted/50 border">
+          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted/50 border">
             {listing.image ? (
               <img
                 src={listing.image}
@@ -143,12 +144,15 @@ export default function ListingsPage() {
     {
       accessorKey: "title",
       header: "Başlık",
+      size: 150,
       cell: ({ row }) => {
         const listing = row.original
         return (
-          <div className="space-y-1">
-            <div className="font-medium text-base leading-tight">{listing.title}</div>
-            <div className="text-xs text-muted-foreground line-clamp-2">{listing.description.substring(0, 60)}...</div>
+          <div className="space-y-1 min-w-0">
+            <div className="font-medium text-sm leading-tight truncate" title={listing.title}>{listing.title}</div>
+            <div className="text-xs text-muted-foreground line-clamp-2" title={listing.description}>
+              {listing.description.length > 50 ? `${listing.description.substring(0, 50)}...` : listing.description}
+            </div>
           </div>
         )
       },
@@ -156,11 +160,12 @@ export default function ListingsPage() {
     {
       accessorKey: "authorInfo",
       header: "İlan Sahibi",
+      size: 100,
       cell: ({ row }) => {
         const listing = row.original
         const author = listing.authorInfo
         if (author) {
-          return <span className="text-sm font-medium">{author.name} {author.surname}</span>
+          return <span className="text-sm font-medium truncate block" title={`${author.name} ${author.surname}`}>{author.name} {author.surname}</span>
         }
         return <span className="text-sm text-muted-foreground">Bilinmiyor</span>
       },
@@ -168,50 +173,50 @@ export default function ListingsPage() {
     {
       accessorKey: "category",
       header: "Kategori",
+      size: 80,
       cell: ({ row }) => {
         const listing = row.original
         const categoryName = getCategoryName(listing.category)
-        return <Badge variant="secondary" className="text-xs font-medium">{categoryName}</Badge>
+        return <span className="text-xs text-muted-foreground truncate block" title={categoryName}>{categoryName}</span>
       },
     },
     {
       accessorKey: "instrument",
       header: "Enstrüman",
+      size: 80,
       cell: ({ row }) => {
         const listing = row.original
         if (listing.instrumentInfo) {
-          return <Badge variant="outline" className="text-xs font-medium">{listing.instrumentInfo.name}</Badge>
+          return <span className="text-xs text-muted-foreground truncate block" title={listing.instrumentInfo.name}>{listing.instrumentInfo.name}</span>
         }
         const instrumentName = getInstrumentName(listing.instrument)
-        return <Badge variant="outline" className="text-xs font-medium">{instrumentName}</Badge>
+        return <span className="text-xs text-muted-foreground truncate block" title={instrumentName}>{instrumentName}</span>
       },
     },
     {
       accessorKey: "location",
       header: "Konum",
+      size: 100,
       cell: ({ row }) => (
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin className="h-3 w-3" />
-          {row.getValue("location")}
+        <div className="flex items-center gap-1 text-sm text-muted-foreground min-w-0">
+          <MapPin className="h-3 w-3 flex-shrink-0" />
+          <span className="truncate" title={row.getValue("location") as string}>{row.getValue("location")}</span>
         </div>
       ),
     },
     {
       accessorKey: "experience",
       header: "Deneyim",
+      size: 80,
       cell: ({ row }) => {
         const experience = row.getValue("experience") as string
-        let variant: "default" | "secondary" | "outline" = "outline"
-        
-        if (experience === "Profesyonel") variant = "default"
-        else if (experience === "İleri") variant = "secondary"
-        
-        return <Badge variant={variant} className="text-xs">{experience}</Badge>
+        return <span className="text-xs text-muted-foreground truncate block" title={experience}>{experience}</span>
       },
     },
     {
       accessorKey: "status",
       header: "Durum",
+      size: 120,
       cell: ({ row }) => {
         const status = row.getValue("status") as string
         const getStatusInfo = (status: string) => {
@@ -251,11 +256,13 @@ export default function ListingsPage() {
     {
       accessorKey: "createdAt",
       header: "Tarih",
+      size: 80,
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.getValue("createdAt"))}</span>,
     },
     {
       id: "actions",
       header: "İşlemler",
+      size: 80,
       cell: ({ row }) => {
         const listing = row.original
         const isAdmin = user?.role === 'admin'
