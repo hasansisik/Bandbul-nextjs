@@ -34,7 +34,6 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
     };
 
     eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error);
       setIsConnected(false);
     };
 
@@ -46,7 +45,7 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
           onNewMessageRef.current(message);
         }
       } catch (error) {
-        console.error('Error parsing SSE message:', error);
+        // Error parsing SSE message - silently continue
       }
     });
 
@@ -55,7 +54,7 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
         const data = JSON.parse(event.data);
         // Handle conversation update
       } catch (error) {
-        console.error('Error parsing conversation update:', error);
+        // Error parsing conversation update - silently continue
       }
     });
 
@@ -70,7 +69,7 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
           }
         });
       } catch (error) {
-        console.error('Error parsing user status:', error);
+        // Error parsing user status - silently continue
       }
     });
 
@@ -87,12 +86,10 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
   const joinConversation = useCallback((conversationId: string) => {
     // SSE doesn't support server-side room joining
     // This would need to be handled via API calls
-    console.log('SSE: Join conversation not directly supported');
   }, []);
 
   const leaveConversation = useCallback((conversationId: string) => {
     // SSE doesn't support server-side room leaving
-    console.log('SSE: Leave conversation not directly supported');
   }, []);
 
   const sendMessage = useCallback(async (conversationId: string, content: string, messageId: string) => {
@@ -115,18 +112,16 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
         throw new Error('Failed to send message');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Error sending message - silently continue
     }
   }, [token]);
 
   const startTyping = useCallback((conversationId: string) => {
     // Typing indicators not supported with SSE
-    console.log('SSE: Typing indicators not supported');
   }, []);
 
   const stopTyping = useCallback((conversationId: string) => {
     // Typing indicators not supported with SSE
-    console.log('SSE: Typing indicators not supported');
   }, []);
 
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -141,7 +136,7 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
         body: JSON.stringify({ conversationId })
       });
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      // Error marking messages as read - silently continue
     }
   }, [token]);
 

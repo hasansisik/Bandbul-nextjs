@@ -106,12 +106,8 @@ export function MessagesPage() {
     const recipientName = searchParams.get('recipientName')
     const conversationId = searchParams.get('conversationId')
     
-    console.log('URL params:', { recipientId, recipientName, conversationId })
-    console.log('Current state:', { isStartingConversation, uniqueConversations: uniqueConversations.length })
-    
     if (conversationId && !isStartingConversation) {
       // Direct conversation ID provided
-      console.log('Selecting existing conversation:', conversationId)
       setSelectedConversation(conversationId)
       setHasProcessedUrlParams(true)
     } else if (recipientId && recipientName && !isStartingConversation) {
@@ -120,28 +116,22 @@ export function MessagesPage() {
         conv.otherParticipant._id === recipientId
       )
       
-      console.log('Existing conversation found:', existingConversation)
-      
       if (existingConversation) {
         // Select existing conversation
-        console.log('Selecting existing conversation:', existingConversation.id)
         setSelectedConversation(existingConversation.id)
         setHasProcessedUrlParams(true)
       } else {
         // Start new conversation - don't wait for conversations to load
-        console.log('Starting new conversation with recipientId:', recipientId)
         setIsStartingConversation(true)
         setHasProcessedUrlParams(true)
         dispatch(startConversation({ recipientId }))
           .unwrap()
           .then((result) => {
-            console.log('Conversation created successfully:', result)
             setIsStartingConversation(false)
             // Refresh conversations to get the new one
             dispatch(getConversations())
           })
           .catch((error) => {
-            console.error('Failed to create conversation:', error)
             setIsStartingConversation(false)
           })
       }
@@ -151,7 +141,6 @@ export function MessagesPage() {
   // Handle conversation creation success
   useEffect(() => {
     if (currentConversation && !selectedConversation && hasProcessedUrlParams) {
-      console.log('Conversation created, selecting:', currentConversation.id)
       setSelectedConversation(currentConversation.id)
       setIsStartingConversation(false)
       
@@ -165,7 +154,6 @@ export function MessagesPage() {
   // Handle conversation creation error
   useEffect(() => {
     if (isStartingConversation && messagesError) {
-      console.error('Failed to create conversation:', messagesError)
       setIsStartingConversation(false)
     }
   }, [isStartingConversation, messagesError])
@@ -228,7 +216,6 @@ export function MessagesPage() {
         }, 100);
         
       } catch (error) {
-        console.error('Failed to send message:', error);
         // Restore message on error
         setNewMessage(messageContent);
       }

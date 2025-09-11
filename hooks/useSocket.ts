@@ -93,7 +93,6 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
       });
 
       currentSocket.on('connect_error', (error: any) => {
-        console.error('WebSocket connection error:', error);
         setIsConnected(false);
       });
 

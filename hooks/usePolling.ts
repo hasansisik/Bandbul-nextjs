@@ -52,7 +52,7 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
             }
           }
         } catch (error) {
-          console.error('Polling error:', error);
+          // Polling error - silently continue
         }
       }, 2000); // Poll every 2 seconds
     };
@@ -70,12 +70,10 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
   // Polling methods (limited functionality compared to WebSocket)
   const joinConversation = useCallback((conversationId: string) => {
     // Polling doesn't support server-side room joining
-    console.log('Polling: Join conversation not directly supported');
   }, []);
 
   const leaveConversation = useCallback((conversationId: string) => {
     // Polling doesn't support server-side room leaving
-    console.log('Polling: Leave conversation not directly supported');
   }, []);
 
   const sendMessage = useCallback(async (conversationId: string, content: string, messageId: string) => {
@@ -98,18 +96,16 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
         throw new Error('Failed to send message');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Error sending message - silently continue
     }
   }, [token]);
 
   const startTyping = useCallback((conversationId: string) => {
     // Typing indicators not supported with polling
-    console.log('Polling: Typing indicators not supported');
   }, []);
 
   const stopTyping = useCallback((conversationId: string) => {
     // Typing indicators not supported with polling
-    console.log('Polling: Typing indicators not supported');
   }, []);
 
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -124,7 +120,7 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
         body: JSON.stringify({ conversationId })
       });
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      // Error marking messages as read - silently continue
     }
   }, [token]);
 
