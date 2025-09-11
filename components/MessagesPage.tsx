@@ -51,6 +51,7 @@ export function MessagesPage() {
   const [isStartingConversation, setIsStartingConversation] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [hasProcessedUrlParams, setHasProcessedUrlParams] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // WebSocket connection
@@ -99,29 +100,45 @@ export function MessagesPage() {
 
   // Handle URL parameters for direct conversation
   useEffect(() => {
+    if (hasProcessedUrlParams) return;
+    
     const recipientId = searchParams.get('recipientId')
     const recipientName = searchParams.get('recipientName')
     const conversationId = searchParams.get('conversationId')
     
+    console.log('URL params:', { recipientId, recipientName, conversationId })
+    console.log('Current state:', { isStartingConversation, uniqueConversations: uniqueConversations.length })
+    
     if (conversationId && !isStartingConversation) {
       // Direct conversation ID provided
+      console.log('Selecting existing conversation:', conversationId)
       setSelectedConversation(conversationId)
-    } else if (recipientId && recipientName && !isStartingConversation && uniqueConversations.length > 0) {
+      setHasProcessedUrlParams(true)
+    } else if (recipientId && recipientName && !isStartingConversation) {
       // Check if conversation already exists in unique conversations
       const existingConversation = uniqueConversations.find(conv => 
         conv.otherParticipant._id === recipientId
       )
       
+      console.log('Existing conversation found:', existingConversation)
+      
       if (existingConversation) {
         // Select existing conversation
+        console.log('Selecting existing conversation:', existingConversation.id)
         setSelectedConversation(existingConversation.id)
+        setHasProcessedUrlParams(true)
       } else {
-        // Start new conversation only if none exists
+        // Start new conversation - don't wait for conversations to load
+        console.log('Starting new conversation with recipientId:', recipientId)
         setIsStartingConversation(true)
+        setHasProcessedUrlParams(true)
         dispatch(startConversation({ recipientId }))
           .unwrap()
-          .then(() => {
+          .then((result) => {
+            console.log('Conversation created successfully:', result)
             setIsStartingConversation(false)
+            // Refresh conversations to get the new one
+            dispatch(getConversations())
           })
           .catch((error) => {
             console.error('Failed to create conversation:', error)
@@ -129,20 +146,21 @@ export function MessagesPage() {
           })
       }
     }
-  }, [searchParams, uniqueConversations, dispatch, isStartingConversation])
+  }, [searchParams, dispatch, isStartingConversation, uniqueConversations, hasProcessedUrlParams])
 
   // Handle conversation creation success
   useEffect(() => {
-    if (isStartingConversation && currentConversation) {
-      setSelectedConversation(currentConversation?.id)
+    if (currentConversation && !selectedConversation && hasProcessedUrlParams) {
+      console.log('Conversation created, selecting:', currentConversation.id)
+      setSelectedConversation(currentConversation.id)
       setIsStartingConversation(false)
       
       // Refresh conversations list to ensure it's up to date
       setTimeout(() => {
         dispatch(getConversations())
-      }, 1000)
+      }, 500)
     }
-  }, [isStartingConversation, currentConversation, dispatch])
+  }, [currentConversation, selectedConversation, dispatch, hasProcessedUrlParams])
 
   // Handle conversation creation error
   useEffect(() => {
