@@ -9,8 +9,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
-import { logout, getAllCategories } from "@/redux/actions/userActions";
-import { useRouter } from "next/navigation";
+import { logout, getAllCategories, loadUser } from "@/redux/actions/userActions";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
 import { useTheme } from "next-themes";
@@ -20,15 +20,23 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { theme } = useTheme();
-  const { isAuthenticated, user, categories } = useAppSelector((state) => state.user);
+  const { isAuthenticated, user, categories, loading: userLoading } = useAppSelector((state) => state.user);
   const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
 
-  // Fetch settings and categories on component mount
+  // Fetch settings, categories and user data on component mount
   useEffect(() => {
     dispatch(getSettings());
     dispatch(getAllCategories({}));
-  }, [dispatch]);
+    
+    // Always try to load user data if token exists
+    const token = localStorage.getItem("accessToken");
+    
+    if (token && (!isAuthenticated || !user)) {
+      dispatch(loadUser());
+    }
+  }, [dispatch, pathname]); // Trigger on every pathname change
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
@@ -224,11 +232,17 @@ const Header = () => {
                     <Link href="/profil">
                       <div className="relative">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors overflow-hidden">
-                          {user?.profile?.picture ? (
-                            <img 
+                          {userLoading ? (
+                            <div className="w-full h-full bg-muted animate-pulse rounded-full" />
+                          ) : user?.profile?.picture ? (
+                            <Image 
                               src={user.profile.picture} 
                               alt="Profile" 
+                              width={32}
+                              height={32}
                               className="w-full h-full object-cover"
+                              priority
+                              unoptimized
                             />
                           ) : (
                             <User className="h-4 w-4 text-primary" />

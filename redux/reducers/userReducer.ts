@@ -628,7 +628,6 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(updateTheme.rejected, (state, action) => {
       // Silent fail - don't show error to user
-      console.warn("Theme update failed:", action.payload);
     })
     // Clear Error
     .addCase(clearError.fulfilled, (state) => {

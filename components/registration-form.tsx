@@ -226,7 +226,7 @@ export function RegistrationForm({
                 </div>
               </div>
 
-              <GoogleAuthButton mode="register" />
+              <GoogleAuthButton mode="register" className="w-full" />
               
               <div className="text-center text-sm">
                 Zaten hesabınız var mı?{" "}

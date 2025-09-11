@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { useSearchParams } from "next/navigation"
-import { getUserListings, createListing, updateListing, deleteListing, getAllCategories, getAllInstruments } from "@/redux/actions/userActions"
+import { getUserListings, createListing, updateListing, deleteListing, getAllCategories, getAllInstruments, loadUser } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
@@ -220,8 +220,15 @@ export function ProfilePage() {
     image: ""
   })
 
-  // Load user listings, categories and instruments on component mount
+  // Load user data, listings, categories and instruments on component mount
   useEffect(() => {
+    // First, try to load user data if not already loaded
+    const token = localStorage.getItem("accessToken")
+    if (token && !user) {
+      dispatch(loadUser())
+    }
+    
+    // Then load other data if user is available
     if (user) {
       dispatch(getUserListings())
       dispatch(getAllCategories({}))
@@ -229,10 +236,6 @@ export function ProfilePage() {
     }
   }, [dispatch, user])
 
-  // Debug: Monitor userListings changes
-  useEffect(() => {
-    console.log("userListings changed:", userListings.length, userListings)
-  }, [userListings])
 
   // Check URL parameters for tab and action
   useEffect(() => {
@@ -422,14 +425,12 @@ export function ProfilePage() {
 
       if (editingListing) {
         // Update existing listing
-        console.log("Updating listing with data:", listingData)
         const result = await dispatch(updateListing({
           id: editingListing._id,
           formData: listingData
         }))
         
         if (updateListing.fulfilled.match(result)) {
-          console.log("Listing updated successfully:", result.payload)
           showMessage('success', "İlan başarıyla güncellendi ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
           dispatch(getUserListings())
@@ -439,13 +440,9 @@ export function ProfilePage() {
         }
       } else {
         // Create new listing
-        console.log("Creating listing with data:", listingData)
         const result = await dispatch(createListing(listingData))
         
         if (createListing.fulfilled.match(result)) {
-          console.log("Listing created successfully:", result.payload)
-          console.log("Current userListings before refresh:", userListings.length)
-          
           showMessage('success', "İlan başarıyla oluşturuldu ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
           dispatch(getUserListings())

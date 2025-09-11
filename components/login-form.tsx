@@ -118,7 +118,7 @@ export function LoginForm({
                 </div>
               </div>
 
-              <GoogleAuthButton mode="login" />
+              <GoogleAuthButton mode="login" className="w-full" />
 
               <div className="text-center text-sm">
                 Hesabınız yok mu?{" "}

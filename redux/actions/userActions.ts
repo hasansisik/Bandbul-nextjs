@@ -201,6 +201,11 @@ export const loadUser = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const token = localStorage.getItem("accessToken");
+      
+      if (!token) {
+        throw new Error("No token found");
+      }
+      
       const { data } = await axios.get(`${server}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -208,7 +213,7 @@ export const loadUser = createAsyncThunk(
       });
       return data.user;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -1069,7 +1074,6 @@ export const updateTheme = createAsyncThunk(
         timeout: 3000, // 3 second timeout
       }
     ).catch((error) => {
-      console.warn("Theme update failed:", error);
     });
     
     // Return immediately

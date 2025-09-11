@@ -343,7 +343,6 @@ export default function ListingsPage() {
             categories={categories.map(cat => cat.name)}
             onCategoriesChange={(newCategories) => {
               // This is now handled by Redux, but keeping for compatibility
-              console.log("Categories changed:", newCategories)
             }}
           />
           

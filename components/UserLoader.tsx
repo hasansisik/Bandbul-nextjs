@@ -8,24 +8,26 @@ import { usePathname } from "next/navigation"
 export function UserLoader() {
   const dispatch = useAppDispatch()
   const pathname = usePathname()
-  const { isAuthenticated } = useAppSelector((state) => state.user)
+  const { isAuthenticated, loading, user } = useAppSelector((state) => state.user)
 
   useEffect(() => {
+    
     // Clear any existing error when on login page
     if (pathname === "/giris") {
       dispatch(clearError())
       return
     }
 
-    // Check if user is already authenticated
-    if (!isAuthenticated) {
-      // Try to load user from localStorage token
-      const token = localStorage.getItem("accessToken")
-      if (token) {
+    // Always try to load user if token exists
+    const token = localStorage.getItem("accessToken")
+    
+    if (token) {
+      // Force load user every time if not authenticated or no user data
+      if (!isAuthenticated || !user) {
         dispatch(loadUser())
       }
     }
-  }, [dispatch, isAuthenticated, pathname])
+  }, [dispatch, pathname, isAuthenticated, user]) // Add dependencies back but keep pathname as primary trigger
 
   // This component doesn't render anything
   return null

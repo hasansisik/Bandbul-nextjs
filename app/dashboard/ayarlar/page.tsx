@@ -332,7 +332,6 @@ export default function SettingsPage() {
           contact: localSettings.contact,
           seo: localSettings.seo
         };
-        console.log('Updating settings with:', updateData);
         await dispatch(updateSettings({ id: settings._id, formData: updateData })).unwrap();
         toast.success('Ayarlar başarıyla güncellendi');
       } else {
@@ -348,7 +347,6 @@ export default function SettingsPage() {
           contact: localSettings.contact,
           seo: localSettings.seo
         };
-        console.log('Creating settings with:', createData);
         await dispatch(createSettings(createData)).unwrap();
         toast.success('Ayarlar başarıyla oluşturuldu');
       }
