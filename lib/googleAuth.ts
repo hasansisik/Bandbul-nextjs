@@ -10,7 +10,6 @@ export interface GoogleUser {
   name: string;
   given_name: string;
   family_name: string;
-  picture: string;
   verified_email: boolean;
 }
 
@@ -65,7 +64,6 @@ export const signInWithGoogle = (): Promise<GoogleUser> => {
             name: payload.name,
             given_name: payload.given_name,
             family_name: payload.family_name,
-            picture: payload.picture,
             verified_email: payload.email_verified,
           };
 

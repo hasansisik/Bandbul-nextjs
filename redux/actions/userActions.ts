@@ -18,7 +18,6 @@ export interface GoogleLoginPayload {
   email: string;
   name: string;
   surname: string;
-  picture?: string;
   googleId: string;
 }
 

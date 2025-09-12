@@ -32,7 +32,6 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         name: payload.name,
         given_name: payload.given_name,
         family_name: payload.family_name,
-        picture: payload.picture,
         verified_email: payload.email_verified,
       }
 
@@ -41,7 +40,6 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         email: googleUser.email,
         name: googleUser.given_name || googleUser.name.split(' ')[0] || 'Google',
         surname: googleUser.family_name || googleUser.name.split(' ').slice(1).join(' ') || 'User',
-        picture: googleUser.picture,
         googleId: googleUser.id,
       }
 

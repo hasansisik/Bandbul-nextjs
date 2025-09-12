@@ -29,6 +29,7 @@ import {
 import { RootState } from "@/redux/store"
 import { useSocket } from "@/hooks/useSocket"
 import { server } from "@/config"
+import { playNotificationSound } from "@/utils/soundNotification"
 
 
 export function MessagesPage() {
@@ -52,38 +53,14 @@ export function MessagesPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [hasProcessedUrlParams, setHasProcessedUrlParams] = useState(false)
+  const [isNavigatingFromListing, setIsNavigatingFromListing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const prevMessageCount = useRef(0)
 
   // WebSocket connection
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
 
-  // Function to play notification sound
-  const playNotificationSound = useCallback(() => {
-    try {
-      // Create a simple notification sound using Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Set frequency for a pleasant notification sound
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-      
-      // Set volume
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
-      // Play the sound
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (error) {
-      console.log('Could not play notification sound:', error);
-    }
-  }, [])
 
   // Function to create title slug for URL (same as in listing detail page)
   const createTitleSlug = useCallback((title: string) => {
@@ -101,21 +78,19 @@ export function MessagesPage() {
   }, [])
   // Handle new message from WebSocket
   const handleNewMessage = useCallback((socketMessage: any) => {
-    // Play notification sound for new messages (only if not from current user)
-    if (socketMessage.senderId !== user?._id) {
-      playNotificationSound();
-    }
-    
     // If it's a message for the current conversation, reload messages
     if (selectedConversation && socketMessage.conversationId === selectedConversation) {
       dispatch(getMessages({ conversationId: selectedConversation }));
-      // No automatic scroll - let user control their own scroll position
+      // Auto scroll to bottom for new messages in current conversation
+      setTimeout(() => {
+        forceScrollToBottom();
+      }, 100);
     }
     
     // Always refresh conversations to update last message and unread counts
     dispatch(getConversations());
     dispatch(getUnreadCount());
-  }, [dispatch, selectedConversation, user?._id, playNotificationSound]);
+  }, [dispatch, selectedConversation]);
 
   const { 
     isConnected, 
@@ -162,6 +137,9 @@ export function MessagesPage() {
       setSelectedConversation(conversationId)
       setHasProcessedUrlParams(true)
     } else if (recipientId && recipientName && !isStartingConversation) {
+      // Set flag to indicate we're navigating from a listing
+      setIsNavigatingFromListing(true)
+      
       // Check if conversation already exists in unique conversations
       const existingConversation = uniqueConversations.find(conv => 
         conv.otherParticipant._id === recipientId
@@ -171,6 +149,7 @@ export function MessagesPage() {
         // Select existing conversation
         setSelectedConversation(existingConversation.id)
         setHasProcessedUrlParams(true)
+        setIsNavigatingFromListing(false)
       } else {
         // Start new conversation - don't wait for conversations to load
         setIsStartingConversation(true)
@@ -182,11 +161,17 @@ export function MessagesPage() {
           .unwrap()
           .then((result) => {
             setIsStartingConversation(false)
+            setIsNavigatingFromListing(false)
+            // Set the conversation immediately after creation
+            if (result && result.id) {
+              setSelectedConversation(result.id)
+            }
             // Refresh conversations to get the new one
             dispatch(getConversations())
           })
           .catch((error) => {
             setIsStartingConversation(false)
+            setIsNavigatingFromListing(false)
           })
       }
     }
@@ -205,6 +190,17 @@ export function MessagesPage() {
     }
   }, [currentConversation, selectedConversation, dispatch, hasProcessedUrlParams])
 
+  // Prevent conversation deselection when conversations are refreshed
+  useEffect(() => {
+    if (selectedConversation && uniqueConversations.length > 0) {
+      const conversationExists = uniqueConversations.find(conv => conv.id === selectedConversation)
+      if (!conversationExists && (hasProcessedUrlParams || isNavigatingFromListing)) {
+        // Don't deselect if we're still processing URL params or navigating from listing
+        return
+      }
+    }
+  }, [selectedConversation, uniqueConversations, hasProcessedUrlParams, isNavigatingFromListing])
+
   // Handle conversation creation error
   useEffect(() => {
     if (isStartingConversation && messagesError) {
@@ -217,6 +213,10 @@ export function MessagesPage() {
     if (selectedConversation) {
       dispatch(getMessages({ conversationId: selectedConversation }))
       dispatch(markAsRead(selectedConversation))
+      // Scroll to bottom when conversation is selected
+      setTimeout(() => {
+        forceScrollToBottom();
+      }, 200);
     }
   }, [selectedConversation, dispatch])
 
@@ -266,7 +266,7 @@ export function MessagesPage() {
         
         // Scroll to bottom after sending message
         setTimeout(() => {
-          scrollToBottom();
+          forceScrollToBottom();
         }, 100);
         
       } catch (error) {
@@ -366,11 +366,15 @@ export function MessagesPage() {
   useEffect(() => {
     const currentMessageCount = uniqueMessages.length;
     if (prevMessageCount.current > 0 && currentMessageCount > prevMessageCount.current) {
-      // New message arrived, play sound
-      playNotificationSound();
+      // Check if the last message is from another user before playing sound
+      const lastMessage = uniqueMessages[uniqueMessages.length - 1];
+      if (lastMessage && lastMessage.senderId !== user?._id) {
+        // New message arrived from another user, play sound
+        playNotificationSound(0.5);
+      }
     }
     prevMessageCount.current = currentMessageCount;
-  }, [uniqueMessages.length, playNotificationSound])
+  }, [uniqueMessages.length, user?._id])
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp)
@@ -386,20 +390,38 @@ export function MessagesPage() {
     }
   }
 
-  // Scroll to bottom function
+  // Scroll to bottom function - only scroll the messages container
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  // Force scroll to bottom function (for immediate scroll) - only scroll the messages container
+  const forceScrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'auto'
+      })
+    }
   }
 
   // Auto scroll to bottom only when user sends a message
   // We'll handle this in handleSendMessage instead
 
-  // Auto scroll to bottom when conversation changes
+  // Auto scroll to bottom when conversation changes or messages change
   useEffect(() => {
     if (selectedConversation) {
-      setTimeout(scrollToBottom, 100) // Small delay to ensure messages are rendered
+      // Use force scroll for immediate positioning
+      setTimeout(() => {
+        forceScrollToBottom();
+      }, 100);
     }
-  }, [selectedConversation])
+  }, [selectedConversation, uniqueMessages.length])
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -601,7 +623,10 @@ export function MessagesPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 scroll-smooth min-h-0">
+                <div 
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 scroll-smooth min-h-0"
+                >
                   {messagesLoading && uniqueMessages.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                       <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -617,27 +642,52 @@ export function MessagesPage() {
                           key={message.id}
                           className={`flex ${message.senderId === user?._id ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.senderId === user?._id
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                            <div className="flex items-center justify-end mt-1 space-x-1">
-                              <span className="text-xs opacity-70">
-                                {message.timestamp}
-                              </span>
-                              {message.senderId === user?._id && (
-                                <div className="flex items-center">
-                                  {message.isRead ? (
-                                    <CheckCheck className="w-3 h-3" />
-                                  ) : (
-                                    <Check className="w-3 h-3" />
-                                  )}
+                          <div className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${message.senderId === user?._id ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            {/* Avatar - only show for other users */}
+                            {message.senderId !== user?._id && (
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mb-1">
+                                {message.sender?.picture ? (
+                                  <img 
+                                    src={message.sender.picture} 
+                                    alt={message.sender.name || 'Kullanıcı'}
+                                    className="w-full h-full object-cover rounded-full"
+                                  />
+                                ) : (
+                                  <User className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Message bubble */}
+                            <div
+                              className={`px-4 py-2 rounded-lg ${
+                                message.senderId === user?._id
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {/* Sender name - only show for other users */}
+                              {message.senderId !== user?._id && message.sender && (
+                                <div className="text-xs font-medium mb-1 opacity-80">
+                                  {message.sender.name} {message.sender.surname}
                                 </div>
                               )}
+                              
+                              <p className="text-sm">{message.content}</p>
+                              <div className="flex items-center justify-end mt-1 space-x-1">
+                                <span className="text-xs opacity-70">
+                                  {message.timestamp}
+                                </span>
+                                {message.senderId === user?._id && (
+                                  <div className="flex items-center">
+                                    {message.isRead ? (
+                                      <CheckCheck className="w-3 h-3" />
+                                    ) : (
+                                      <Check className="w-3 h-3" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -646,10 +696,15 @@ export function MessagesPage() {
                       {/* Typing Indicator */}
                       {typingUsers.length > 0 && (
                         <div className="flex justify-start">
-                          <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
-                            <p className="text-sm">
-                              {typingUsers.join(', ')} yazıyor...
-                            </p>
+                          <div className="flex items-end space-x-2">
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mb-1">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
+                              <p className="text-sm">
+                                {typingUsers.join(', ')} yazıyor...
+                              </p>
+                            </div>
                           </div>
                         </div>
                       )}

@@ -12,9 +12,11 @@ import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { logout, getAllCategories, loadUser, getUnreadCount } from "@/redux/actions/userActions";
 import { getNotificationStats } from "@/redux/actions/notificationActions";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
 import { useTheme } from "next-themes";
+import { useSocket } from "@/hooks/useSocket";
+import { playNotificationSound } from "@/utils/soundNotification";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,6 +28,47 @@ const Header = () => {
   const { isAuthenticated, user, categories, loading: userLoading, unreadCount } = useAppSelector((state) => state.user);
   const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
   const { stats: notificationStats, loading: notificationLoading } = useAppSelector((state) => state.notification);
+  
+  // Sound notification functionality
+  const lastMessageIdRef = useRef<string | null>(null);
+  const lastNotificationIdRef = useRef<string | null>(null);
+
+  // Handle new message from WebSocket
+  const handleNewMessage = useCallback((socketMessage: any) => {
+    // Only play sound for new messages (not from current user)
+    if (socketMessage.senderId !== user?._id) {
+      const messageId = socketMessage.id || socketMessage._id;
+      
+      // Check if this is a new message (not already processed)
+      if (messageId && messageId !== lastMessageIdRef.current) {
+        lastMessageIdRef.current = messageId;
+      }
+    }
+    
+    // Refresh message count
+    dispatch(getUnreadCount());
+  }, [dispatch, user?._id]);
+
+  // Handle new notification from WebSocket
+  const handleNewNotification = useCallback((notification: any) => {
+    const notificationId = notification.id || notification._id;
+    
+    // Check if this is a new notification (not already processed)
+    if (notificationId && notificationId !== lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = notificationId;
+    }
+    
+    // Refresh notification count
+    dispatch(getNotificationStats());
+  }, [dispatch]);
+
+  // WebSocket connection for real-time updates
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const { isConnected } = useSocket({ 
+    token, 
+    userId: user?._id,
+    onNewMessage: handleNewMessage
+  });
 
   // Fetch settings, categories and user data on component mount
   useEffect(() => {
@@ -40,21 +83,48 @@ const Header = () => {
     }
   }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
 
+  // Track previous counts for sound notifications
+  const prevMessageCountRef = useRef<number>(0);
+  const prevNotificationCountRef = useRef<number>(0);
+
   // Fetch counters when user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getNotificationStats());
       dispatch(getUnreadCount());
       
-      // Set up polling for counters every 30 seconds
+      // Set up polling for counters every 5 seconds for real-time updates
       const interval = setInterval(() => {
         dispatch(getNotificationStats());
         dispatch(getUnreadCount());
-      }, 30000);
+      }, 5000);
       
       return () => clearInterval(interval);
     }
   }, [dispatch, isAuthenticated]);
+
+  // Play sound when message count increases
+  useEffect(() => {
+    if (isAuthenticated && unreadCount !== undefined) {
+      if (prevMessageCountRef.current >= 0 && unreadCount > prevMessageCountRef.current) {
+        // Message count increased, play sound
+        console.log('Message count increased:', prevMessageCountRef.current, '->', unreadCount);
+        playNotificationSound(0.5);
+      }
+      prevMessageCountRef.current = unreadCount;
+    }
+  }, [unreadCount, isAuthenticated]);
+
+  // Track notification count (no sound)
+  useEffect(() => {
+    if (isAuthenticated && notificationStats?.unread !== undefined) {
+      if (prevNotificationCountRef.current >= 0 && notificationStats.unread > prevNotificationCountRef.current) {
+        // Notification count increased, but no sound
+        console.log('Notification count increased:', prevNotificationCountRef.current, '->', notificationStats.unread);
+      }
+      prevNotificationCountRef.current = notificationStats.unread;
+    }
+  }, [notificationStats?.unread, isAuthenticated]);
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
