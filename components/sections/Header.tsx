@@ -118,7 +118,7 @@ const Header = () => {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo and Search */}
-            <div className="flex items-center space-x-4 flex-1">
+            <div className="flex items-center space-x-2 lg:space-x-4 flex-1 min-w-0">
               <div className="flex-shrink-0">
                 <Link href="/">
                   <Image
@@ -137,7 +137,7 @@ const Header = () => {
               </div>
               
               {/* Search Bar - Close to Logo */}
-              <div className="hidden md:block relative max-w-md w-full">
+              <div className="hidden lg:block relative max-w-md w-full">
                 <Input
                   placeholder="Hangi müzik hizmetini arıyorsunuz?"
                   value={searchQuery}
@@ -167,8 +167,8 @@ const Header = () => {
                 </div>
               </div>
 
-              {/* İlan Ver Button */}
-              <div className="hidden md:block">
+              {/* İlan Ver Button - Only on large screens */}
+              <div className="hidden lg:block flex-shrink-0">
                 <Button
                   onClick={() => {
                     if (isAuthenticated) {
@@ -186,8 +186,8 @@ const Header = () => {
               </div>
             </div>
 
-            {/* Desktop Content - Center */}
-            <div className="hidden md:flex items-center flex-1 justify-center">
+            {/* Desktop Content - Center - Only on large screens */}
+            <div className="hidden lg:flex items-center flex-1 justify-center">
               {/* Ana Menü */}
               <nav className="flex items-center space-x-6">
                 {settingsLoading ? (
@@ -212,9 +212,9 @@ const Header = () => {
             </div>
 
             {/* Right Side Actions */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
-              {/* Desktop Actions */}
-              <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
+              {/* Desktop Actions - Only on large screens */}
+              <div className="hidden lg:flex items-center space-x-4">
                 <ThemeToggle />
                 
                 {isAuthenticated ? (
@@ -271,8 +271,8 @@ const Header = () => {
                 )}
               </div>
 
-              {/* Mobile Actions */}
-              <div className="md:hidden flex items-center space-x-2">
+              {/* Mobile/Tablet Actions - Show on screens smaller than lg */}
+              <div className="lg:hidden flex items-center space-x-2">
                 <ThemeToggle />
                 <Button
                   variant="ghost"
@@ -288,8 +288,8 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Bottom Navigation - Categories */}
-      <div className="hidden md:block">
+      {/* Bottom Navigation - Categories - Only on large screens */}
+      <div className="hidden lg:block">
         <div className="container mx-auto px-4">
           <nav className="flex items-center space-x-8 py-3">
             {settingsLoading ? (
@@ -314,9 +314,9 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile/Tablet Menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur">
+        <div className="lg:hidden border-t border-border/50 bg-background/95 backdrop-blur">
           <div className="container mx-auto px-4 py-4">
             {/* Mobile Search */}
             <div className="mb-4">
