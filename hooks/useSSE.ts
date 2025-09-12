@@ -124,21 +124,6 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
     // Typing indicators not supported with SSE
   }, []);
 
-  const markAsRead = useCallback(async (conversationId: string) => {
-    // Mark as read via API
-    try {
-      await fetch(`${server}/messages/mark-read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ conversationId })
-      });
-    } catch (error) {
-      // Error marking messages as read - silently continue
-    }
-  }, [token]);
 
   return {
     socket: null, // No socket object for SSE
@@ -148,7 +133,6 @@ export const useSSE = ({ token, userId, onNewMessage }: UseSSEProps) => {
     leaveConversation,
     sendMessage,
     startTyping,
-    stopTyping,
-    markAsRead
+    stopTyping
   };
 };

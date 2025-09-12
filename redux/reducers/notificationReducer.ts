@@ -2,7 +2,6 @@ import { createReducer } from "@reduxjs/toolkit";
 import {
   getUserNotifications,
   getNotificationById,
-  markAsRead,
   markAllAsRead,
   deleteNotification,
   getNotificationStats,
@@ -62,27 +61,6 @@ export const notificationReducer = createReducer(initialState, (builder) => {
       state.error = null;
     })
     .addCase(getNotificationById.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    })
-    // Mark As Read
-    .addCase(markAsRead.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    })
-    .addCase(markAsRead.fulfilled, (state, action) => {
-      state.loading = false;
-      const index = state.notifications.findIndex(notification => notification._id === action.payload.notification._id);
-      if (index !== -1) {
-        state.notifications[index] = action.payload.notification;
-      }
-      if (state.currentNotification && state.currentNotification._id === action.payload.notification._id) {
-        state.currentNotification = action.payload.notification;
-      }
-      state.message = action.payload.message;
-      state.error = null;
-    })
-    .addCase(markAsRead.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     })

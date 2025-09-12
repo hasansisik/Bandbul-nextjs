@@ -33,7 +33,6 @@ import {
   getMessages,
   sendMessage,
   startConversation,
-  markAsRead,
   getUnreadCount,
   getAllInstruments,
   updateTheme,
@@ -616,27 +615,6 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(startConversation.rejected, (state, action) => {
       state.messagesLoading = false;
-      state.messagesError = action.payload as string;
-    })
-    // Mark As Read
-    .addCase(markAsRead.pending, (state) => {
-      // No loading state needed for this action
-    })
-    .addCase(markAsRead.fulfilled, (state, action) => {
-      // Update messages as read
-      state.currentMessages = state.currentMessages.map(msg => ({
-        ...msg,
-        isRead: true
-      }));
-      // Update conversation unread count
-      const conversationIndex = state.conversations.findIndex(
-        conv => conv.id === state.currentConversation?._id
-      );
-      if (conversationIndex !== -1) {
-        state.conversations[conversationIndex].unreadCount = 0;
-      }
-    })
-    .addCase(markAsRead.rejected, (state, action) => {
       state.messagesError = action.payload as string;
     })
     // Get Unread Count

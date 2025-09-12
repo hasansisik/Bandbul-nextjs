@@ -22,7 +22,6 @@ import {
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { 
   getUserNotifications, 
-  markAsRead, 
   markAllAsRead, 
   deleteNotification,
   getNotificationStats 
@@ -47,9 +46,6 @@ export function NotificationsPage() {
 
   const unreadCount = stats?.unread || 0
 
-  const handleMarkAsRead = (id: string) => {
-    dispatch(markAsRead(id))
-  }
 
   const handleMarkAllAsRead = () => {
     dispatch(markAllAsRead())
@@ -293,16 +289,6 @@ export function NotificationsPage() {
                         </div>
                         
                         <div className="flex items-center space-x-1 ml-4">
-                          {!notification.isRead && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkAsRead(notification._id)}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="sm"

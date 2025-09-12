@@ -23,7 +23,6 @@ import {
   getConversations, 
   getMessages, 
   sendMessage, 
-  markAsRead,
   getUnreadCount,
   startConversation,
   clearError
@@ -106,7 +105,6 @@ export function MessagesPage() {
     sendMessage: sendSocketMessage, 
     startTyping, 
     stopTyping, 
-    markAsRead: markAsReadSocket,
     isUserOnline 
   } = useSocket({ 
     token, 
@@ -238,7 +236,6 @@ export function MessagesPage() {
   useEffect(() => {
     if (selectedConversation) {
       dispatch(getMessages({ conversationId: selectedConversation }))
-      dispatch(markAsRead(selectedConversation))
       // Clear any previous errors when selecting conversation
       if (messagesError) {
         dispatch(clearError())
@@ -253,7 +250,6 @@ export function MessagesPage() {
   // Handle socket connection for selected conversation
   useEffect(() => {
     if (selectedConversation && isConnected) {
-      markAsReadSocket(selectedConversation)
       joinConversation(selectedConversation)
     }
     
@@ -262,7 +258,7 @@ export function MessagesPage() {
         leaveConversation(selectedConversation)
       }
     }
-  }, [selectedConversation, isConnected, joinConversation, leaveConversation, markAsReadSocket])
+  }, [selectedConversation, isConnected, joinConversation, leaveConversation])
 
   // Close emoji picker when clicking outside
   useEffect(() => {

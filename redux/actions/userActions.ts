@@ -1017,31 +1017,6 @@ export const startConversation = createAsyncThunk(
   }
 );
 
-export const markAsRead = createAsyncThunk(
-  "user/markAsRead",
-  async (conversationId: string, thunkAPI) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.patch(
-        `${server}/messages/conversations/${conversationId}/read`,
-        {},
-        config
-      );
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-      );
-    }
-  }
-);
 
 export const getUnreadCount = createAsyncThunk(
   "user/getUnreadCount",

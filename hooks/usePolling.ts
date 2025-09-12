@@ -108,21 +108,6 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
     // Typing indicators not supported with polling
   }, []);
 
-  const markAsRead = useCallback(async (conversationId: string) => {
-    // Mark as read via API
-    try {
-      await fetch(`${server}/messages/mark-read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ conversationId })
-      });
-    } catch (error) {
-      // Error marking messages as read - silently continue
-    }
-  }, [token]);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.includes(userId);
@@ -137,7 +122,6 @@ export const usePolling = ({ token, userId, onNewMessage }: UsePollingProps) => 
     sendMessage,
     startTyping,
     stopTyping,
-    markAsRead,
     isUserOnline
   };
 };

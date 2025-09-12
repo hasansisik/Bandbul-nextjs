@@ -179,11 +179,6 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
     }
   }, []);
 
-  const markAsRead = useCallback((conversationId: string) => {
-    if (!isProduction && socketRef.current && socketRef.current.connected && conversationId) {
-      socketRef.current.emit('mark_as_read', { conversationId });
-    }
-  }, []);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.includes(userId);
@@ -206,7 +201,6 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
     sendMessage,
     startTyping,
     stopTyping,
-    markAsRead,
     isUserOnline
   };
 };
