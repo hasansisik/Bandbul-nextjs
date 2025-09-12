@@ -38,8 +38,12 @@ export function NotificationsPage() {
   // Load notifications on component mount
   useEffect(() => {
     dispatch(getUserNotifications({ page: currentPage, limit: 20 }))
-    dispatch(getNotificationStats())
   }, [dispatch, currentPage])
+
+  // Fetch stats only once when component mounts
+  useEffect(() => {
+    dispatch(getNotificationStats())
+  }, [dispatch])
 
   const unreadCount = stats?.unread || 0
 

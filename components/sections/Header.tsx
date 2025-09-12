@@ -93,13 +93,49 @@ const Header = () => {
       dispatch(getNotificationStats());
       dispatch(getUnreadCount());
       
-      // Set up polling for counters every 5 seconds for real-time updates
-      const interval = setInterval(() => {
-        dispatch(getNotificationStats());
-        dispatch(getUnreadCount());
-      }, 5000);
+      // Set up smart polling for counters - only when page is visible and user is active
+      let interval: NodeJS.Timeout | null = null;
       
-      return () => clearInterval(interval);
+      const startPolling = () => {
+        if (interval) clearInterval(interval);
+        interval = setInterval(() => {
+          // Only poll if page is visible and user is authenticated
+          if (document.visibilityState === 'visible' && isAuthenticated) {
+            dispatch(getNotificationStats());
+            dispatch(getUnreadCount());
+          }
+        }, 30000); // 30 seconds
+      };
+      
+      const stopPolling = () => {
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      };
+      
+      // Start polling when page becomes visible
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          // Immediately fetch when page becomes visible
+          dispatch(getNotificationStats());
+          dispatch(getUnreadCount());
+          startPolling();
+        } else {
+          stopPolling();
+        }
+      };
+      
+      // Start initial polling
+      startPolling();
+      
+      // Listen for visibility changes
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        stopPolling();
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
   }, [dispatch, isAuthenticated]);
 

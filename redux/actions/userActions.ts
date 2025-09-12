@@ -135,6 +135,7 @@ export interface Conversation {
     surname: string;
     picture?: string;
   };
+  conversationKey?: string;
 }
 
 export const register = createAsyncThunk(

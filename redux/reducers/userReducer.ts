@@ -545,6 +545,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(getConversations.fulfilled, (state, action) => {
       state.messagesLoading = false;
       state.conversations = action.payload.conversations;
+      state.messagesError = null; // Clear any previous errors
     })
     .addCase(getConversations.rejected, (state, action) => {
       state.messagesLoading = false;
@@ -558,6 +559,7 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.messagesLoading = false;
       state.currentMessages = action.payload.messages;
       state.currentConversation = action.payload.conversation;
+      state.messagesError = null; // Clear any previous errors
     })
     .addCase(getMessages.rejected, (state, action) => {
       state.messagesLoading = false;
@@ -594,7 +596,21 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(startConversation.fulfilled, (state, action) => {
       state.messagesLoading = false;
-      state.conversations.unshift(action.payload.conversation);
+      state.messagesError = null; // Clear any previous errors
+      
+      // Check if conversation already exists before adding
+      const existingIndex = state.conversations.findIndex(
+        conv => conv.id === action.payload.conversation.id
+      );
+      
+      if (existingIndex === -1) {
+        // Add new conversation only if it doesn't exist
+        state.conversations.unshift(action.payload.conversation);
+      } else {
+        // Update existing conversation
+        state.conversations[existingIndex] = action.payload.conversation;
+      }
+      
       state.currentConversation = action.payload.conversation;
       state.currentMessages = [];
     })
