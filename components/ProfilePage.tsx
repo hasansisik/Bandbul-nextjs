@@ -176,6 +176,8 @@ export function ProfilePage() {
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false)
   const [selectedRejectedListing, setSelectedRejectedListing] = useState<any>(null)
   const [listingRulesDialogOpen, setListingRulesDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('all')
+  const [showFormTimer, setShowFormTimer] = useState<NodeJS.Timeout | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const dispatch = useAppDispatch()
@@ -184,6 +186,12 @@ export function ProfilePage() {
   // Function to show operation messages and auto-clear them
   const showMessage = (type: 'success' | 'error' | 'info', text: string) => {
     setOperationMessage({ type, text })
+    
+    // Scroll to top when error occurs
+    if (type === 'error') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    
     // Auto-clear message after 5 seconds
     setTimeout(() => {
       setOperationMessage(null)
@@ -247,18 +255,42 @@ export function ProfilePage() {
     }
   }, [searchParams])
 
+  // Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (showFormTimer) {
+        clearTimeout(showFormTimer)
+      }
+    }
+  }, [showFormTimer])
+
   const handleEditProfile = () => {
     // Navigate to profile editing page
     window.location.href = '/profil-duzenle'
   }
 
   const handleCreateListingClick = () => {
-    setListingRulesDialogOpen(true)
+    setShowCreateForm(true)
+    // Start timer to show modal after 3 seconds
+    const timer = setTimeout(() => {
+      setListingRulesDialogOpen(true)
+    }, 3000)
+    setShowFormTimer(timer)
   }
 
   const handleApproveRules = () => {
     setListingRulesDialogOpen(false)
-    setShowCreateForm(true)
+  }
+
+  const handleCloseRules = () => {
+    setListingRulesDialogOpen(false)
+    // Close form when modal is cancelled
+    setShowCreateForm(false)
+    // Clear timer if it exists
+    if (showFormTimer) {
+      clearTimeout(showFormTimer)
+      setShowFormTimer(null)
+    }
   }
 
   const handleSaveProfile = () => {
@@ -308,6 +340,11 @@ export function ProfilePage() {
   }
 
   const handleCancelEdit = () => {
+    // Clear timer if it exists
+    if (showFormTimer) {
+      clearTimeout(showFormTimer)
+      setShowFormTimer(null)
+    }
     setEditingListing(null)
     setNewListing({
       title: "",
@@ -497,6 +534,35 @@ export function ProfilePage() {
     }
   }
 
+  // Filter listings based on active tab
+  const getFilteredListings = () => {
+    if (activeTab === 'all') {
+      return userListings
+    }
+    return userListings.filter(listing => {
+      switch (activeTab) {
+        case 'archived':
+          return listing.status === 'archived'
+        case 'pending':
+          return listing.status === 'pending'
+        case 'active':
+          return listing.status === 'active'
+        default:
+          return true
+      }
+    })
+  }
+
+  // Get count for each tab
+  const getTabCounts = () => {
+    return {
+      all: userListings.length,
+      archived: userListings.filter(l => l.status === 'archived').length,
+      pending: userListings.filter(l => l.status === 'pending').length,
+      active: userListings.filter(l => l.status === 'active').length
+    }
+  }
+
   // Show loading skeleton if user data is not loaded yet
   if (loading || !user || !userData) {
     return (
@@ -528,13 +594,14 @@ export function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Modern Header */}
+      {/* Modern Header - Responsive */}
       <div className="bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Profile Info */}
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                   {userData.avatar ? (
                     <img 
                       src={userData.avatar} 
@@ -542,47 +609,58 @@ export function ProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-foreground text-xl font-bold">
+                    <span className="text-foreground text-lg sm:text-xl font-bold">
                       {userData.firstName[0]}{userData.lastName[0]}
                     </span>
                   )}
                 </div>
                 {userData.isOnline && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-background rounded-full"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 border-2 border-background rounded-full"></div>
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground">
                   {userData.firstName} {userData.lastName}
                 </h1>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
                   <span>•</span>
                   <span>{userData.location}</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            
+            {/* Action Buttons - Responsive */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex gap-2 sm:gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-border hover:bg-accent flex-1 sm:flex-none text-xs sm:text-sm"
+                  onClick={() => window.location.href = '/mesajlar'}
+                >
+                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Mesajlar</span>
+                  <span className="sm:hidden">Mesaj</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-border hover:bg-accent flex-1 sm:flex-none text-xs sm:text-sm"
+                  onClick={() => window.location.href = '/bildirimler'}
+                >
+                  <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Bildirimler</span>
+                  <span className="sm:hidden">Bildirim</span>
+                </Button>
+              </div>
               <Button 
-                variant="outline" 
                 size="sm" 
-                className="border-border hover:bg-accent"
-                onClick={() => window.location.href = '/mesajlar'}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm"
+                onClick={handleEditProfile}
               >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Mesajlar
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-border hover:bg-accent"
-                onClick={() => window.location.href = '/bildirimler'}
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Bildirimler
-              </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={handleEditProfile}>
-                <Settings className="w-4 h-4 mr-2" />
-                Profil Düzenle
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Profil Düzenle</span>
+                <span className="sm:hidden">Profil Düzenle</span>
               </Button>
             </div>
           </div>
@@ -591,7 +669,7 @@ export function ProfilePage() {
 
       {/* Operation Messages Display */}
       {operationMessage && (
-        <div className="container mx-auto px-4 max-w-7xl mb-4">
+        <div className="container mx-auto px-4 max-w-7xl mt-6 mb-4">
           <div className={`p-4 rounded-lg border ${
             operationMessage.type === 'success' 
               ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
@@ -678,6 +756,7 @@ export function ProfilePage() {
 
             {/* Listings Section */}
             <div className="space-y-6">
+              {/* Header with button - always visible */}
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
                 <Button onClick={editingListing ? () => setShowCreateForm(!showCreateForm) : handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -685,12 +764,74 @@ export function ProfilePage() {
                   {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
                 </Button>
               </div>
+
+              {/* Status Tabs - Show above form when form is closed, below form when form is open */}
+              {!showCreateForm && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setActiveTab('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'all'
+                        ? 'bg-foreground text-background'
+                        : 'bg-background text-foreground border border-border hover:bg-accent'
+                    }`}
+                  >
+                    Tümü ({getTabCounts().all})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('active')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'active'
+                        ? 'bg-foreground text-background'
+                        : 'bg-background text-foreground border border-border hover:bg-accent'
+                    }`}
+                  >
+                    Yayında ({getTabCounts().active})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('pending')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'pending'
+                        ? 'bg-foreground text-background'
+                        : 'bg-background text-foreground border border-border hover:bg-accent'
+                    }`}
+                  >
+                    Beklemede ({getTabCounts().pending})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('archived')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'archived'
+                        ? 'bg-foreground text-background'
+                        : 'bg-background text-foreground border border-border hover:bg-accent'
+                    }`}
+                  >
+                    Arşiv ({getTabCounts().archived})
+                  </button>
+                </div>
+              )}
               
-              {/* Create Listing Form */}
+              {/* Create Listing Form - Shows when form is open */}
               {showCreateForm && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Ana İçerik Alanı - Sol Taraf */}
-                  <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6">
+                  {/* Form Header with Close Button */}
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
+                    </h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleCancelEdit}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Ana İçerik Alanı - Sol Taraf */}
+                    <div className="lg:col-span-2 space-y-6">
                     {/* Başlık */}
                     <Card>
                       <CardHeader>
@@ -786,8 +927,8 @@ export function ProfilePage() {
                     </Card>
                   </div>
 
-                  {/* Sağ Sidebar */}
-                  <div className="space-y-6">
+                  {/* Sağ Sidebar - Desktop Order */}
+                  <div className="hidden lg:block space-y-6">
                     {/* Yayınla/Kaydet */}
                     <Card>
                       <CardHeader>
@@ -896,6 +1037,172 @@ export function ProfilePage() {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* Mobile Order - Genel Ayarlar first, then Yayınla */}
+                  <div className="lg:hidden space-y-6">
+                    {/* Genel Ayarlar - Mobile First */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Genel Ayarlar</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Kategori */}
+                        <div className="space-y-2">
+                          <Label htmlFor="category">Kategori *</Label>
+                          {categoriesLoading ? (
+                            <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
+                          ) : (
+                            <Select value={newListing.category} onValueChange={(value) => setNewListing({...newListing, category: value})}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Kategori seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories
+                                  .filter(cat => cat.active)
+                                  .map((category) => (
+                                    <SelectItem key={category._id} value={category._id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+
+                        {/* Enstrüman */}
+                        <div className="space-y-2">
+                          <Label htmlFor="instrument">Enstrüman</Label>
+                          {instrumentsLoading ? (
+                            <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
+                          ) : (
+                            <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Enstrüman seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {instruments
+                                  .filter(inst => inst.active)
+                                  .map((instrument) => (
+                                    <SelectItem key={instrument._id} value={instrument._id}>
+                                      {instrument.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+
+                        {/* Deneyim Seviyesi */}
+                        <div className="space-y-2">
+                          <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                          <Select value={newListing.experience} onValueChange={(value) => setNewListing({...newListing, experience: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Deneyim seviyesi seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {experienceLevels.map((level) => (
+                                <SelectItem key={level} value={level}>
+                                  {level}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Şehir */}
+                        <div className="space-y-2">
+                          <Label htmlFor="location" className="flex items-center gap-2">
+                            Şehir
+                          </Label>
+                          <Select value={newListing.location} onValueChange={(value) => setNewListing({...newListing, location: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Şehir seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {turkishCities.map((city) => (
+                                <SelectItem key={city} value={city}>
+                                  {city}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Yayınla/Kaydet - Mobile Second */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex gap-2">
+                          <Button onClick={handleCreateListing} className="flex-1">
+                            <Save className="h-4 w-4 mr-2" />
+                            {editingListing ? "Güncelle" : "İlan Oluştur"}
+                          </Button>
+                          <Button variant="outline" onClick={handleCancelEdit}>
+                            İptal
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+              )}
+
+              {/* Separator between form and listings */}
+              {showCreateForm && (
+                <Separator className="my-6" />
+              )}
+
+              {/* İlanlarım title and Status Tabs - Show below form when form is open */}
+              {showCreateForm && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setActiveTab('all')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === 'all'
+                          ? 'bg-foreground text-background'
+                          : 'bg-background text-foreground border border-border hover:bg-accent'
+                      }`}
+                    >
+                      Tümü ({getTabCounts().all})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('active')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === 'active'
+                          ? 'bg-foreground text-background'
+                          : 'bg-background text-foreground border border-border hover:bg-accent'
+                      }`}
+                    >
+                      Yayında ({getTabCounts().active})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('pending')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === 'pending'
+                          ? 'bg-foreground text-background'
+                          : 'bg-background text-foreground border border-border hover:bg-accent'
+                      }`}
+                    >
+                      Beklemede ({getTabCounts().pending})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('archived')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === 'archived'
+                          ? 'bg-foreground text-background'
+                          : 'bg-background text-foreground border border-border hover:bg-accent'
+                      }`}
+                    >
+                      Arşiv ({getTabCounts().archived})
+                    </button>
+                  </div>
                 </div>
               )}
               
@@ -906,8 +1213,8 @@ export function ProfilePage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                     <p className="mt-2 text-muted-foreground">İlanlar yükleniyor...</p>
                   </div>
-                ) : userListings.length > 0 ? (
-                  userListings.map((listing) => (
+                ) : getFilteredListings().length > 0 ? (
+                  getFilteredListings().map((listing) => (
                     <div key={listing._id} className={`bg-card rounded-xl border-2 ${getStatusBorderColor(listing)} shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group`}>
                       <div className="relative">
                         <img 
@@ -1083,11 +1390,21 @@ export function ProfilePage() {
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                       <Briefcase className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold text-card-foreground mb-2">Henüz hiç ilanınız yok</h3>
-                    <p className="text-muted-foreground mb-6">İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun.</p>
+                    <h3 className="text-lg font-semibold text-card-foreground mb-2">
+                      {userListings.length === 0 
+                        ? "Henüz hiç ilanınız yok" 
+                        : `Bu kategoride ilan bulunmuyor`
+                      }
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      {userListings.length === 0 
+                        ? "İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun."
+                        : "Farklı bir kategori seçin veya yeni ilan oluşturun."
+                      }
+                    </p>
                     <Button onClick={handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                       <Plus className="w-4 h-4 mr-2" />
-                      İlk İlanınızı Oluşturun
+                      {userListings.length === 0 ? "İlk İlanınızı Oluşturun" : "Yeni İlan Oluştur"}
                     </Button>
                   </div>
                 )}
@@ -1107,7 +1424,7 @@ export function ProfilePage() {
       {/* Listing Rules Dialog */}
       <ListingRulesDialog
         isOpen={listingRulesDialogOpen}
-        onClose={() => setListingRulesDialogOpen(false)}
+        onClose={handleCloseRules}
         onApprove={handleApproveRules}
       />
     </div>
