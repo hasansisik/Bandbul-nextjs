@@ -28,6 +28,7 @@ import {
   toggleCategoryStatus,
   getAllUsers,
   deleteUser,
+  updateUserRole,
   getConversations,
   getMessages,
   sendMessage,
@@ -518,6 +519,22 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.message = action.payload.message;
     })
     .addCase(deleteUser.rejected, (state, action) => {
+      state.usersLoading = false;
+      state.usersError = action.payload as string;
+    })
+    // Update User Role
+    .addCase(updateUserRole.pending, (state) => {
+      state.usersLoading = true;
+    })
+    .addCase(updateUserRole.fulfilled, (state, action) => {
+      state.usersLoading = false;
+      const index = state.allUsers.findIndex(user => user._id === action.payload.id);
+      if (index !== -1) {
+        state.allUsers[index].role = action.payload.role;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(updateUserRole.rejected, (state, action) => {
       state.usersLoading = false;
       state.usersError = action.payload as string;
     })

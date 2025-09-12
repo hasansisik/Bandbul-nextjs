@@ -101,7 +101,7 @@ export default function ListingDetailPage() {
         : 'Bilinmeyen';
       
       if (recipientId && recipientId !== user?._id) {
-        router.push(`/mesajlar?recipientId=${recipientId}&recipientName=${encodeURIComponent(recipientName)}`);
+        router.push(`/mesajlar?recipientId=${recipientId}&recipientName=${encodeURIComponent(recipientName)}&listingId=${listing._id}&listingTitle=${encodeURIComponent(listing.title)}`);
       }
     }
   };

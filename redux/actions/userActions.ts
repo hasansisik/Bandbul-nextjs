@@ -99,6 +99,7 @@ export interface SendMessagePayload {
 
 export interface StartConversationPayload {
   recipientId: string;
+  listingId?: string;
 }
 
 export interface Message {
@@ -123,6 +124,12 @@ export interface Conversation {
   timestamp: string;
   unreadCount: number;
   isOnline: boolean;
+  listing?: {
+    _id: string;
+    title: string;
+    image: string;
+    category: string;
+  } | null;
   otherParticipant: {
     _id: string;
     name: string;
@@ -871,6 +878,33 @@ export const deleteUser = createAsyncThunk(
         config
       );
       return { id, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const updateUserRole = createAsyncThunk(
+  "user/updateUserRole",
+  async ({ id, role }: { id: string; role: string }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/auth/users/${id}/role`,
+        { role },
+        config
+      );
+      return { id, role, message: response.data.message };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message

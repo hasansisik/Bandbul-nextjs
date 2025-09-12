@@ -53,20 +53,69 @@ export function MessagesPage() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [hasProcessedUrlParams, setHasProcessedUrlParams] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const prevMessageCount = useRef(0)
 
   // WebSocket connection
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+
+  // Function to play notification sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      // Create a simple notification sound using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Set frequency for a pleasant notification sound
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+      
+      // Set volume
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      // Play the sound
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
+    }
+  }, [])
+
+  // Function to create title slug for URL (same as in listing detail page)
+  const createTitleSlug = useCallback((title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  }, [])
   // Handle new message from WebSocket
   const handleNewMessage = useCallback((socketMessage: any) => {
+    // Play notification sound for new messages (only if not from current user)
+    if (socketMessage.senderId !== user?._id) {
+      playNotificationSound();
+    }
+    
     // If it's a message for the current conversation, reload messages
     if (selectedConversation && socketMessage.conversationId === selectedConversation) {
       dispatch(getMessages({ conversationId: selectedConversation }));
       // No automatic scroll - let user control their own scroll position
     }
     
-    // Always refresh conversations to update last message
+    // Always refresh conversations to update last message and unread counts
     dispatch(getConversations());
-  }, [dispatch, selectedConversation]);
+    dispatch(getUnreadCount());
+  }, [dispatch, selectedConversation, user?._id, playNotificationSound]);
 
   const { 
     isConnected, 
@@ -105,6 +154,8 @@ export function MessagesPage() {
     const recipientId = searchParams.get('recipientId')
     const recipientName = searchParams.get('recipientName')
     const conversationId = searchParams.get('conversationId')
+    const listingId = searchParams.get('listingId')
+    const listingTitle = searchParams.get('listingTitle')
     
     if (conversationId && !isStartingConversation) {
       // Direct conversation ID provided
@@ -124,7 +175,10 @@ export function MessagesPage() {
         // Start new conversation - don't wait for conversations to load
         setIsStartingConversation(true)
         setHasProcessedUrlParams(true)
-        dispatch(startConversation({ recipientId }))
+        dispatch(startConversation({ 
+          recipientId, 
+          listingId: listingId || undefined 
+        }))
           .unwrap()
           .then((result) => {
             setIsStartingConversation(false)
@@ -308,6 +362,16 @@ export function MessagesPage() {
     index === self.findIndex(m => m.id === message.id)
   )
 
+  // Track message count changes for sound notifications
+  useEffect(() => {
+    const currentMessageCount = uniqueMessages.length;
+    if (prevMessageCount.current > 0 && currentMessageCount > prevMessageCount.current) {
+      // New message arrived, play sound
+      playNotificationSound();
+    }
+    prevMessageCount.current = currentMessageCount;
+  }, [uniqueMessages.length, playNotificationSound])
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -433,6 +497,27 @@ export function MessagesPage() {
                         <p className="text-sm text-muted-foreground truncate">
                           {conversation.lastMessage}
                         </p>
+                        {conversation.listing && (
+                          <div className="flex items-center space-x-2 mt-1 cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const slug = createTitleSlug(conversation.listing.title);
+                                 window.open(`/ilan-detay/${slug}`, '_blank');
+                               }}>
+                            <div className="w-4 h-4 rounded overflow-hidden bg-muted flex-shrink-0">
+                              <img 
+                                src={conversation.listing.image} 
+                                alt={conversation.listing.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs text-muted-foreground truncate block">
+                                {conversation.listing.title}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -448,42 +533,71 @@ export function MessagesPage() {
             {selectedConversation && selectedConversationDetails ? (
               <>
                 {/* Chat Header */}
-                <div className="p-3 lg:p-4 border-b border-border flex items-center justify-between flex-shrink-0">
-                  <div className="flex items-center space-x-3">
-                    {/* Mobile Back Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="lg:hidden"
-                      onClick={() => setSelectedConversation(null)}
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                        {selectedConversationDetails?.avatar ? (
-                          <img 
-                            src={selectedConversationDetails.avatar} 
-                            alt={selectedConversationDetails?.name || 'Kullanıcı'}
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <User className="w-5 h-5 text-muted-foreground" />
+                <div className="p-3 lg:p-4 border-b border-border flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {/* Mobile Back Button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="lg:hidden"
+                        onClick={() => setSelectedConversation(null)}
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                      </Button>
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                          {selectedConversationDetails?.avatar ? (
+                            <img 
+                              src={selectedConversationDetails.avatar} 
+                              alt={selectedConversationDetails?.name || 'Kullanıcı'}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <User className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        {selectedConversationDetails?.otherParticipant?._id && isUserOnline(selectedConversationDetails.otherParticipant._id) && (
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
                         )}
                       </div>
-                      {selectedConversationDetails?.otherParticipant?._id && isUserOnline(selectedConversationDetails.otherParticipant._id) && (
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-card-foreground">
-                        {selectedConversationDetails?.name || 'Konuşma'}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {selectedConversationDetails?.otherParticipant?._id && isUserOnline(selectedConversationDetails.otherParticipant._id) ? 'Çevrimiçi' : 'Son görülme: ' + formatTimestamp(selectedConversationDetails?.timestamp || '')}
-                      </p>
+                      <div>
+                        <h3 className="font-semibold text-card-foreground">
+                          {selectedConversationDetails?.name || 'Konuşma'}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedConversationDetails?.otherParticipant?._id && isUserOnline(selectedConversationDetails.otherParticipant._id) ? 'Çevrimiçi' : 'Son görülme: ' + formatTimestamp(selectedConversationDetails?.timestamp || '')}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Listing Information */}
+                  {selectedConversationDetails?.listing && (
+                    <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                         onClick={() => {
+                           const slug = createTitleSlug(selectedConversationDetails.listing.title);
+                           window.open(`/ilan-detay/${slug}`, '_blank');
+                         }}>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <img 
+                            src={selectedConversationDetails.listing.image} 
+                            alt={selectedConversationDetails.listing.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-card-foreground truncate">
+                            {selectedConversationDetails.listing.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            Bu ilan hakkında konuşuyorsunuz - Tıklayarak ilanı görüntüleyin
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Messages */}

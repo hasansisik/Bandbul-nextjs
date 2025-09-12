@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { getAllUsers, deleteUser } from "@/redux/actions/userActions";
+import { getAllUsers, deleteUser, updateUserRole } from "@/redux/actions/userActions";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,8 @@ export default function UsersPage() {
     userStats, 
     usersLoading, 
     usersError, 
-    message 
+    message,
+    user: currentUser
   } = useSelector((state: RootState) => state.user);
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -124,6 +125,16 @@ export default function UsersPage() {
     } catch (error) {
       console.error('Delete error:', error);
       toast.error('Kullanıcı silinirken bir hata oluştu');
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      await dispatch(updateUserRole({ id: userId, role: newRole })).unwrap();
+      toast.success('Kullanıcı rolü başarıyla güncellendi');
+    } catch (error) {
+      console.error('Role update error:', error);
+      toast.error('Rol güncellenirken bir hata oluştu');
     }
   };
 
@@ -439,6 +450,26 @@ export default function UsersPage() {
                     <div className="flex justify-center gap-2 mb-3">
                       {getThemeBadge(user.theme || 'light')}
                     </div>
+                    
+                    {/* Role Management - Only for Admins */}
+                    {currentUser?.role === 'admin' && (
+                      <div className="mb-3">
+                        <Select 
+                          value={user.role || 'user'} 
+                          onValueChange={(newRole) => handleRoleChange(user._id, newRole)}
+                          disabled={usersLoading}
+                        >
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">Kullanıcı</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
                     <div className="text-xs text-muted-foreground">
                       Kayıt: {formatDate(user.createdAt)}
                     </div>
@@ -547,6 +578,28 @@ export default function UsersPage() {
                     <label className="text-sm font-medium text-muted-foreground">Tema Tercihi</label>
                     <div className="mt-1">{getThemeBadge(selectedUser.theme || 'light')}</div>
                   </div>
+                  
+                  {/* Role Management in Modal - Only for Admins */}
+                  {currentUser?.role === 'admin' && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Rol Yönetimi</label>
+                      <div className="mt-1">
+                        <Select 
+                          value={selectedUser.role || 'user'} 
+                          onValueChange={(newRole) => handleRoleChange(selectedUser._id, newRole)}
+                          disabled={usersLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">Kullanıcı</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>

@@ -9,7 +9,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
-import { logout, getAllCategories, loadUser } from "@/redux/actions/userActions";
+import { logout, getAllCategories, loadUser, getUnreadCount } from "@/redux/actions/userActions";
+import { getNotificationStats } from "@/redux/actions/notificationActions";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
@@ -22,8 +23,9 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { theme } = useTheme();
-  const { isAuthenticated, user, categories, loading: userLoading } = useAppSelector((state) => state.user);
+  const { isAuthenticated, user, categories, loading: userLoading, unreadCount } = useAppSelector((state) => state.user);
   const { settings, loading: settingsLoading } = useAppSelector((state) => state.settings);
+  const { stats: notificationStats, loading: notificationLoading } = useAppSelector((state) => state.notification);
 
   // Fetch settings, categories and user data on component mount
   useEffect(() => {
@@ -37,6 +39,22 @@ const Header = () => {
       dispatch(loadUser());
     }
   }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
+
+  // Fetch counters when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getNotificationStats());
+      dispatch(getUnreadCount());
+      
+      // Set up polling for counters every 30 seconds
+      const interval = setInterval(() => {
+        dispatch(getNotificationStats());
+        dispatch(getUnreadCount());
+      }, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [dispatch, isAuthenticated]);
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
@@ -110,6 +128,18 @@ const Header = () => {
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+
+  // Function to refresh counters
+  const refreshCounters = () => {
+    if (isAuthenticated) {
+      dispatch(getNotificationStats());
+      dispatch(getUnreadCount());
+    }
+  };
+
+  // Get unread counts for display
+  const notificationUnreadCount = notificationStats?.unread || 0;
+  const messageUnreadCount = unreadCount || 0;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border/50">
@@ -219,14 +249,28 @@ const Header = () => {
                 
                 {isAuthenticated ? (
                   <>
-                    <Link href="/bildirimler">
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                    <Link href="/bildirimler" onClick={refreshCounters}>
+                      <Button variant="ghost" size="sm" className="hover:bg-accent relative">
                         <Bell className="h-5 w-5" />
+                        {notificationUnreadCount > 0 && (
+                          <Badge 
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-400 hover:bg-orange-500 text-white border-0"
+                          >
+                            {notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
-                    <Link href="/mesajlar">
-                      <Button variant="ghost" size="sm" className="hover:bg-accent">
+                    <Link href="/mesajlar" onClick={refreshCounters}>
+                      <Button variant="ghost" size="sm" className="hover:bg-accent relative">
                         <MessageCircle className="h-5 w-5" />
+                        {messageUnreadCount > 0 && (
+                          <Badge 
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-500 hover:bg-orange-500 text-white border-0"
+                          >
+                            {messageUnreadCount > 99 ? '99+' : messageUnreadCount}
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
                     <Link href="/profil">
@@ -442,16 +486,30 @@ const Header = () => {
                 <div className="space-y-4 pt-4 border-t border-border/50">
                   {/* User Actions */}
                   <div className="flex flex-col space-y-2">
-                    <Link href="/bildirimler" onClick={closeMenu}>
-                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start">
+                    <Link href="/bildirimler" onClick={() => { closeMenu(); refreshCounters(); }}>
+                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start relative">
                         <Bell className="h-4 w-4 mr-2" />
                         Bildirimler
+                        {notificationUnreadCount > 0 && (
+                          <Badge 
+                            className="absolute right-2 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-400 hover:bg-orange-500 text-white border-0"
+                          >
+                            {notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
-                    <Link href="/mesajlar" onClick={closeMenu}>
-                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start">
+                    <Link href="/mesajlar" onClick={() => { closeMenu(); refreshCounters(); }}>
+                      <Button variant="outline" size="sm" className="w-full border-border hover:bg-accent justify-start relative">
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Mesajlar
+                        {messageUnreadCount > 0 && (
+                          <Badge 
+                            className="absolute right-2 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-500 hover:bg-orange-500 text-white border-0"
+                          >
+                            {messageUnreadCount > 99 ? '99+' : messageUnreadCount}
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
                     <Link href="/profil" onClick={closeMenu}>
