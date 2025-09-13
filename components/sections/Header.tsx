@@ -45,9 +45,15 @@ const Header = () => {
       }
     }
     
-    // Refresh message count
+    // Refresh message count immediately for real-time updates
     dispatch(getUnreadCount());
   }, [dispatch, user?._id]);
+
+  // Handle messages read from WebSocket
+  const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
+    // Refresh message count when messages are read
+    dispatch(getUnreadCount());
+  }, [dispatch]);
 
   // Handle new notification from WebSocket
   const handleNewNotification = useCallback((notification: any) => {
@@ -67,7 +73,9 @@ const Header = () => {
   const { isConnected } = useSocket({ 
     token, 
     userId: user?._id,
-    onNewMessage: handleNewMessage
+    onNewMessage: handleNewMessage,
+    onNewNotification: handleNewNotification,
+    onMessagesRead: handleMessagesRead
   });
 
   // Fetch settings, categories and user data on component mount
@@ -104,7 +112,7 @@ const Header = () => {
             dispatch(getNotificationStats());
             dispatch(getUnreadCount());
           }
-        }, 30000); // 30 seconds
+        }, 10000); // 10 seconds for faster updates
       };
       
       const stopPolling = () => {

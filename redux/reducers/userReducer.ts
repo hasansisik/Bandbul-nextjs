@@ -34,6 +34,8 @@ import {
   sendMessage,
   startConversation,
   getUnreadCount,
+  markMessagesAsRead,
+  markUserMessagesAsRead,
   getAllInstruments,
   updateTheme,
   clearError,
@@ -625,6 +627,62 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.unreadCount = action.payload.unreadCount;
     })
     .addCase(getUnreadCount.rejected, (state, action) => {
+      state.messagesError = action.payload as string;
+    })
+    // Mark Messages as Read
+    .addCase(markMessagesAsRead.pending, (state) => {
+      // No loading state needed for this action
+    })
+    .addCase(markMessagesAsRead.fulfilled, (state, action) => {
+      const { conversationId } = action.payload;
+      
+      // Mark messages from OTHER users as read (not current user's messages)
+      // Current user's messages should only be marked as read when the other party reads them
+      state.currentMessages = state.currentMessages.map(message => {
+        if (message.senderId !== state.user?._id) {
+          return {
+            ...message,
+            isRead: true
+          };
+        }
+        return message;
+      });
+      
+      // Update conversation unread count to 0
+      const conversationIndex = state.conversations.findIndex(
+        conv => conv.id === conversationId
+      );
+      if (conversationIndex !== -1) {
+        state.conversations[conversationIndex].unreadCount = 0;
+      }
+      
+      // Update total unread count
+      state.unreadCount = Math.max(0, state.unreadCount - 
+        (state.conversations.find(conv => conv.id === conversationId)?.unreadCount || 0)
+      );
+    })
+    .addCase(markMessagesAsRead.rejected, (state, action) => {
+      state.messagesError = action.payload as string;
+    })
+    // Mark User Messages as Read
+    .addCase(markUserMessagesAsRead.pending, (state) => {
+      // No loading state needed for this action
+    })
+    .addCase(markUserMessagesAsRead.fulfilled, (state, action) => {
+      const { conversationId } = action.payload;
+      
+      // Mark current user's messages as read
+      state.currentMessages = state.currentMessages.map(message => {
+        if (message.senderId === state.user?._id) {
+          return {
+            ...message,
+            isRead: true
+          };
+        }
+        return message;
+      });
+    })
+    .addCase(markUserMessagesAsRead.rejected, (state, action) => {
       state.messagesError = action.payload as string;
     })
     // Update Theme - No loading state for instant UI updates

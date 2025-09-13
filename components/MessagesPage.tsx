@@ -25,13 +25,13 @@ import {
   sendMessage, 
   getUnreadCount,
   startConversation,
+  markMessagesAsRead,
+  markUserMessagesAsRead,
   clearError
 } from "@/redux/actions/userActions"
 import { RootState } from "@/redux/store"
 import { useSocket } from "@/hooks/useSocket"
-import { server } from "@/config"
 import { playNotificationSound } from "@/utils/soundNotification"
-
 
 export function MessagesPage() {
   const dispatch = useDispatch<AppDispatch>()
@@ -95,8 +95,19 @@ export function MessagesPage() {
       // Only refresh conversations for other conversations to update last message
       dispatch(getConversations());
     }
+    
+    // Always refresh unread count for real-time updates
     dispatch(getUnreadCount());
   }, [dispatch, selectedConversation]);
+
+  // Handle messages read from WebSocket
+  const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
+    // If it's for the current conversation and not from current user
+    if (selectedConversation && data.conversationId === selectedConversation && data.readBy !== user?._id) {
+      // Mark current user's messages as read
+      dispatch(markUserMessagesAsRead(data.conversationId));
+    }
+  }, [dispatch, selectedConversation, user?._id]);
 
   const { 
     isConnected, 
@@ -109,7 +120,8 @@ export function MessagesPage() {
   } = useSocket({ 
     token, 
     userId: user?._id,
-    onNewMessage: handleNewMessage
+    onNewMessage: handleNewMessage,
+    onMessagesRead: handleMessagesRead
   })
 
   // Filter conversations by search query and remove duplicates by conversationKey
@@ -128,6 +140,7 @@ export function MessagesPage() {
     // Sort by lastMessageAt to show most recent conversations first
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   })
+
 
   const filteredConversations = uniqueConversations.filter(conv =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -247,6 +260,27 @@ export function MessagesPage() {
     }
   }, [selectedConversation, dispatch, messagesError])
 
+  // Remove duplicate messages by ID
+  const uniqueMessages = currentMessages.filter((message, index, self) =>
+    index === self.findIndex(m => m.id === message.id)
+  )
+
+  // Mark messages as read when conversation is selected and messages are loaded
+  useEffect(() => {
+    if (selectedConversation && uniqueMessages.length > 0) {
+      // Mark messages from OTHER users as read after a short delay
+      const timer = setTimeout(() => {
+        dispatch(markMessagesAsRead(selectedConversation))
+          .then(() => {
+            // Refresh unread count in header after marking as read
+            dispatch(getUnreadCount())
+          })
+      }, 500)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [selectedConversation, uniqueMessages.length, dispatch])
+
   // Handle socket connection for selected conversation
   useEffect(() => {
     if (selectedConversation && isConnected) {
@@ -336,6 +370,11 @@ export function MessagesPage() {
     setSelectedConversation(conversationId)
   }
 
+  // Function to mark current user's messages as read (when other party reads them)
+  const markUserMessagesAsReadHandler = useCallback((conversationId: string) => {
+    dispatch(markUserMessagesAsRead(conversationId))
+  }, [dispatch])
+
   // Emoji data
   const emojis = [
     // Smileys & Emotion
@@ -383,11 +422,6 @@ export function MessagesPage() {
   // Get selected conversation details
   const selectedConversationDetails = conversations.find((conv: any) => conv.id === selectedConversation)
 
-  // Remove duplicate messages by ID
-  const uniqueMessages = currentMessages.filter((message, index, self) =>
-    index === self.findIndex(m => m.id === message.id)
-  )
-
   // Track message count changes for sound notifications
   useEffect(() => {
     const currentMessageCount = uniqueMessages.length;
@@ -406,13 +440,30 @@ export function MessagesPage() {
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    const diffInDays = Math.floor(diffInHours / 24)
     
-    if (diffInHours < 24) {
+    if (diffInHours < 1) {
+      // Son 1 saat içinde
+      const diffInMinutes = Math.floor(diffInHours * 60)
+      if (diffInMinutes < 1) {
+        return 'Şimdi'
+      }
+      return `${diffInMinutes} dk önce`
+    } else if (diffInHours < 24) {
+      // Bugün
       return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffInHours < 48) {
+    } else if (diffInDays === 1) {
+      // Dün
       return 'Dün'
-    } else {
+    } else if (diffInDays < 7) {
+      // Bu hafta
+      return date.toLocaleDateString('tr-TR', { weekday: 'long' })
+    } else if (diffInDays < 30) {
+      // Bu ay
       return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
+    } else {
+      // Daha eski
+      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: '2-digit' })
     }
   }
 
@@ -515,9 +566,13 @@ export function MessagesPage() {
                 filteredConversations.map((conversation, index) => (
                   <div key={conversation.id}>
                     <div
-                      className={`p-4 cursor-pointer hover:bg-muted/50 transition-all duration-200 ${
-                        selectedConversation === conversation.id ? 'bg-muted/80 border-l-4 border-l-primary' : ''
-                      }`}
+                        className={`p-4 cursor-pointer hover:bg-muted/50 transition-all duration-200 ${
+                          selectedConversation === conversation.id 
+                            ? 'bg-muted/6 border-l-4 border-l-primary' 
+                            : conversation.unreadCount > 0 
+                              ? 'bg-primary/5' 
+                              : ''
+                        }`}
                       onClick={() => handleConversationSelect(conversation.id)}
                     >
                       <div className="space-y-3">
@@ -556,7 +611,9 @@ export function MessagesPage() {
                         <div className="flex items-start space-x-3">
                           {/* Avatar */}
                           <div className="relative flex-shrink-0">
-                            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center shadow-sm">
+                            <div className={`w-14 h-14 rounded-full bg-muted flex items-center justify-center shadow-xs ${
+                              conversation.unreadCount > 0 ? 'ring-1 ring-primary/10' : ''
+                            }`}>
                               {conversation.avatar ? (
                                 <img 
                                   src={conversation.avatar} 
@@ -570,35 +627,40 @@ export function MessagesPage() {
                             {isUserOnline(conversation.otherParticipant._id) && (
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-background rounded-full"></div>
                             )}
+                            {conversation.unreadCount > 0 && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                                {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                              </div>
+                            )}
                           </div>
 
                           {/* Content */}
                           <div className="flex-1 min-w-0 space-y-2">
                             {/* User Name and Time */}
                             <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-card-foreground text-base truncate">
+                              <h3 className={`text-base truncate ${
+                                conversation.unreadCount > 0 
+                                  ? 'text-foreground font-bold' 
+                                  : 'text-card-foreground font-semibold'
+                              }`}>
                                 {conversation.name}
                               </h3>
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs text-muted-foreground">
                                   {formatTimestamp(conversation.timestamp)}
                                 </span>
-                                {conversation.unreadCount > 0 && (
-                                  <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
-                                    {conversation.unreadCount}
-                                  </Badge>
-                                )}
                               </div>
                             </div>
 
                             {/* Last Message */}
                             <div className="flex items-center space-x-2">
-                              <p className="text-sm text-muted-foreground truncate flex-1">
+                              <p className={`text-sm truncate flex-1 ${
+                                conversation.unreadCount > 0 
+                                  ? 'text-foreground font-semibold' 
+                                  : 'text-muted-foreground'
+                              }`}>
                                 {conversation.lastMessage}
                               </p>
-                              {conversation.unreadCount > 0 && (
-                                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -748,9 +810,9 @@ export function MessagesPage() {
                                 {message.senderId === user?._id && (
                                   <div className="flex items-center">
                                     {message.isRead ? (
-                                      <CheckCheck className="w-3 h-3" />
+                                      <CheckCheck className="w-3 h-3 text-blue-500" />
                                     ) : (
-                                      <Check className="w-3 h-3" />
+                                      <Check className="w-3 h-3 text-gray-400" />
                                     )}
                                   </div>
                                 )}

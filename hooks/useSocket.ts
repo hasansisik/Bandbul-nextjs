@@ -20,6 +20,7 @@ interface UseSocketProps {
   token: string | null;
   userId: string | null;
   onNewMessage?: (message: SocketMessage) => void;
+  onMessagesRead?: (data: { conversationId: string; readBy: string; readAt: string }) => void;
 }
 
 interface SocketMessage {
@@ -36,21 +37,23 @@ interface SocketMessage {
   isRead: boolean;
 }
 
-export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
+export const useSocket = ({ token, userId, onNewMessage, onMessagesRead }: UseSocketProps) => {
   const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const dispatch = useDispatch();
   const socketRef = useRef<any>(null);
   const onNewMessageRef = useRef(onNewMessage);
+  const onMessagesReadRef = useRef(onMessagesRead);
 
   // Use polling for production (Vercel)
   const pollingHook = usePolling({ token, userId, onNewMessage });
 
-  // Update ref when onNewMessage changes
+  // Update refs when handlers change
   useEffect(() => {
     onNewMessageRef.current = onNewMessage;
-  }, [onNewMessage]);
+    onMessagesReadRef.current = onMessagesRead;
+  }, [onNewMessage, onMessagesRead]);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -101,6 +104,14 @@ export const useSocket = ({ token, userId, onNewMessage }: UseSocketProps) => {
         // Callback ile yeni mesajı handle et
         if (message && onNewMessageRef.current) {
           onNewMessageRef.current(message);
+        }
+      });
+
+      // Messages read events
+      currentSocket.on('messages_read', (data: { conversationId: string; readBy: string; readAt: string }) => {
+        // Callback ile okundu durumunu handle et
+        if (data && onMessagesReadRef.current) {
+          onMessagesReadRef.current(data);
         }
       });
 

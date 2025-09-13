@@ -1040,6 +1040,58 @@ export const getUnreadCount = createAsyncThunk(
   }
 );
 
+export const markMessagesAsRead = createAsyncThunk(
+  "user/markMessagesAsRead",
+  async (conversationId: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/messages/conversations/${conversationId}/read`,
+        {},
+        config
+      );
+      return { conversationId, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const markUserMessagesAsRead = createAsyncThunk(
+  "user/markUserMessagesAsRead",
+  async (conversationId: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/messages/conversations/${conversationId}/user-read`,
+        {},
+        config
+      );
+      return { conversationId, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
 // Get all instruments (public - no authentication required)
 export const getAllInstruments = createAsyncThunk(
   "user/getAllInstruments",
