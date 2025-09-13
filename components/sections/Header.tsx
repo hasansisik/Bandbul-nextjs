@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Menu, User, Search, Bell, MessageCircle, ChevronRight, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,11 +12,10 @@ import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { logout, getAllCategories, loadUser, getUnreadCount } from "@/redux/actions/userActions";
 import { getNotificationStats } from "@/redux/actions/notificationActions";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useCallback, useRef } from "react";
 import { getSettings } from "@/redux/actions/settingsActions";
 import { useTheme } from "next-themes";
 import { useSocket } from "@/hooks/useSocket";
-import { playNotificationSound } from "@/utils/soundNotification";
+import { playNotificationSound, preloadNotificationSound } from "@/utils/soundNotification";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,41 +30,68 @@ const Header = () => {
   
   // Sound notification functionality
   const lastMessageIdRef = useRef<string | null>(null);
-  const lastNotificationIdRef = useRef<string | null>(null);
+  const lastSoundTimeRef = useRef<number>(0);
+  const SOUND_DEBOUNCE_MS = 2000; // 2 seconds debounce
+
+  // Debounced sound playing function
+  const playNotificationSoundDebounced = useCallback((volume: number = 0.4) => {
+    const now = Date.now();
+    if (now - lastSoundTimeRef.current > SOUND_DEBOUNCE_MS) {
+      lastSoundTimeRef.current = now;
+      playNotificationSound(volume);
+    }
+  }, []);
 
   // Handle new message from WebSocket
   const handleNewMessage = useCallback((socketMessage: any) => {
-    // Only play sound for new messages (not from current user)
+    // Only process messages from other users
     if (socketMessage.senderId !== user?._id) {
       const messageId = socketMessage.id || socketMessage._id;
       
       // Check if this is a new message (not already processed)
       if (messageId && messageId !== lastMessageIdRef.current) {
         lastMessageIdRef.current = messageId;
+        
+        // Play notification sound immediately for new messages
+        playNotificationSoundDebounced(0.4);
+        
+        // Refresh message count only for new messages
+        dispatch(getUnreadCount());
       }
     }
-    
-    // Refresh message count immediately for real-time updates
-    dispatch(getUnreadCount());
   }, [dispatch, user?._id]);
 
   // Handle messages read from WebSocket
   const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
-    // Refresh message count when messages are read
-    dispatch(getUnreadCount());
+    // Only refresh if someone else read the messages (not current user)
+    if (data.readBy !== user?._id) {
+      dispatch(getUnreadCount());
+    }
+  }, [dispatch, user?._id]);
+
+
+  // WebSocket event handlers for notifications
+  const lastNotificationIdRef = useRef<string | null>(null);
+  
+  const handleNewNotification = useCallback((notification: any) => {
+    // Check if this is a new notification (not already processed)
+    if (notification?._id && notification._id !== lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = notification._id;
+      
+      // Play notification sound immediately for new notifications
+      playNotificationSoundDebounced(0.4);
+      
+      // Refresh notification stats only for new notifications
+      dispatch(getNotificationStats());
+    }
   }, [dispatch]);
 
-  // Handle new notification from WebSocket
-  const handleNewNotification = useCallback((notification: any) => {
-    const notificationId = notification.id || notification._id;
-    
-    // Check if this is a new notification (not already processed)
-    if (notificationId && notificationId !== lastNotificationIdRef.current) {
-      lastNotificationIdRef.current = notificationId;
-    }
-    
-    // Refresh notification count
-    dispatch(getNotificationStats());
+  const handleNotificationStatsUpdate = useCallback((stats: any) => {
+    // Update notification stats in Redux store
+    dispatch({
+      type: 'notification/updateStats',
+      payload: stats
+    });
   }, [dispatch]);
 
   // WebSocket connection for real-time updates
@@ -74,14 +100,18 @@ const Header = () => {
     token, 
     userId: user?._id,
     onNewMessage: handleNewMessage,
+    onMessagesRead: handleMessagesRead,
     onNewNotification: handleNewNotification,
-    onMessagesRead: handleMessagesRead
+    onNotificationStatsUpdate: handleNotificationStatsUpdate
   });
 
   // Fetch settings, categories and user data on component mount
   useEffect(() => {
     dispatch(getSettings());
     dispatch(getAllCategories({}));
+    
+    // Preload notification sound for better performance
+    preloadNotificationSound();
     
     // Always try to load user data if token exists
     const token = localStorage.getItem("accessToken");
@@ -92,8 +122,8 @@ const Header = () => {
   }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
 
   // Track previous counts for sound notifications
-  const prevMessageCountRef = useRef<number>(0);
-  const prevNotificationCountRef = useRef<number>(0);
+  const prevMessageCountRef = useRef<number | undefined>(undefined);
+  const prevNotificationCountRef = useRef<number | undefined>(undefined);
 
   // Fetch counters when user is authenticated
   useEffect(() => {
@@ -103,16 +133,23 @@ const Header = () => {
       
       // Set up smart polling for counters - only when page is visible and user is active
       let interval: NodeJS.Timeout | null = null;
+      let lastPollTime = 0;
+      const POLL_INTERVAL = 30000; // 30 seconds for less frequent polling
       
       const startPolling = () => {
         if (interval) clearInterval(interval);
         interval = setInterval(() => {
           // Only poll if page is visible and user is authenticated
           if (document.visibilityState === 'visible' && isAuthenticated) {
-            dispatch(getNotificationStats());
-            dispatch(getUnreadCount());
+            const now = Date.now();
+            // Only poll if enough time has passed since last poll
+            if (now - lastPollTime >= POLL_INTERVAL) {
+              lastPollTime = now;
+              dispatch(getNotificationStats());
+              dispatch(getUnreadCount());
+            }
           }
-        }, 10000); // 10 seconds for faster updates
+        }, 10000); // Check every 10 seconds but only poll every 30 seconds
       };
       
       const stopPolling = () => {
@@ -125,9 +162,13 @@ const Header = () => {
       // Start polling when page becomes visible
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
-          // Immediately fetch when page becomes visible
-          dispatch(getNotificationStats());
-          dispatch(getUnreadCount());
+          // Immediately fetch when page becomes visible (but only if enough time has passed)
+          const now = Date.now();
+          if (now - lastPollTime >= POLL_INTERVAL) {
+            lastPollTime = now;
+            dispatch(getNotificationStats());
+            dispatch(getUnreadCount());
+          }
           startPolling();
         } else {
           stopPolling();
@@ -147,28 +188,29 @@ const Header = () => {
     }
   }, [dispatch, isAuthenticated]);
 
-  // Play sound when message count increases
+  // Track message count and play sound on increase
   useEffect(() => {
     if (isAuthenticated && unreadCount !== undefined) {
-      if (prevMessageCountRef.current >= 0 && unreadCount > prevMessageCountRef.current) {
+      // Only play sound if we have a previous count (not initial load)
+      if (prevMessageCountRef.current !== undefined && unreadCount > prevMessageCountRef.current) {
         // Message count increased, play sound
-        console.log('Message count increased:', prevMessageCountRef.current, '->', unreadCount);
-        playNotificationSound(0.5);
+        playNotificationSoundDebounced(0.4);
       }
       prevMessageCountRef.current = unreadCount;
     }
-  }, [unreadCount, isAuthenticated]);
+  }, [unreadCount, isAuthenticated, playNotificationSoundDebounced]);
 
-  // Track notification count (no sound)
+  // Track notification count and play sound on increase
   useEffect(() => {
     if (isAuthenticated && notificationStats?.unread !== undefined) {
-      if (prevNotificationCountRef.current >= 0 && notificationStats.unread > prevNotificationCountRef.current) {
-        // Notification count increased, but no sound
-        console.log('Notification count increased:', prevNotificationCountRef.current, '->', notificationStats.unread);
+      // Only play sound if we have a previous count (not initial load)
+      if (prevNotificationCountRef.current !== undefined && notificationStats.unread > prevNotificationCountRef.current) {
+        // Notification count increased, play sound
+        playNotificationSoundDebounced(0.4);
       }
       prevNotificationCountRef.current = notificationStats.unread;
     }
-  }, [notificationStats?.unread, isAuthenticated]);
+  }, [notificationStats?.unread, isAuthenticated, playNotificationSoundDebounced]);
 
   const mainMenuItems = settings?.header?.mainMenu || [];
 
@@ -251,6 +293,7 @@ const Header = () => {
     }
   };
 
+
   // Get unread counts for display
   const notificationUnreadCount = notificationStats?.unread || 0;
   const messageUnreadCount = unreadCount || 0;
@@ -278,6 +321,24 @@ const Header = () => {
                     priority
                   />
                 </Link>
+              </div>
+
+              {/* İlan Ver Button - Mobile Only - After Logo */}
+              <div className="flex-shrink-0 pl-4 lg:hidden">
+                <Button
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      router.push("/profil?tab=listings&action=create");
+                    } else {
+                      const redirectUrl = encodeURIComponent("/profil?tab=listings&action=create");
+                      router.push(`/giris?redirect=${redirectUrl}`);
+                    }
+                  }}
+                  className="bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white font-medium px-3 py-1.5 h-8 whitespace-nowrap shadow-lg text-xs"
+                  size="sm"
+                >
+                  İlan Ver
+                </Button>
               </div>
               
               {/* Search Bar - Close to Logo */}
@@ -311,7 +372,7 @@ const Header = () => {
                 </div>
               </div>
 
-              {/* İlan Ver Button - Only on large screens */}
+              {/* İlan Ver Button - Desktop Only - After Search */}
               <div className="hidden lg:block flex-shrink-0">
                 <Button
                   onClick={() => {
@@ -322,12 +383,13 @@ const Header = () => {
                       router.push(`/giris?redirect=${redirectUrl}`);
                     }
                   }}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium px-4 py-2 h-10 whitespace-nowrap"
+                  className="bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white font-medium px-4 py-2 h-10 whitespace-nowrap shadow-lg text-sm"
                   size="sm"
                 >
                   İlan Ver
                 </Button>
               </div>
+
             </div>
 
             {/* Desktop Content - Center - Only on large screens */}
@@ -354,6 +416,7 @@ const Header = () => {
                 )}
               </nav>
             </div>
+
 
             {/* Right Side Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
@@ -508,24 +571,6 @@ const Header = () => {
                 </div>
               </div>
               
-              {/* Mobile İlan Ver Button */}
-              <div className="mt-3">
-                <Button
-                  onClick={() => {
-                    closeMenu();
-                    if (isAuthenticated) {
-                      router.push("/profil?tab=listings&action=create");
-                    } else {
-                      const redirectUrl = encodeURIComponent("/profil?tab=listings&action=create");
-                      router.push(`/giris?redirect=${redirectUrl}`);
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 text-white font-medium h-12"
-                  size="sm"
-                >
-                  İlan Ver
-                </Button>
-              </div>
             </div>
 
             {/* Mobile Navigation */}

@@ -252,6 +252,11 @@ export function ProfilePage() {
     
     if (tab === 'listings' && action === 'create') {
       setShowCreateForm(true)
+      // Start timer to show modal after 700ms (same as handleCreateListingClick)
+      const timer = setTimeout(() => {
+        setListingRulesDialogOpen(true)
+      }, 700)
+      setShowFormTimer(timer)
     }
   }, [searchParams])
 
@@ -280,17 +285,25 @@ export function ProfilePage() {
 
   const handleApproveRules = () => {
     setListingRulesDialogOpen(false)
+    // Keep form open when rules are approved - user can continue creating listing
+    // setShowCreateForm remains true
   }
 
   const handleCloseRules = () => {
     setListingRulesDialogOpen(false)
-    // Close form when modal is cancelled
+    // Close form when modal is cancelled - show only ProfilePage
     setShowCreateForm(false)
     // Clear timer if it exists
     if (showFormTimer) {
       clearTimeout(showFormTimer)
       setShowFormTimer(null)
     }
+    
+    // Clear URL parameters when modal is closed
+    const url = new URL(window.location.href)
+    url.searchParams.delete('tab')
+    url.searchParams.delete('action')
+    window.history.replaceState({}, '', url.toString())
   }
 
   const handleSaveProfile = () => {
@@ -356,6 +369,12 @@ export function ProfilePage() {
       image: ""
     })
     setShowCreateForm(false)
+    
+    // Clear URL parameters when form is closed
+    const url = new URL(window.location.href)
+    url.searchParams.delete('tab')
+    url.searchParams.delete('action')
+    window.history.replaceState({}, '', url.toString())
   }
 
   const handleDeleteListing = async (listingId: string) => {

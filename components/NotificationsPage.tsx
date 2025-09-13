@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,23 +16,62 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  Clock,
+  Archive,
   ChevronLeft,
   ChevronRight
 } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { 
   getUserNotifications, 
+  markAsRead,
   markAllAsRead, 
   deleteNotification,
   getNotificationStats 
 } from "@/redux/actions/notificationActions"
+import { useSocket } from "@/hooks/useSocket"
 
 export function NotificationsPage() {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { notifications, loading, error, stats, pagination } = useAppSelector((state) => state.notification)
+  const { user } = useAppSelector((state) => state.user)
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const [currentPage, setCurrentPage] = useState(1)
+
+  // WebSocket event handlers
+  const lastNotificationIdRef = useRef<string | null>(null);
+  
+  const handleNewNotification = useCallback((notification: any) => {
+    // Check if this is a new notification (not already processed)
+    if (notification._id && notification._id !== lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = notification._id;
+      
+      // Add new notification to the list
+      dispatch({
+        type: 'notification/addNotification',
+        payload: notification
+      })
+      // Update stats only for new notifications
+      dispatch(getNotificationStats())
+    }
+  }, [dispatch])
+
+  const handleNotificationStatsUpdate = useCallback((newStats: any) => {
+    // Update stats in Redux store
+    dispatch({
+      type: 'notification/updateStats',
+      payload: newStats
+    })
+  }, [dispatch])
+
+  // Initialize WebSocket connection
+  useSocket({
+    token: user?.accessToken || null,
+    userId: user?._id || null,
+    onNewNotification: handleNewNotification,
+    onNotificationStatsUpdate: handleNotificationStatsUpdate
+  })
 
   // Load notifications on component mount
   useEffect(() => {
@@ -46,6 +85,9 @@ export function NotificationsPage() {
 
   const unreadCount = stats?.unread || 0
 
+  const handleMarkAsRead = (id: string) => {
+    dispatch(markAsRead(id))
+  }
 
   const handleMarkAllAsRead = () => {
     dispatch(markAllAsRead())
@@ -110,6 +152,8 @@ export function NotificationsPage() {
       type === "listing_created" ? "text-purple-500" :
       type === "listing_approved" ? "text-green-500" :
       type === "listing_rejected" ? "text-red-500" :
+      type === "listing_pending" ? "text-yellow-500" :
+      type === "listing_archived" ? "text-gray-500" :
       type === "welcome" ? "text-green-500" :
       type === "system" ? "text-blue-600" :
       "text-muted-foreground"
@@ -124,6 +168,10 @@ export function NotificationsPage() {
         return <CheckCircle className={iconClass} />
       case 'listing_rejected':
         return <XCircle className={iconClass} />
+      case 'listing_pending':
+        return <Clock className={iconClass} />
+      case 'listing_archived':
+        return <Archive className={iconClass} />
       case 'welcome':
         return <UserPlus className={iconClass} />
       case 'system':
@@ -169,7 +217,10 @@ export function NotificationsPage() {
               variant={filter === "all" ? "default" : "ghost"}
               size="sm"
               onClick={() => setFilter("all")}
-              className={filter === "all" ? "bg-background text-foreground" : ""}
+              className={filter === "all" 
+                ? "bg-background text-foreground hover:bg-background hover:text-foreground" 
+                : "hover:bg-background hover:text-foreground"
+              }
             >
               Tümü
             </Button>
@@ -177,7 +228,10 @@ export function NotificationsPage() {
               variant={filter === "unread" ? "default" : "ghost"}
               size="sm"
               onClick={() => setFilter("unread")}
-              className={filter === "unread" ? "bg-background text-foreground" : ""}
+              className={filter === "unread" 
+                ? "bg-background text-foreground hover:bg-background hover:text-foreground" 
+                : "hover:bg-background hover:text-foreground"
+              }
             >
               Okunmamış
               {unreadCount > 0 && (
@@ -269,7 +323,7 @@ export function NotificationsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-xs text-primary hover:text-primary"
+                                className="text-xs text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={() => handleViewMessage(notification.conversationId)}
                               >
                                 Mesajı Görüntüle
@@ -279,7 +333,7 @@ export function NotificationsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-xs text-primary hover:text-primary"
+                                className="text-xs text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={() => handleViewListing(notification.listingId)}
                               >
                                 İlanı Görüntüle
@@ -289,11 +343,23 @@ export function NotificationsPage() {
                         </div>
                         
                         <div className="flex items-center space-x-1 ml-4">
+                          {!notification.isRead && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkAsRead(notification._id)}
+                              className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              title="Okundu işaretle"
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteNotification(notification._id)}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            title="Sil"
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -333,7 +399,7 @@ export function NotificationsPage() {
                   size="sm"
                   onClick={handlePreviousPage}
                   disabled={currentPage <= 1}
-                  className="flex items-center space-x-1"
+                  className="flex items-center space-x-1 hover:bg-primary hover:text-primary-foreground"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Önceki</span>
@@ -350,7 +416,7 @@ export function NotificationsPage() {
                   size="sm"
                   onClick={handleNextPage}
                   disabled={currentPage >= pagination.totalPages}
-                  className="flex items-center space-x-1"
+                  className="flex items-center space-x-1 hover:bg-primary hover:text-primary-foreground"
                 >
                   <span>Sonraki</span>
                   <ChevronRight className="w-4 h-4" />
@@ -371,7 +437,7 @@ export function NotificationsPage() {
                   size="sm"
                   onClick={handlePreviousPage}
                   disabled={currentPage <= 1}
-                  className="flex items-center space-x-1"
+                  className="flex items-center space-x-1 hover:bg-primary hover:text-primary-foreground"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>Önceki</span>
@@ -392,7 +458,7 @@ export function NotificationsPage() {
                           variant={current === 1 ? "default" : "outline"}
                           size="sm"
                           onClick={() => handlePageChange(1)}
-                          className="w-8 h-8 p-0"
+                          className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
                         >
                           1
                         </Button>
@@ -417,7 +483,7 @@ export function NotificationsPage() {
                           variant={current === i ? "default" : "outline"}
                           size="sm"
                           onClick={() => handlePageChange(i)}
-                          className="w-8 h-8 p-0"
+                          className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
                         >
                           {i}
                         </Button>
@@ -439,7 +505,7 @@ export function NotificationsPage() {
                           variant={current === totalPages ? "default" : "outline"}
                           size="sm"
                           onClick={() => handlePageChange(totalPages)}
-                          className="w-8 h-8 p-0"
+                          className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
                         >
                           {totalPages}
                         </Button>
@@ -456,7 +522,7 @@ export function NotificationsPage() {
                   size="sm"
                   onClick={handleNextPage}
                   disabled={currentPage >= pagination.totalPages}
-                  className="flex items-center space-x-1"
+                  className="flex items-center space-x-1 hover:bg-primary hover:text-primary-foreground"
                 >
                   <span>Sonraki</span>
                   <ChevronRight className="w-4 h-4" />

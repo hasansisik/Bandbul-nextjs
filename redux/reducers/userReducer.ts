@@ -624,7 +624,10 @@ export const userReducer = createReducer(initialState, (builder) => {
       // No loading state needed for this action
     })
     .addCase(getUnreadCount.fulfilled, (state, action) => {
-      state.unreadCount = action.payload.unreadCount;
+      // Only update unreadCount if payload is not null (304 response)
+      if (action.payload !== null) {
+        state.unreadCount = action.payload.unreadCount;
+      }
     })
     .addCase(getUnreadCount.rejected, (state, action) => {
       state.messagesError = action.payload as string;

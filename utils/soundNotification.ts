@@ -6,31 +6,47 @@ let audioInstance: HTMLAudioElement | null = null;
 
 /**
  * Play notification sound using sound.mp3
- * @param volume - Volume level (0.0 to 1.0), defaults to 0.5
+ * @param volume - Volume level (0.0 to 1.0), defaults to 0.3
  */
-export const playNotificationSound = (volume: number = 0.5): void => {
+export const playNotificationSound = (volume: number = 0.3): void => {
   try {
-    console.log('Attempting to play notification sound...');
-    
     // Check if audio is supported
     if (!isAudioSupported()) {
-      console.log('Audio not supported in this environment');
       return;
     }
 
-    // Create new audio instance for each play to avoid conflicts
-    const audio = new Audio('/sound.mp3');
+    // Check if user has granted audio permission
+    if (typeof document !== 'undefined' && document.hidden) {
+      return; // Don't play sound if tab is not active
+    }
+
+    // Use preloaded instance if available, otherwise create new one
+    let audio: HTMLAudioElement;
+    
+    if (audioInstance && audioInstance.readyState >= 2) {
+      // Use preloaded instance for faster playback
+      audio = audioInstance.cloneNode() as HTMLAudioElement;
+    } else {
+      // Create new audio instance
+      audio = new Audio('/sound.mp3');
+      audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous';
+    }
+    
     audio.volume = Math.max(0, Math.min(1, volume));
     
-    // Play immediately
-    audio.play().then(() => {
-      console.log('Notification sound played successfully');
-    }).catch((error) => {
-      console.log('Could not play notification sound:', error);
-    });
+    // Play immediately with error handling
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        // Silently handle audio play errors (user interaction required, etc.)
+        console.debug('Notification sound play failed:', error);
+      });
+    }
     
   } catch (error) {
-    console.log('Could not play notification sound:', error);
+    console.debug('Could not play notification sound:', error);
   }
 };
 
@@ -39,13 +55,17 @@ export const playNotificationSound = (volume: number = 0.5): void => {
  */
 export const preloadNotificationSound = (): void => {
   try {
-    if (!audioInstance) {
+    if (!audioInstance && isAudioSupported()) {
       audioInstance = new Audio('/sound.mp3');
       audioInstance.preload = 'auto';
-      audioInstance.volume = 0.5;
+      audioInstance.volume = 0.3;
+      audioInstance.crossOrigin = 'anonymous';
+      
+      // Load the audio immediately
+      audioInstance.load();
     }
   } catch (error) {
-    console.log('Could not preload notification sound:', error);
+    console.debug('Could not preload notification sound:', error);
   }
 };
 

@@ -2,6 +2,7 @@ import { createReducer } from "@reduxjs/toolkit";
 import {
   getUserNotifications,
   getNotificationById,
+  markAsRead,
   markAllAsRead,
   deleteNotification,
   getNotificationStats,
@@ -42,8 +43,11 @@ export const notificationReducer = createReducer(initialState, (builder) => {
     })
     .addCase(getUserNotifications.fulfilled, (state, action) => {
       state.loading = false;
-      state.notifications = action.payload.notifications;
-      state.pagination = action.payload.pagination;
+      // Only update notifications if payload is not null (304 response)
+      if (action.payload !== null) {
+        state.notifications = action.payload.notifications;
+        state.pagination = action.payload.pagination;
+      }
       state.error = null;
     })
     .addCase(getUserNotifications.rejected, (state, action) => {
@@ -64,6 +68,32 @@ export const notificationReducer = createReducer(initialState, (builder) => {
       state.loading = false;
       state.error = action.payload as string;
     })
+    // Mark As Read
+    .addCase(markAsRead.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(markAsRead.fulfilled, (state, action) => {
+      state.loading = false;
+      const { id } = action.payload;
+      state.notifications = state.notifications.map(notification => 
+        notification._id === id ? { ...notification, isRead: true } : notification
+      );
+      if (state.currentNotification && state.currentNotification._id === id) {
+        state.currentNotification.isRead = true;
+      }
+      // Update stats
+      if (state.stats) {
+        state.stats.unread = Math.max(0, state.stats.unread - 1);
+        state.stats.read = state.stats.read + 1;
+      }
+      state.message = action.payload.message;
+      state.error = null;
+    })
+    .addCase(markAsRead.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
     // Mark All As Read
     .addCase(markAllAsRead.pending, (state) => {
       state.loading = true;
@@ -77,6 +107,11 @@ export const notificationReducer = createReducer(initialState, (builder) => {
       }));
       if (state.currentNotification) {
         state.currentNotification.isRead = true;
+      }
+      // Update stats
+      if (state.stats) {
+        state.stats.unread = 0;
+        state.stats.read = state.stats.total;
       }
       state.message = action.payload.message;
       state.error = null;
@@ -110,7 +145,10 @@ export const notificationReducer = createReducer(initialState, (builder) => {
     })
     .addCase(getNotificationStats.fulfilled, (state, action) => {
       state.loading = false;
-      state.stats = action.payload.stats;
+      // Only update stats if payload is not null (304 response)
+      if (action.payload !== null) {
+        state.stats = action.payload.stats;
+      }
       state.error = null;
     })
     .addCase(getNotificationStats.rejected, (state, action) => {
@@ -132,6 +170,19 @@ export const notificationReducer = createReducer(initialState, (builder) => {
       state.loading = false;
       state.error = action.payload as string;
       state.message = null;
+    })
+    // Real-time notification updates
+    .addCase('notification/addNotification', (state, action) => {
+      // Add new notification to the beginning of the list
+      state.notifications.unshift(action.payload);
+      // Update pagination total
+      if (state.pagination) {
+        state.pagination.totalItems += 1;
+      }
+    })
+    .addCase('notification/updateStats', (state, action) => {
+      // Update stats from WebSocket
+      state.stats = action.payload;
     });
 });
 

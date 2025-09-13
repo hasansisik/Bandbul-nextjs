@@ -21,6 +21,8 @@ interface UseSocketProps {
   userId: string | null;
   onNewMessage?: (message: SocketMessage) => void;
   onMessagesRead?: (data: { conversationId: string; readBy: string; readAt: string }) => void;
+  onNewNotification?: (notification: any) => void;
+  onNotificationStatsUpdate?: (stats: any) => void;
 }
 
 interface SocketMessage {
@@ -37,7 +39,7 @@ interface SocketMessage {
   isRead: boolean;
 }
 
-export const useSocket = ({ token, userId, onNewMessage, onMessagesRead }: UseSocketProps) => {
+export const useSocket = ({ token, userId, onNewMessage, onMessagesRead, onNewNotification, onNotificationStatsUpdate }: UseSocketProps) => {
   const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -45,6 +47,8 @@ export const useSocket = ({ token, userId, onNewMessage, onMessagesRead }: UseSo
   const socketRef = useRef<any>(null);
   const onNewMessageRef = useRef(onNewMessage);
   const onMessagesReadRef = useRef(onMessagesRead);
+  const onNewNotificationRef = useRef(onNewNotification);
+  const onNotificationStatsUpdateRef = useRef(onNotificationStatsUpdate);
 
   // Use polling for production (Vercel)
   const pollingHook = usePolling({ token, userId, onNewMessage });
@@ -53,7 +57,9 @@ export const useSocket = ({ token, userId, onNewMessage, onMessagesRead }: UseSo
   useEffect(() => {
     onNewMessageRef.current = onNewMessage;
     onMessagesReadRef.current = onMessagesRead;
-  }, [onNewMessage, onMessagesRead]);
+    onNewNotificationRef.current = onNewNotification;
+    onNotificationStatsUpdateRef.current = onNotificationStatsUpdate;
+  }, [onNewMessage, onMessagesRead, onNewNotification, onNotificationStatsUpdate]);
 
   useEffect(() => {
     if (!token || !userId) return;
@@ -112,6 +118,27 @@ export const useSocket = ({ token, userId, onNewMessage, onMessagesRead }: UseSo
         // Callback ile okundu durumunu handle et
         if (data && onMessagesReadRef.current) {
           onMessagesReadRef.current(data);
+        }
+      });
+
+      // Notification events
+      currentSocket.on('new_notification', (data: any) => {
+        // Backend sends { notification: notification.toObject() }
+        const notification = data?.notification || data;
+        
+        // Callback ile yeni bildirimi handle et
+        if (notification && onNewNotificationRef.current) {
+          onNewNotificationRef.current(notification);
+        }
+      });
+
+      currentSocket.on('notification_stats_updated', (data: any) => {
+        // Backend sends { stats: stats }
+        const stats = data?.stats || data;
+        
+        // Callback ile bildirim istatistiklerini handle et
+        if (stats && onNotificationStatsUpdateRef.current) {
+          onNotificationStatsUpdateRef.current(stats);
         }
       });
 

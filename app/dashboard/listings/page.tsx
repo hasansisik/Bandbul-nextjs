@@ -10,7 +10,8 @@ import {
   approveListing,
   rejectListing,
   getPendingListings,
-  toggleListingStatus
+  toggleListingStatus,
+  updateListingStatus
 } from "@/redux/actions/userActions"
 import { toast } from "sonner"
 import { Button } from "../../../components/ui/button"
@@ -61,17 +62,22 @@ export default function ListingsPage() {
     if (!selectedListing) return
 
     try {
-      if (status === 'active') {
-        await dispatch(approveListing(selectedListing._id))
-        toast.success("İlan başarıyla onaylandı.")
-      } else if (status === 'rejected') {
-        await dispatch(rejectListing({ id: selectedListing._id, reason: reason || 'Belirtilmemiş neden' }))
-        toast.success("İlan reddedildi.")
-      } else {
-        // For other status changes, use the existing toggle function
-        await dispatch(toggleListingStatus(selectedListing._id))
-        toast.success("İlan durumu güncellendi.")
+      // Use the new flexible status update function
+      await dispatch(updateListingStatus({ 
+        id: selectedListing._id, 
+        status, 
+        reason 
+      }))
+      
+      const statusMessages = {
+        'active': 'İlan başarıyla onaylandı.',
+        'rejected': 'İlan reddedildi.',
+        'pending': 'İlan onay bekliyor durumuna alındı.',
+        'archived': 'İlan arşivlendi.',
+        'inactive': 'İlan pasif duruma alındı.'
       }
+      
+      toast.success(statusMessages[status as keyof typeof statusMessages] || "İlan durumu güncellendi.")
       
       // Refresh listings
       dispatch(getAllListings({ status: statusFilter }))

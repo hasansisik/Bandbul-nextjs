@@ -547,6 +547,32 @@ export const toggleListingStatus = createAsyncThunk(
   }
 );
 
+export const updateListingStatus = createAsyncThunk(
+  "user/updateListingStatus",
+  async ({ id, status, reason }: { id: string; status: string; reason?: string }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/listings/${id}/status`,
+        { status, reason },
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
 // Admin listing management actions
 export const getPendingListings = createAsyncThunk(
   "user/getPendingListings",
@@ -1029,6 +1055,12 @@ export const getUnreadCount = createAsyncThunk(
         },
       };
       const response = await axios.get(`${server}/messages/unread-count`, config);
+      
+      // If response status is 304 (Not Modified), return null to prevent state update
+      if (response.status === 304) {
+        return null;
+      }
+      
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(

@@ -39,6 +39,12 @@ export const getUserNotifications = createAsyncThunk(
       const queryString = new URLSearchParams(stringParams).toString();
       const url = `${server}/notifications${queryString ? `?${queryString}` : ''}`;
       const response = await axios.get(url, config);
+      
+      // If response status is 304 (Not Modified), return null to prevent state update
+      if (response.status === 304) {
+        return null;
+      }
+      
       return response.data;
     } catch (error: any) {
       // Handle specific error types
@@ -76,6 +82,43 @@ export const getNotificationById = createAsyncThunk(
         config
       );
       return response.data;
+    } catch (error: any) {
+      // Handle specific error types
+      if (error.response && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      
+      // Handle network errors
+      if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        return thunkAPI.rejectWithValue('Sunucu bağlantısında sorun yaşanıyor. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // Handle mongoose/database errors
+      if (error.message && error.message.includes('mongoose')) {
+        return thunkAPI.rejectWithValue('Veritabanı bağlantısında geçici bir sorun yaşanıyor. Lütfen tekrar deneyin.');
+      }
+      
+      return thunkAPI.rejectWithValue(error.message || 'Beklenmeyen bir hata oluştu');
+    }
+  }
+);
+
+export const markAsRead = createAsyncThunk(
+  "notification/markAsRead",
+  async (id: string, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/notifications/${id}/read`,
+        {},
+        config
+      );
+      return { id, message: response.data.message };
     } catch (error: any) {
       // Handle specific error types
       if (error.response && error.response.data.message) {
@@ -185,6 +228,12 @@ export const getNotificationStats = createAsyncThunk(
         `${server}/notifications/stats`,
         config
       );
+      
+      // If response status is 304 (Not Modified), return null to prevent state update
+      if (response.status === 304) {
+        return null;
+      }
+      
       return response.data;
     } catch (error: any) {
       // Handle specific error types
