@@ -172,7 +172,7 @@ export const notificationReducer = createReducer(initialState, (builder) => {
       state.message = null;
     })
     // Real-time notification updates
-    .addCase('notification/addNotification', (state, action) => {
+    .addCase('notification/addNotification', (state, action: any) => {
       // Add new notification to the beginning of the list
       state.notifications.unshift(action.payload);
       // Update pagination total
@@ -180,7 +180,7 @@ export const notificationReducer = createReducer(initialState, (builder) => {
         state.pagination.totalItems += 1;
       }
     })
-    .addCase('notification/updateStats', (state, action) => {
+    .addCase('notification/updateStats', (state, action: any) => {
       // Update stats from WebSocket
       state.stats = action.payload;
     });

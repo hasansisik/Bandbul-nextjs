@@ -434,7 +434,7 @@ export function MessagesPage() {
       }
     }
     prevMessageCount.current = currentMessageCount;
-  }, [uniqueMessages.length, user?._id])
+  }, [uniqueMessages, user?._id])
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp)

@@ -59,7 +59,7 @@ const Header = () => {
         dispatch(getUnreadCount());
       }
     }
-  }, [dispatch, user?._id]);
+  }, [dispatch, user?._id, playNotificationSoundDebounced]);
 
   // Handle messages read from WebSocket
   const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
@@ -84,7 +84,7 @@ const Header = () => {
       // Refresh notification stats only for new notifications
       dispatch(getNotificationStats());
     }
-  }, [dispatch]);
+  }, [dispatch, playNotificationSoundDebounced]);
 
   const handleNotificationStatsUpdate = useCallback((stats: any) => {
     // Update notification stats in Redux store
