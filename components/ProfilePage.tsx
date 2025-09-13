@@ -274,7 +274,7 @@ export function ProfilePage() {
     // Start timer to show modal after 3 seconds
     const timer = setTimeout(() => {
       setListingRulesDialogOpen(true)
-    }, 3000)
+    }, 700)
     setShowFormTimer(timer)
   }
 
@@ -756,14 +756,16 @@ export function ProfilePage() {
 
             {/* Listings Section */}
             <div className="space-y-6">
-              {/* Header with button - always visible */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
-                <Button onClick={editingListing ? () => setShowCreateForm(!showCreateForm) : handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
-                </Button>
-              </div>
+              {/* Header with button - hide when form is open */}
+              {!showCreateForm && (
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-foreground">İlanlarım</h2>
+                  <Button onClick={editingListing ? () => setShowCreateForm(!showCreateForm) : handleCreateListingClick} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Plus className="w-4 h-4 mr-2" />
+                    {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
+                  </Button>
+                </div>
+              )}
 
               {/* Status Tabs - Show above form when form is closed, below form when form is open */}
               {!showCreateForm && (
