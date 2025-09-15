@@ -7,9 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { 
   Bell, 
-  Check, 
   X, 
-  MessageCircle, 
   UserPlus, 
   Music,
   FileText,
@@ -25,7 +23,6 @@ import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { 
   getUserNotifications, 
   markAsRead,
-  markAllAsRead, 
   deleteNotification,
   getNotificationStats 
 } from "@/redux/actions/notificationActions"
@@ -36,7 +33,6 @@ export function NotificationsPage() {
   const router = useRouter()
   const { notifications, loading, error, stats, pagination } = useAppSelector((state) => state.notification)
   const { user } = useAppSelector((state) => state.user)
-  const [filter, setFilter] = useState<"all" | "unread">("all")
   const [currentPage, setCurrentPage] = useState(1)
 
   // WebSocket event handlers
@@ -83,27 +79,56 @@ export function NotificationsPage() {
     dispatch(getNotificationStats())
   }, [dispatch])
 
+  // Automatically mark all unread notifications as read when page loads
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const unreadNotifications = notifications.filter(n => !n.isRead)
+      if (unreadNotifications.length > 0) {
+        // Mark all unread notifications as read
+        unreadNotifications.forEach(notification => {
+          dispatch(markAsRead(notification._id))
+        })
+      }
+    }
+  }, [notifications, dispatch])
+
   const unreadCount = stats?.unread || 0
 
-  const handleMarkAsRead = (id: string) => {
-    dispatch(markAsRead(id))
-  }
-
-  const handleMarkAllAsRead = () => {
-    dispatch(markAllAsRead())
-  }
+  // Function to create title slug for URL (same as in MessagesPage)
+  const createTitleSlug = useCallback((title: string) => {
+    return title.toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  }, [])
 
   const handleDeleteNotification = (id: string) => {
     dispatch(deleteNotification(id))
   }
 
-  const handleViewListing = (listingId: string) => {
-    router.push(`/ilan-detay/${listingId}`)
+  const handleDeleteAllNotifications = () => {
+    if (notifications.length > 0) {
+      // Delete all notifications one by one
+      notifications.forEach(notification => {
+        dispatch(deleteNotification(notification._id))
+      })
+    }
   }
 
-  const handleViewMessage = (conversationId: string) => {
-    router.push(`/mesajlar?conversationId=${conversationId}`)
+  const handleViewListing = (notification: any) => {
+    if (notification.listingInfo && notification.listingInfo.title) {
+      const slug = createTitleSlug(notification.listingInfo.title);
+      router.push(`/ilan-detay/${slug}`);
+    }
   }
+
 
   const handlePageChange = (page: number) => {
     if (page !== currentPage) {
@@ -125,14 +150,7 @@ export function NotificationsPage() {
     }
   }
 
-  const filteredNotifications = filter === "unread" 
-    ? notifications.filter(n => !n.isRead)
-    : notifications
-
-  // Reset page when filter changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filter])
+  const filteredNotifications = notifications
 
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
@@ -148,7 +166,6 @@ export function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     const iconClass = `w-5 h-5 ${
-      type === "message_received" ? "text-blue-500" :
       type === "listing_created" ? "text-purple-500" :
       type === "listing_approved" ? "text-green-500" :
       type === "listing_rejected" ? "text-red-500" :
@@ -160,8 +177,6 @@ export function NotificationsPage() {
     }`
     
     switch (type) {
-      case 'message_received':
-        return <MessageCircle className={iconClass} />
       case 'listing_created':
         return <FileText className={iconClass} />
       case 'listing_approved':
@@ -194,14 +209,15 @@ export function NotificationsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-2">
-              {unreadCount > 0 && (
+              {notifications.length > 0 && (
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={handleMarkAllAsRead}
+                  onClick={handleDeleteAllNotifications}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
-                  <Check className="w-4 h-4 mr-2" />
-                  Tümünü Okundu İşaretle
+                  <X className="w-4 h-4 mr-2" />
+                  Tümünü Sil
                 </Button>
               )}
             </div>
@@ -210,38 +226,6 @@ export function NotificationsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Filter Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
-            <Button
-              variant={filter === "all" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("all")}
-              className={filter === "all" 
-                ? "bg-background text-foreground hover:bg-background hover:text-foreground" 
-                : "hover:bg-background hover:text-foreground"
-              }
-            >
-              Tümü
-            </Button>
-            <Button
-              variant={filter === "unread" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("unread")}
-              className={filter === "unread" 
-                ? "bg-background text-foreground hover:bg-background hover:text-foreground" 
-                : "hover:bg-background hover:text-foreground"
-              }
-            >
-              Okunmamış
-              {unreadCount > 0 && (
-                <Badge className="ml-2 bg-primary text-primary-foreground text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </div>
-        </div>
 
         {/* Loading State */}
         {loading && (
@@ -286,15 +270,12 @@ export function NotificationsPage() {
         )}
 
         {/* Notifications List */}
-        {!loading && !error && (
+        {!loading && !error && notifications.length > 0 && (
           <div className="space-y-4">
-            {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((notification) => (
+            {filteredNotifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`bg-card rounded-xl border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md ${
-                    !notification.isRead ? 'ring-2 ring-primary/20' : ''
-                  }`}
+                  className="bg-card rounded-xl border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md"
                 >
                   <div className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
@@ -308,9 +289,6 @@ export function NotificationsPage() {
                             <h3 className="font-semibold text-card-foreground">
                               {notification.title}
                             </h3>
-                            {!notification.isRead && (
-                              <div className="w-2 h-2 bg-primary rounded-full"></div>
-                            )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
                             {notification.message}
@@ -319,22 +297,12 @@ export function NotificationsPage() {
                             <span className="text-xs text-muted-foreground">
                               {formatTimestamp(notification.createdAt)}
                             </span>
-                            {notification.conversationId && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs text-primary hover:text-primary hover:bg-primary/10"
-                                onClick={() => handleViewMessage(notification.conversationId)}
-                              >
-                                Mesajı Görüntüle
-                              </Button>
-                            )}
                             {notification.listingId && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-xs text-primary hover:text-primary hover:bg-primary/10"
-                                onClick={() => handleViewListing(notification.listingId)}
+                                onClick={() => handleViewListing(notification)}
                               >
                                 İlanı Görüntüle
                               </Button>
@@ -343,17 +311,6 @@ export function NotificationsPage() {
                         </div>
                         
                         <div className="flex items-center space-x-1 ml-4">
-                          {!notification.isRead && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkAsRead(notification._id)}
-                              className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                              title="Okundu işaretle"
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -368,23 +325,22 @@ export function NotificationsPage() {
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="bg-card rounded-xl border border-border shadow-sm p-12 text-center">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bell className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                  {filter === "unread" ? "Okunmamış bildirim yok" : "Henüz bildirim yok"}
-                </h3>
-                <p className="text-muted-foreground">
-                  {filter === "unread" 
-                    ? "Tüm bildirimlerinizi okudunuz" 
-                    : "Yeni bildirimler geldiğinde burada görünecek"
-                  }
-                </p>
-              </div>
-            )}
+            ))}
+          </div>
+        )}
+
+        {/* Empty State - Only show when loading is complete and there are no notifications */}
+        {!loading && !error && notifications.length === 0 && (
+          <div className="bg-card rounded-xl border border-border shadow-sm p-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground mb-2">
+              Henüz bildirim yok
+            </h3>
+            <p className="text-muted-foreground">
+              Yeni bildirimler geldiğinde burada görünecek
+            </p>
           </div>
         )}
 

@@ -16,7 +16,6 @@ export interface CreateNotificationPayload {
   message: string;
   data?: any;
   listingId?: string;
-  conversationId?: string;
   systemAction?: string;
 }
 

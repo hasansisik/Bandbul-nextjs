@@ -314,7 +314,7 @@ export default function ListingDetailPage() {
                 <div className="space-y-2">
                   {allListings
                     .filter(item => (item.categoryInfo?.name || item.category) === (listing.categoryInfo?.name || listing.category) && item._id !== listing._id)
-                    .slice(0, 4)
+                    .slice(0, 5)
                     .map(item => (
                       <div 
                         key={item._id} 

@@ -443,7 +443,7 @@ const Header = () => {
                         <MessageCircle className="h-5 w-5" />
                         {messageUnreadCount > 0 && (
                           <Badge 
-                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-500 hover:bg-orange-500 text-white border-0"
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-400 hover:bg-orange-500 text-white border-0"
                           >
                             {messageUnreadCount > 99 ? '99+' : messageUnreadCount}
                           </Badge>
@@ -664,7 +664,7 @@ const Header = () => {
                         Mesajlar
                         {messageUnreadCount > 0 && (
                           <Badge 
-                            className="absolute right-2 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-500 hover:bg-orange-500 text-white border-0"
+                            className="absolute right-2 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold min-w-[20px] bg-orange-400 hover:bg-orange-500 text-white border-0"
                           >
                             {messageUnreadCount > 99 ? '99+' : messageUnreadCount}
                           </Badge>
