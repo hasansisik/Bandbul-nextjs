@@ -6,6 +6,7 @@ import { useAppDispatch } from "@/redux/hook"
 import { googleAuth } from "@/redux/actions/userActions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { safeJWTDecode } from "@/lib/jwtUtils"
 
 interface GoogleAuthButtonProps {
   mode: 'login' | 'register'
@@ -23,8 +24,8 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
     setIsLoading(true)
     
     try {
-      // Decode the JWT token
-      const payload = JSON.parse(atob(response.credential.split('.')[1]))
+      // Decode the JWT token with proper UTF-8 handling
+      const payload = safeJWTDecode(response.credential)
       
       const googleUser: GoogleUser = {
         id: payload.sub,

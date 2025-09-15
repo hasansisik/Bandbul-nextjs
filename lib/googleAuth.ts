@@ -1,5 +1,6 @@
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ;
+import { safeJWTDecode } from './jwtUtils';
 
 // For client-side OAuth, we need to add the current origin to allowed origins
 
@@ -55,8 +56,8 @@ export const signInWithGoogle = (): Promise<GoogleUser> => {
       client_id: GOOGLE_CLIENT_ID,
       callback: (response: any) => {
         try {
-          // Decode the JWT token
-          const payload = JSON.parse(atob(response.credential.split('.')[1]));
+          // Decode the JWT token with proper UTF-8 handling
+          const payload = safeJWTDecode(response.credential);
           
           const googleUser: GoogleUser = {
             id: payload.sub,
