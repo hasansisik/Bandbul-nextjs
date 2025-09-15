@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { 
-  getSettingsAdmin, 
-  updateSettings, 
+import {
+  getSettingsAdmin,
+  updateSettings,
   createSettings,
-  getSettingsStats 
+  getSettingsStats
 } from "@/redux/actions/settingsActions";
 import { getAllCategories } from "@/redux/actions/userActions";
 import { toast } from "sonner";
@@ -18,11 +18,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Settings2, 
-  Image as ImageIcon, 
-  Globe, 
-  Menu, 
+import {
+  Settings2,
+  Image as ImageIcon,
+  Globe,
+  Menu,
   Link as LinkIcon,
   Mail,
   Phone,
@@ -110,14 +110,14 @@ interface SettingsData {
 
 export default function SettingsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { 
-    settings, 
-    stats, 
-    loading, 
-    error, 
-    message 
+  const {
+    settings,
+    stats,
+    loading,
+    error,
+    message
   } = useSelector((state: RootState) => state.settings);
-  
+
   const { categories } = useSelector((state: RootState) => state.user);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -129,19 +129,29 @@ export default function SettingsPage() {
       dark: ""
     },
     metadata: {
-      title: "",
-      description: "",
-      keywords: "",
-      author: ""
+      title: "Bandbul - Müzisyen Buluşma Platformu",
+      description: "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform",
+      keywords: "müzik, müzisyen, ilan, grup, konser, müzik aleti, müzik eğitimi",
+      author: "Bandbul"
     },
     header: {
       mainMenu: [],
       categories: []
     },
     footer: {
-      main: [],
+      main: [
+        { name: "Anasayfa", href: "/" },
+        { name: "İlanlar", href: "/ilanlar" },
+        { name: "Blog", href: "/blog" },
+        { name: "İletişim", href: "/iletisim" }
+      ],
       listings: [],
-      support: [],
+      support: [
+        { name: "S.S.S.", href: "/sss" },
+        { name: "İlan Kuralları", href: "/ilan-kurallari" },
+        { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
+        { name: "KVKK", href: "/kvkk" }
+      ],
       social: {
         facebook: "",
         twitter: "",
@@ -150,11 +160,11 @@ export default function SettingsPage() {
       }
     },
     contact: {
-      email: "",
-      phone: "",
-      address: "",
-      workingHours: "",
-      companyDescription: ""
+      email: "info@bandbul.com",
+      phone: "+90 212 123 45 67",
+      address: "İstanbul, Türkiye",
+      workingHours: "Pazartesi - Cuma, 09:00 - 18:00",
+      companyDescription: "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform. Amatör ve profesyonel müzisyenlerin bir araya geldiği, müzik projelerini hayata geçirdiği güvenli bir ortam."
     },
     seo: {
       googleAnalytics: "",
@@ -191,19 +201,29 @@ export default function SettingsPage() {
           dark: settings.logo?.dark || ""
         },
         metadata: {
-          title: settings.metadata?.title || "",
-          description: settings.metadata?.description || "",
-          keywords: settings.metadata?.keywords || "",
-          author: settings.metadata?.author || ""
+          title: settings.metadata?.title || "Bandbul - Müzisyen Buluşma Platformu",
+          description: settings.metadata?.description || "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform",
+          keywords: settings.metadata?.keywords || "müzik, müzisyen, ilan, grup, konser, müzik aleti, müzik eğitimi",
+          author: settings.metadata?.author || "Bandbul"
         },
         header: {
           mainMenu: settings.header?.mainMenu || [],
           categories: settings.header?.categories || []
         },
         footer: {
-          main: settings.footer?.main || [],
+          main: settings.footer?.main?.length > 0 ? settings.footer.main : [
+            { name: "Anasayfa", href: "/" },
+            { name: "İlanlar", href: "/ilanlar" },
+            { name: "Blog", href: "/blog" },
+            { name: "İletişim", href: "/iletisim" }
+          ],
           listings: settings.footer?.listings || [],
-          support: settings.footer?.support || [],
+          support: settings.footer?.support?.length > 0 ? settings.footer.support : [
+            { name: "S.S.S.", href: "/sss" },
+            { name: "İlan Kuralları", href: "/ilan-kurallari" },
+            { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
+            { name: "KVKK", href: "/kvkk" }
+          ],
           social: {
             facebook: settings.footer?.social?.facebook || "",
             twitter: settings.footer?.social?.twitter || "",
@@ -212,11 +232,11 @@ export default function SettingsPage() {
           }
         },
         contact: {
-          email: settings.contact?.email || "",
-          phone: settings.contact?.phone || "",
-          address: settings.contact?.address || "",
-          workingHours: settings.contact?.workingHours || "",
-          companyDescription: settings.contact?.companyDescription || ""
+          email: settings.contact?.email || "info@bandbul.com",
+          phone: settings.contact?.phone || "+90 212 123 45 67",
+          address: settings.contact?.address || "İstanbul, Türkiye",
+          workingHours: settings.contact?.workingHours || "Pazartesi - Cuma, 09:00 - 18:00",
+          companyDescription: settings.contact?.companyDescription || "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform. Amatör ve profesyonel müzisyenlerin bir araya geldiği, müzik projelerini hayata geçirdiği güvenli bir ortam."
         },
         seo: {
           googleAnalytics: settings.seo?.googleAnalytics || "",
@@ -226,7 +246,7 @@ export default function SettingsPage() {
 
       });
     } else {
-      // If no settings exist, keep the empty state
+      // If no settings exist, keep the default state
       setLocalSettings(prev => prev);
     }
   }, [settings]);
@@ -243,20 +263,20 @@ export default function SettingsPage() {
       try {
         // Set loading state
         setLogoUploading(prev => ({ ...prev, [logoType]: true }));
-        
+
         // Show immediate feedback
         toast.info(`${logoType === 'light' ? 'Açık' : 'Koyu'} logo yükleniyor: ${file.name}`);
-        
+
         // Import and use your Cloudinary utility
         const { uploadImageToCloudinary } = await import('@/utils/cloudinary');
         const cloudinaryUrl = await uploadImageToCloudinary(file);
-        
+
         // Update local settings with Cloudinary URL
         setLocalSettings(prev => ({
           ...prev,
           logo: { ...prev.logo, [logoType]: cloudinaryUrl }
         }));
-        
+
         toast.success(`${logoType === 'light' ? 'Açık' : 'Koyu'} logo başarıyla yüklendi`);
       } catch (error) {
         console.error('Logo upload error:', error);
@@ -280,7 +300,7 @@ export default function SettingsPage() {
       ...prev,
       header: {
         ...prev.header,
-        mainMenu: prev.header.mainMenu.map((item, i) => 
+        mainMenu: prev.header.mainMenu.map((item, i) =>
           i === index ? { ...item, [field]: value } : item
         )
       }
@@ -292,7 +312,7 @@ export default function SettingsPage() {
       ...prev,
       footer: {
         ...prev.footer,
-        [section]: prev.footer[section].map((item, i) => 
+        [section]: prev.footer[section].map((item, i) =>
           i === index ? { ...item, [field]: value } : item
         )
       }
@@ -395,6 +415,50 @@ export default function SettingsPage() {
           { name: "Gizlilik Sözleşmesi", href: "/gizlilik-sozlesmesi" },
           { name: "KVKK", href: "/kvkk" }
         ]
+      },
+      metadata: {
+        title: "Bandbul - Müzisyen Buluşma Platformu",
+        description: "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform",
+        keywords: "müzik, müzisyen, ilan, grup, konser, müzik aleti, müzik eğitimi",
+        author: "Bandbul"
+      },
+      contact: {
+        email: "info@bandbul.com",
+        phone: "+90 212 123 45 67",
+        address: "İstanbul, Türkiye",
+        workingHours: "Pazartesi - Cuma, 09:00 - 18:00",
+        companyDescription: "Müzisyenlerin buluştuğu, ilan verdiği ve müzik dünyasında kendilerini geliştirdiği platform. Amatör ve profesyonel müzisyenlerin bir araya geldiği, müzik projelerini hayata geçirdiği güvenli bir ortam."
+      }
+    }));
+  };
+
+
+  const addFooterMenuItem = () => {
+    setLocalSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        main: [...prev.footer.main, { name: "Yeni Link", href: "/yeni" }]
+      }
+    }));
+  };
+
+  const addSupportMenuItem = () => {
+    setLocalSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        support: [...prev.footer.support, { name: "Yeni Destek Linki", href: "/yeni" }]
+      }
+    }));
+  };
+
+  const removeFooterMenuItem = (section: 'main' | 'support', index: number) => {
+    setLocalSettings(prev => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        [section]: prev.footer[section].filter((_, i) => i !== index)
       }
     }));
   };
@@ -414,7 +478,7 @@ export default function SettingsPage() {
     if (localSettings.header.categories.find((cat: any) => cat._id === category._id)) {
       return;
     }
-    
+
     setLocalSettings(prev => ({
       ...prev,
       header: {
@@ -422,7 +486,7 @@ export default function SettingsPage() {
         categories: [...prev.header.categories, category._id]
       }
     }));
-    
+
     setIsCategoryModalOpen(false);
   };
 
@@ -431,7 +495,7 @@ export default function SettingsPage() {
     if (localSettings.footer.listings.find((cat: any) => cat === category._id)) {
       return;
     }
-    
+
     setLocalSettings(prev => ({
       ...prev,
       footer: {
@@ -439,7 +503,7 @@ export default function SettingsPage() {
         listings: [...prev.footer.listings, category._id]
       }
     }));
-    
+
     setIsFooterListingCategoryModalOpen(false);
   };
 
@@ -550,8 +614,8 @@ export default function SettingsPage() {
               Logo, metadata, menüler ve iletişim bilgilerini düzenleyin
             </p>
           </div>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={isSaving}
             className="px-8"
           >
@@ -586,9 +650,9 @@ export default function SettingsPage() {
                 <Label htmlFor="light-logo-upload" className="block mb-2">Açık Tema Logo</Label>
                 <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center mx-auto mb-3">
                   {localSettings.logo.light ? (
-                    <img 
-                      src={localSettings.logo.light} 
-                      alt="Light Logo" 
+                    <img
+                      src={localSettings.logo.light}
+                      alt="Light Logo"
                       className="w-20 h-20 object-contain"
                     />
                   ) : (
@@ -629,9 +693,9 @@ export default function SettingsPage() {
                 <Label htmlFor="dark-logo-upload" className="block mb-2">Koyu Tema Logo</Label>
                 <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center mx-auto mb-3 bg-gray-800">
                   {localSettings.logo.dark ? (
-                    <img 
-                      src={localSettings.logo.dark} 
-                      alt="Dark Logo" 
+                    <img
+                      src={localSettings.logo.dark}
+                      alt="Dark Logo"
                       className="w-20 h-20 object-contain"
                     />
                   ) : (
@@ -687,43 +751,43 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title">Site Başlığı</Label>
-                                  <Input
-                    id="title"
-                    value={localSettings.metadata.title}
-                    onChange={(e) => handleMetadataChange('title', e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="author">Yazar</Label>
-                  <Input
-                    id="author"
-                    value={localSettings.metadata.author}
-                    onChange={(e) => handleMetadataChange('author', e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="description">Açıklama</Label>
-                <Textarea
-                  id="description"
-                  value={localSettings.metadata.description}
-                  onChange={(e) => handleMetadataChange('description', e.target.value)}
-                  className="mt-2"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="keywords">Anahtar Kelimeler</Label>
                 <Input
-                  id="keywords"
-                  value={localSettings.metadata.keywords}
-                  onChange={(e) => handleMetadataChange('keywords', e.target.value)}
+                  id="title"
+                  value={localSettings.metadata.title}
+                  onChange={(e) => handleMetadataChange('title', e.target.value)}
                   className="mt-2"
-                  placeholder="Virgülle ayırarak yazın"
                 />
               </div>
+              <div>
+                <Label htmlFor="author">Yazar</Label>
+                <Input
+                  id="author"
+                  value={localSettings.metadata.author}
+                  onChange={(e) => handleMetadataChange('author', e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="description">Açıklama</Label>
+              <Textarea
+                id="description"
+                value={localSettings.metadata.description}
+                onChange={(e) => handleMetadataChange('description', e.target.value)}
+                className="mt-2"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="keywords">Anahtar Kelimeler</Label>
+              <Input
+                id="keywords"
+                value={localSettings.metadata.keywords}
+                onChange={(e) => handleMetadataChange('keywords', e.target.value)}
+                className="mt-2"
+                placeholder="Virgülle ayırarak yazın"
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -798,7 +862,7 @@ export default function SettingsPage() {
                         Mevcut kategorilerden seçim yaparak ekleyin
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="max-h-96 overflow-y-auto space-y-3">
                       {categories.map((category: any) => {
                         const isAlreadyAdded = localSettings.header.categories.find((cat: any) => cat === category._id);
@@ -828,49 +892,49 @@ export default function SettingsPage() {
                   </DialogContent>
                 </Dialog>
               </div>
-                              <div className="space-y-3">
-                  {localSettings.header.categories.map((categoryId: string, index: number) => {
-                    const category = categories.find((cat: any) => cat._id === categoryId);
-                    return (
-                      <div key={categoryId} className="flex items-center gap-3 p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <Input
-                            value={category?.name || ''}
-                            disabled
-                            placeholder="Kategori Adı"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => moveCategoryUp(index)}
-                            disabled={index === 0}
-                            className="h-8 w-8 p-0"
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => moveCategoryDown(index)}
-                            disabled={index === localSettings.header.categories.length - 1}
-                            className="h-8 w-8 p-0"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeCategoryItem(index)}
-                          >
-                            Sil
-                          </Button>
-                        </div>
+              <div className="space-y-3">
+                {localSettings.header.categories.map((categoryId: string, index: number) => {
+                  const category = categories.find((cat: any) => cat._id === categoryId);
+                  return (
+                    <div key={categoryId} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <Input
+                          value={category?.name || ''}
+                          disabled
+                          placeholder="Kategori Adı"
+                        />
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveCategoryUp(index)}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveCategoryDown(index)}
+                          disabled={index === localSettings.header.categories.length - 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeCategoryItem(index)}
+                        >
+                          Sil
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -884,30 +948,6 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Main Links */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Ana Linkler</h3>
-              <div className="space-y-3">
-                {localSettings.footer.main.map((item: FooterLink, index: number) => (
-                  <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <div className="flex-1 grid grid-cols-2 gap-3">
-                      <Input
-                        value={item.name}
-                        onChange={(e) => handleFooterLinkChange('main', index, 'name', e.target.value)}
-                        placeholder="Link Adı"
-                      />
-                      <Input
-                        value={item.href}
-                        onChange={(e) => handleFooterLinkChange('main', index, 'href', e.target.value)}
-                        placeholder="Link"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
 
             {/* Listings Categories */}
             <div>
@@ -927,7 +967,7 @@ export default function SettingsPage() {
                         Mevcut kategorilerden seçim yaparak ekleyin
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="max-h-96 overflow-y-auto space-y-3">
                       {categories.map((category: any) => {
                         const isAlreadyAdded = localSettings.footer.listings.find((cat: any) => cat === category._id);
@@ -1004,9 +1044,51 @@ export default function SettingsPage() {
 
             <Separator />
 
+            {/* Main Links */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Ana Linkler</h3>
+                <Button onClick={addFooterMenuItem} size="sm">
+                  Menü Ekle
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {localSettings.footer.main.map((item: FooterLink, index: number) => (
+                  <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="flex-1 grid grid-cols-2 gap-3">
+                      <Input
+                        value={item.name}
+                        onChange={(e) => handleFooterLinkChange('main', index, 'name', e.target.value)}
+                        placeholder="Link Adı"
+                      />
+                      <Input
+                        value={item.href}
+                        onChange={(e) => handleFooterLinkChange('main', index, 'href', e.target.value)}
+                        placeholder="Link"
+                      />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeFooterMenuItem('main', index)}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Support Links */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Destek Linkleri</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Destek Linkleri</h3>
+                <Button onClick={addSupportMenuItem} size="sm">
+                  Menü Ekle
+                </Button>
+              </div>
               <div className="space-y-3">
                 {localSettings.footer.support.map((item: FooterLink, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
@@ -1022,6 +1104,13 @@ export default function SettingsPage() {
                         placeholder="Link"
                       />
                     </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeFooterMenuItem('support', index)}
+                    >
+                      Sil
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -1090,56 +1179,56 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="contact-email">E-posta</Label>
-                                  <Input
-                    id="contact-email"
-                    value={localSettings.contact.email}
-                    onChange={(e) => handleContactChange('email', e.target.value)}
-                    className="mt-2"
-                    placeholder="info@bandbul.com"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact-phone">Telefon</Label>
-                  <Input
-                    id="contact-phone"
-                    value={localSettings.contact.phone}
-                    onChange={(e) => handleContactChange('phone', e.target.value)}
-                    className="mt-2"
-                    placeholder="+90 212 123 45 67"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="contact-address">Adres</Label>
                 <Input
-                  id="contact-address"
-                  value={localSettings.contact.address}
-                  onChange={(e) => handleContactChange('address', e.target.value)}
+                  id="contact-email"
+                  value={localSettings.contact.email}
+                  onChange={(e) => handleContactChange('email', e.target.value)}
                   className="mt-2"
-                  placeholder="İstanbul, Türkiye"
+                  placeholder="info@bandbul.com"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-hours">Çalışma Saatleri</Label>
+                <Label htmlFor="contact-phone">Telefon</Label>
                 <Input
-                  id="contact-hours"
-                  value={localSettings.contact.workingHours}
-                  onChange={(e) => handleContactChange('workingHours', e.target.value)}
+                  id="contact-phone"
+                  value={localSettings.contact.phone}
+                  onChange={(e) => handleContactChange('phone', e.target.value)}
                   className="mt-2"
-                  placeholder="Pazartesi - Cuma, 09:00 - 18:00"
+                  placeholder="+90 212 123 45 67"
                 />
               </div>
-              <div>
-                <Label htmlFor="contact-description">Şirket Açıklaması</Label>
-                <Textarea
-                  id="contact-description"
-                  value={localSettings.contact.companyDescription}
-                  onChange={(e) => handleContactChange('companyDescription', e.target.value)}
-                  className="mt-2"
-                  rows={3}
-                  placeholder="Şirket hakkında kısa açıklama"
-                />
-              </div>
+            </div>
+            <div>
+              <Label htmlFor="contact-address">Adres</Label>
+              <Input
+                id="contact-address"
+                value={localSettings.contact.address}
+                onChange={(e) => handleContactChange('address', e.target.value)}
+                className="mt-2"
+                placeholder="İstanbul, Türkiye"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-hours">Çalışma Saatleri</Label>
+              <Input
+                id="contact-hours"
+                value={localSettings.contact.workingHours}
+                onChange={(e) => handleContactChange('workingHours', e.target.value)}
+                className="mt-2"
+                placeholder="Pazartesi - Cuma, 09:00 - 18:00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="contact-description">Şirket Açıklaması</Label>
+              <Textarea
+                id="contact-description"
+                value={localSettings.contact.companyDescription}
+                onChange={(e) => handleContactChange('companyDescription', e.target.value)}
+                className="mt-2"
+                rows={3}
+                placeholder="Şirket hakkında kısa açıklama"
+              />
+            </div>
           </CardContent>
         </Card>
 
