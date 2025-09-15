@@ -18,6 +18,22 @@ const Footer = () => {
   useEffect(() => {
     dispatch(getSettings());
   }, [dispatch]);
+
+  // Function to create SEO-friendly slug from Turkish text
+  const createSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ı/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
   const footerLinks = {
     main: settings?.footer?.main || [
       { name: "Anasayfa", href: "/" },
@@ -137,7 +153,7 @@ const Footer = () => {
                   {footerLinks.listings.map((category: any, index: number) => (
                     <li key={category._id || index}>
                       <Link
-                        href={`/ilanlar?kategori=${category._id}`}
+                        href={`/ilanlar?category=${category.slug || createSlug(category.name || '')}`}
                         className="text-muted-foreground hover:text-foreground transition-colors text-sm block"
                       >
                         {category.name}

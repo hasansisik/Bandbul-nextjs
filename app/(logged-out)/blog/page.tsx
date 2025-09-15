@@ -12,11 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  Filter, 
-  Calendar, 
-  Clock, 
+import {
+  Search,
+  Filter,
+  Calendar,
+  Clock,
   User,
   ArrowLeft,
   ArrowRight,
@@ -28,7 +28,7 @@ export default function BlogPage() {
   const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
   const { categories: blogCategories } = useSelector((state: RootState) => state.blogCategory)
   const router = useRouter();
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -116,10 +116,10 @@ export default function BlogPage() {
         const tags = post?.tags || [];
 
         return title.toLowerCase().includes(lowercaseQuery) ||
-               excerpt.toLowerCase().includes(lowercaseQuery) ||
-               content.toLowerCase().includes(lowercaseQuery) ||
-               author.toLowerCase().includes(lowercaseQuery) ||
-               tags.some((tag: string) => (tag || '').toLowerCase().includes(lowercaseQuery));
+          excerpt.toLowerCase().includes(lowercaseQuery) ||
+          content.toLowerCase().includes(lowercaseQuery) ||
+          author.toLowerCase().includes(lowercaseQuery) ||
+          tags.some((tag: string) => (tag || '').toLowerCase().includes(lowercaseQuery));
       });
     }
 
@@ -156,17 +156,17 @@ export default function BlogPage() {
             Blog
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Müzik dünyasından en güncel haberler, ipuçları ve rehberler. 
+            Müzik dünyasından en güncel haberler, ipuçları ve rehberler.
             Müzisyenler için hazırlanmış kapsamlı içerikler.
           </p>
         </div>
 
         {/* Search and Filter Section */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="flex flex-col sm:flex-row gap-4" style={{alignItems: 'stretch'}}>
+          <div className="flex flex-col sm:flex-row gap-4" style={{ alignItems: 'stretch' }}>
             {/* Search */}
             <div className="flex-1">
-              <div className="relative" style={{height: '40px'}}>
+              <div className="relative" style={{ height: '40px' }}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
@@ -174,7 +174,7 @@ export default function BlogPage() {
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 border border-border bg-background rounded-md"
-                  style={{height: '40px', minHeight: '40px'}}
+                  style={{ height: '40px', minHeight: '40px' }}
                 />
               </div>
             </div>
@@ -244,15 +244,15 @@ export default function BlogPage() {
                     <div className="p-6">
                       <div className="flex items-center gap-2 mb-3">
                         {postCategory && (
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/blog/kategori/${createCategorySlug(postCategory)}`);
                             }}
                             className="focus:outline-none"
                           >
-                            <Badge 
-                              variant="outline" 
+                            <Badge
+                              variant="outline"
                               className="text-xs border-border cursor-pointer hover:bg-muted"
                             >
                               {postCategory}
@@ -265,17 +265,17 @@ export default function BlogPage() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       <Link href={`/${createTitleSlug(postTitle)}`}>
                         <h2 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight">
                           {postTitle}
                         </h2>
                       </Link>
-                      
+
                       <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
                         {postExcerpt}
                       </p>
-                      
+
                       <div className="flex items-center gap-3 text-xs text-muted-foreground pt-3 border-t border-border">
                         {postAuthor && (
                           <div className="flex items-center gap-1">
@@ -311,17 +311,14 @@ export default function BlogPage() {
           </>
         ) : (
           <div className="text-center py-20">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search className="h-12 w-12 text-muted-foreground" />
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-4">Sonuç bulunamadı</h3>
-            <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-              Arama kriterlerinize uygun blog yazısı bulunamadı. 
+            <p className="text-lg font-bold text-foreground mb-4">Sonuç bulunamadı</p>
+            <p className=" text-muted-foreground mb-8 max-w-md mx-auto">
+              Arama kriterlerinize uygun blog yazısı bulunamadı.
               Farklı anahtar kelimeler deneyebilir veya filtreleri temizleyebilirsiniz.
             </p>
-            <Button onClick={clearFilters} className="bg-primary hover:bg-primary/90 px-8 py-3 text-lg rounded-xl">
-              Filtreleri Temizle
-            </Button>
           </div>
         )}
 

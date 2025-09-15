@@ -170,9 +170,7 @@ Yukarıda belirtilen haklarınızı kullanmak için, kimliğinizi tespit edebile
 6. İletişim
 Kişisel verilerinizin işlenmesi ile ilgili her türlü soru ve talepleriniz için aşağıdaki iletişim kanallarından bize ulaşabilirsiniz:
 
-E-posta: kvkk@bandbul.com
-Adres: [Şirket Adresi]
-Telefon: [Şirket Telefonu]
+E-posta: info@bandbul.com
 
 Bu bilgilendirme metni, Kanun'un 10. maddesi gereğince hazırlanmış olup, kişisel verilerinizin işlenmesi konusunda sizleri bilgilendirmek amacıyla hazırlanmıştır.`
 };
