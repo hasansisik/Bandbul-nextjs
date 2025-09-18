@@ -67,9 +67,11 @@ const VideoExtension = TiptapNode.create({
       },
       provider: {
         default: 'youtube', // youtube or vimeo
+        parseHTML: element => element.getAttribute('data-provider') || 'youtube',
       },
       videoId: {
         default: null,
+        parseHTML: element => element.getAttribute('data-video-id') || null,
       },
       align: {
         default: 'center', // 'left', 'center', 'right', 'full'
@@ -100,12 +102,19 @@ const VideoExtension = TiptapNode.create({
   renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     const { provider, videoId, width, height, align } = HTMLAttributes;
     
+    // Debug: always log in development to see what's happening
+    console.log('VideoExtension renderHTML - HTMLAttributes:', HTMLAttributes);
+    console.log('VideoExtension renderHTML - videoId:', videoId);
+    console.log('VideoExtension renderHTML - provider:', provider);
+    
     let embedUrl = '';
     if (provider === 'youtube') {
       embedUrl = `https://www.youtube.com/embed/${videoId}`;
     } else if (provider === 'vimeo') {
       embedUrl = `https://player.vimeo.com/video/${videoId}`;
     }
+    
+    console.log('VideoExtension renderHTML - embedUrl:', embedUrl);
     
     // Convert align value to HTML attributes and inline styles
     let style = '';
@@ -127,6 +136,8 @@ const VideoExtension = TiptapNode.create({
       { 
         class: 'video-embed resizable-video', 
         'data-video': '', 
+        'data-video-id': videoId,
+        'data-provider': provider,
         style: `position: relative; margin: 1em 0; ${style}`,
         align: alignAttr
       }, 
@@ -144,10 +155,27 @@ const VideoExtension = TiptapNode.create({
 // Helper function to extract video ID from URLs
 const getVideoId = (url: string, provider: 'youtube' | 'vimeo'): string | null => {
   if (provider === 'youtube') {
-    // Match YouTube URL patterns - daha geniş regex ile farklı URL biçimlerini destekle
+    // Match YouTube URL patterns - simplified and more reliable regex
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
     const match = url.match(youtubeRegex);
-    return match ? match[1] : null;
+    
+    if (match) {
+      return match[1];
+    }
+    
+    // Fallback: try to extract from watch?v= parameter
+    const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
+    if (watchMatch) {
+      return watchMatch[1];
+    }
+    
+    // Another fallback for youtu.be links
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
+    if (shortMatch) {
+      return shortMatch[1];
+    }
+    
+    return null;
   } else if (provider === 'vimeo') {
     // Match Vimeo URL patterns
     const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?))/i;
@@ -353,18 +381,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editor && videoUrl) {
       const videoId = getVideoId(videoUrl, videoProvider);
       
+      console.log('insertVideo - videoUrl:', videoUrl);
+      console.log('insertVideo - videoProvider:', videoProvider);
+      console.log('insertVideo - extracted videoId:', videoId);
+      
       if (videoId) {
+        const videoAttrs = {
+          videoId,
+          provider: videoProvider,
+          width: '100%',
+          height: '400px'
+        };
+        
+        console.log('insertVideo - videoAttrs:', videoAttrs);
+        
         editor
           .chain()
           .focus()
           .insertContent({
             type: 'video',
-            attrs: {
-              videoId,
-              provider: videoProvider,
-              width: '100%',
-              height: '400px'
-            }
+            attrs: videoAttrs
           })
           .run();
         
@@ -376,7 +412,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           videoProvider === 'youtube' 
             ? 'https://www.youtube.com/watch?v=abcdefghijk veya https://youtu.be/abcdefghijk' 
             : 'https://vimeo.com/123456789'
-        }`);
+        }\n\nGirilen URL: ${videoUrl}`);
       }
     }
   };
