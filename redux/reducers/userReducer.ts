@@ -47,6 +47,7 @@ interface UserState {
   loading: boolean;
   error: string | null;
   isAuthenticated?: boolean;
+  isVerified?: boolean;
   message?: string | null;
   listings: any[];
   allListings: any[];
@@ -152,6 +153,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(login.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
+      state.isVerified = true; // If login succeeded, user is verified
       state.user = action.payload;
     })
     .addCase(login.rejected, (state, action) => {
@@ -178,6 +180,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(loadUser.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
+      state.isVerified = action.payload.isVerified || true; // Set verification status
       state.user = action.payload;
     })
     .addCase(loadUser.rejected, (state, action) => {
@@ -191,6 +194,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(logout.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = false;
+      state.isVerified = false;
       state.user = null;
       state.message = action.payload;
     })
@@ -204,6 +208,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(verifyEmail.fulfilled, (state, action) => {
       state.loading = false;
+      state.isVerified = true;
       state.message = action.payload;
     })
     .addCase(verifyEmail.rejected, (state, action) => {

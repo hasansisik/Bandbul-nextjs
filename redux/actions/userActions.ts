@@ -170,9 +170,19 @@ export const login = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/login`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      // Handle email verification required case
+      if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
+        // Don't set this as an error, it's handled by redirect
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresVerification: true,
+          email: error.response.data.email
+        });
+      }
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -183,6 +193,7 @@ export const googleAuth = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/google-auth`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data.message);
@@ -196,6 +207,7 @@ export const googleLogin = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/google-login`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data.message);
@@ -218,6 +230,10 @@ export const loadUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      // Store user email for potential verification redirects
+      if (data.user.email) {
+        localStorage.setItem("userEmail", data.user.email);
+      }
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
@@ -234,6 +250,7 @@ export const logout = createAsyncThunk("user/logout", async (_, thunkAPI) => {
       },
     });
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("userEmail");
     return data.message;
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.response.data.message);

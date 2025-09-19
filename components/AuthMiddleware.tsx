@@ -12,7 +12,7 @@ interface AuthMiddlewareProps {
 export function AuthMiddleware({ children }: AuthMiddlewareProps) {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { isAuthenticated, loading } = useAppSelector((state) => state.user)
+  const { isAuthenticated, isVerified, loading } = useAppSelector((state) => state.user)
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
@@ -40,11 +40,19 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
         }
       }
       
+      // Check if user is verified after authentication
+      if (isAuthenticated && isVerified === false) {
+        // User is authenticated but not verified, redirect to verification page
+        const userEmail = localStorage.getItem("userEmail") || ""
+        router.push(`/dogrulama?email=${encodeURIComponent(userEmail)}`)
+        return
+      }
+      
       setIsChecking(false)
     }
 
     checkAuth()
-  }, [dispatch, isAuthenticated, router])
+  }, [dispatch, isAuthenticated, isVerified, router])
 
   // Show loading while checking authentication
   if (isChecking || loading) {
@@ -60,6 +68,11 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
     return null
   }
 
-  // User is authenticated, render children
+  // If user is not verified, don't render children (will be redirected)
+  if (isVerified === false) {
+    return null
+  }
+
+  // User is authenticated and verified, render children
   return <>{children}</>
 }

@@ -21,6 +21,22 @@ export function LoginForm({
   const { loading, error } = useAppSelector((state) => state.user)
   const router = useRouter()
   const searchParams = useSearchParams()
+  
+  // Helper function to get error message
+  const getErrorMessage = (error: any) => {
+    if (typeof error === 'string') {
+      return error
+    }
+    if (error && typeof error === 'object' && 'message' in error) {
+      return error.message
+    }
+    return 'Bir hata oluştu'
+  }
+
+  // Check if error is verification case (should not be displayed)
+  const isVerificationError = (error: any) => {
+    return error && typeof error === 'object' && 'requiresVerification' in error
+  }
 
   // Clear any existing error when component mounts
   useEffect(() => {
@@ -50,6 +66,16 @@ export function LoginForm({
         } else {
           router.push("/")
         }
+      } else if (login.rejected.match(result)) {
+        // Handle email verification required case
+        if (result.payload && typeof result.payload === 'object' && 'requiresVerification' in result.payload) {
+          const verificationData = result.payload as { message: string; requiresVerification: boolean; email: string }
+          console.log('Verification required, redirecting to:', `/dogrulama?email=${encodeURIComponent(verificationData.email)}`)
+          // Clear any error state before redirect
+          dispatch(clearError())
+          // Redirect to verification page with email parameter
+          router.push(`/dogrulama?email=${encodeURIComponent(verificationData.email)}`)
+        }
       }
     } catch (err) {
       console.error("Login error:", err)
@@ -69,9 +95,9 @@ export function LoginForm({
                 </p>
               </div>
               
-              {error && (
+              {error && !isVerificationError(error) && (
                 <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
-                  {error}
+                  {getErrorMessage(error)}
                 </div>
               )}
               <div className="grid gap-3">
