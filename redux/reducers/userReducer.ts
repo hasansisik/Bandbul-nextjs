@@ -153,7 +153,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(login.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.isVerified = true; // If login succeeded, user is verified
+      state.isVerified = true; 
       state.user = action.payload;
     })
     .addCase(login.rejected, (state, action) => {
@@ -209,9 +209,8 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(verifyEmail.fulfilled, (state, action) => {
       state.loading = false;
       state.isVerified = true;
-      state.isAuthenticated = false; // Kullanıcı otomatik giriş yapmasın
+      state.isAuthenticated = false; 
       state.message = action.payload.message;
-      // Kullanıcı bilgilerini yükleme
     })
     .addCase(verifyEmail.rejected, (state, action) => {
       state.loading = false;
