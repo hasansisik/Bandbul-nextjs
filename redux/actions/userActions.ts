@@ -143,7 +143,7 @@ export const register = createAsyncThunk(
   async (payload: RegisterPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/register`, payload);
-      localStorage.setItem("accessToken", data.user.token);
+      // Token'ı localStorage'a kaydetme - sadece email doğrulamasından sonra kaydedilecek
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data.message);
@@ -262,7 +262,11 @@ export const verifyEmail = createAsyncThunk(
   async (payload: VerifyEmailPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/verify-email`, payload);
-      return data.message;
+      
+      // Sadece doğrulama mesajını döndür, kullanıcıyı otomatik giriş yaptırma
+      return {
+        message: data.message
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message
