@@ -183,8 +183,6 @@ export default function UsersPage() {
         return <Badge variant="default" className="text-xs">Aktif</Badge>;
       case 'inactive':
         return <Badge variant="secondary" className="text-xs">Pasif</Badge>;
-      case 'banned':
-        return <Badge variant="destructive" className="text-xs">Yasaklı</Badge>;
       default:
         return <Badge variant="outline" className="text-xs">{status}</Badge>;
     }
@@ -296,7 +294,7 @@ export default function UsersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Toplam Kullanıcı</CardTitle>
@@ -334,18 +332,6 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Yasaklı</CardTitle>
-            <Badge className="bg-red-500 hover:bg-red-600">Yasaklı</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {bannedUsers}
-            </div>
-            <p className="text-xs text-muted-foreground">Yasaklı kullanıcılar</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters Section */}
@@ -396,7 +382,6 @@ export default function UsersPage() {
                 <SelectItem value="all">Tüm Durumlar</SelectItem>
                 <SelectItem value="active">Aktif</SelectItem>
                 <SelectItem value="inactive">Pasif</SelectItem>
-                <SelectItem value="banned">Yasaklı</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -494,7 +479,6 @@ export default function UsersPage() {
                           <SelectContent>
                             <SelectItem value="active">Aktif</SelectItem>
                             <SelectItem value="inactive">Pasif</SelectItem>
-                            <SelectItem value="banned">Yasaklı</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -647,7 +631,6 @@ export default function UsersPage() {
                           <SelectContent>
                             <SelectItem value="active">Aktif</SelectItem>
                             <SelectItem value="inactive">Pasif</SelectItem>
-                            <SelectItem value="banned">Yasaklı</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
