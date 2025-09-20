@@ -118,10 +118,10 @@ const Header = () => {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     
-    if (token && (!isAuthenticated || !user)) {
+    if (token && !isAuthenticated) {
       dispatch(loadUser());
     }
-  }, [dispatch, isAuthenticated, user]); // Only run when auth state changes
+  }, [dispatch, isAuthenticated]); // Only run when auth state changes
 
   // Track previous counts for sound notifications
   const prevMessageCountRef = useRef<number | undefined>(undefined);

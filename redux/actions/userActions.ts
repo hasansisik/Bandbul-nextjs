@@ -2,6 +2,20 @@ import axios from "axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { server } from "@/config";
 
+// Add axios interceptor to suppress 404 errors in console
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Suppress 404 errors from /auth/me endpoint in console
+    if (error.response?.status === 404 && error.config?.url?.includes('/auth/me')) {
+      // Don't log 404 errors for /auth/me endpoint
+      return Promise.reject(error);
+    }
+    // Log other errors normally
+    return Promise.reject(error);
+  }
+);
+
 export interface RegisterPayload {
   name: string;
   surname: string;
@@ -263,6 +277,14 @@ export const loadUser = createAsyncThunk(
       }
       return data.user;
     } catch (error: any) {
+      // Handle 404 errors silently (user not found or invalid token)
+      if (error.response?.status === 404) {
+        // Clear invalid token and return silent error
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
+        return thunkAPI.rejectWithValue("User not found");
+      }
+      
       // Handle inactive user case - user gets kicked out
       if (error.response?.status === 401 && error.response?.data?.requiresLogout) {
         // Clear local storage and return special error

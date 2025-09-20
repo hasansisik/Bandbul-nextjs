@@ -18,16 +18,14 @@ export function UserLoader() {
       return
     }
 
-    // Always try to load user if token exists
+    // Only try to load user if token exists and user is not already authenticated
     const token = localStorage.getItem("accessToken")
     
-    if (token) {
-      // Force load user every time if not authenticated or no user data
-      if (!isAuthenticated || !user) {
-        dispatch(loadUser())
-      }
+    if (token && !isAuthenticated) {
+      // Only load user if not already authenticated
+      dispatch(loadUser())
     }
-  }, [dispatch, pathname, isAuthenticated, user]) // Add dependencies back but keep pathname as primary trigger
+  }, [dispatch, pathname, isAuthenticated]) // Removed user dependency to prevent unnecessary calls
 
   // This component doesn't render anything
   return null
