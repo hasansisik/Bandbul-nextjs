@@ -11,9 +11,10 @@ import { safeJWTDecode } from "@/lib/jwtUtils"
 interface GoogleAuthButtonProps {
   mode: 'login' | 'register'
   className?: string
+  onError?: (error: string) => void
 }
 
-export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ mode, className, onError }: GoogleAuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false)
   const dispatch = useAppDispatch()
@@ -63,6 +64,22 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         }
       } else {
         console.error('Authentication failed:', result)
+        // Handle inactive user case
+        if (result.payload && typeof result.payload === 'object' && 'requiresLogout' in result.payload) {
+          const errorMessage = (result.payload as any).message || 'Hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin.'
+          if (onError) {
+            onError(errorMessage)
+          } else {
+            alert(errorMessage)
+          }
+        } else {
+          const errorMessage = typeof result.payload === 'string' ? result.payload : 'Google ile giriş yapılırken hata oluştu'
+          if (onError) {
+            onError(errorMessage)
+          } else {
+            alert(errorMessage)
+          }
+        }
       }
     } catch (error) {
       console.error('Google authentication error:', error)

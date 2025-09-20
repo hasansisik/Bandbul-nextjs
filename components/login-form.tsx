@@ -17,6 +17,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [googleError, setGoogleError] = useState<string | null>(null)
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.user)
   const router = useRouter()
@@ -38,9 +39,15 @@ export function LoginForm({
     return error && typeof error === 'object' && 'requiresVerification' in error
   }
 
+  // Handle Google authentication errors
+  const handleGoogleError = (errorMessage: string) => {
+    setGoogleError(errorMessage)
+  }
+
   // Clear any existing error when component mounts
   useEffect(() => {
     dispatch(clearError())
+    setGoogleError(null)
   }, [dispatch])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -91,11 +98,11 @@ export function LoginForm({
                 </p>
               </div>
               
-              {error && !isVerificationError(error) && (
+              {(error && !isVerificationError(error)) || googleError ? (
                 <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
-                  {getErrorMessage(error)}
+                  {googleError || getErrorMessage(error)}
                 </div>
-              )}
+              ) : null}
               <div className="grid gap-3">
                 <Label htmlFor="email">E-posta</Label>
                 <Input
@@ -103,7 +110,10 @@ export function LoginForm({
                   type="email"
                   placeholder="ornek@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setGoogleError(null)
+                  }}
                   required
                 />
               </div>
@@ -121,7 +131,10 @@ export function LoginForm({
                   id="password" 
                   type="password" 
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setGoogleError(null)
+                  }}
                   required 
                 />
               </div>
@@ -140,7 +153,7 @@ export function LoginForm({
                 </div>
               </div>
 
-              <GoogleAuthButton mode="login" className="w-full" />
+              <GoogleAuthButton mode="login" className="w-full" onError={handleGoogleError} />
 
               <div className="text-center text-sm">
                 Hesabınız yok mu?{" "}

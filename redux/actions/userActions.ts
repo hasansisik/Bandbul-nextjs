@@ -158,6 +158,13 @@ export const googleRegister = createAsyncThunk(
       localStorage.setItem("accessToken", data.user.token);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -181,6 +188,13 @@ export const login = createAsyncThunk(
           email: error.response.data.email
         });
       }
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -195,6 +209,13 @@ export const googleAuth = createAsyncThunk(
       localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -209,6 +230,13 @@ export const googleLogin = createAsyncThunk(
       localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -235,6 +263,16 @@ export const loadUser = createAsyncThunk(
       }
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case - user gets kicked out
+      if (error.response?.status === 401 && error.response?.data?.requiresLogout) {
+        // Clear local storage and return special error
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }

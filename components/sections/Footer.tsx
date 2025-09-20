@@ -14,10 +14,12 @@ const Footer = () => {
   const { theme } = useTheme();
   const { settings, loading: settingsLoading } = useSelector((state: RootState) => state.settings);
 
-  // Fetch settings on component mount
+  // Fetch settings on component mount (only if not already loaded)
   useEffect(() => {
-    dispatch(getSettings());
-  }, [dispatch]);
+    if (!settings && !settingsLoading) {
+      dispatch(getSettings());
+    }
+  }, [dispatch, settings, settingsLoading]);
 
   // Function to create SEO-friendly slug from Turkish text
   const createSlug = (text: string) => {

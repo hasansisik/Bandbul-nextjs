@@ -131,7 +131,15 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleRegister.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Handle inactive user case
+      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
+        state.isAuthenticated = false;
+        state.isVerified = false;
+        state.user = null;
+        state.error = (action.payload as any).message;
+      } else {
+        state.error = action.payload as string;
+      }
     })
     // Google Auth (Unified)
     .addCase(googleAuth.pending, (state) => {
@@ -146,7 +154,15 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleAuth.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Handle inactive user case
+      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
+        state.isAuthenticated = false;
+        state.isVerified = false;
+        state.user = null;
+        state.error = (action.payload as any).message;
+      } else {
+        state.error = action.payload as string;
+      }
     })
     // Login
     .addCase(login.pending, (state) => {
@@ -160,7 +176,15 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(login.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Handle inactive user case
+      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
+        state.isAuthenticated = false;
+        state.isVerified = false;
+        state.user = null;
+        state.error = (action.payload as any).message;
+      } else {
+        state.error = action.payload as string;
+      }
     })
     // Google Login
     .addCase(googleLogin.pending, (state) => {
@@ -173,7 +197,15 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleLogin.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Handle inactive user case
+      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
+        state.isAuthenticated = false;
+        state.isVerified = false;
+        state.user = null;
+        state.error = (action.payload as any).message;
+      } else {
+        state.error = action.payload as string;
+      }
     })
     // Load User
     .addCase(loadUser.pending, (state) => {
@@ -187,7 +219,15 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(loadUser.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Handle inactive user case - user gets kicked out
+      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
+        state.isAuthenticated = false;
+        state.isVerified = false;
+        state.user = null;
+        state.error = (action.payload as any).message;
+      } else {
+        state.error = action.payload as string;
+      }
     })
     // Logout
     .addCase(logout.pending, (state) => {
