@@ -143,7 +143,6 @@ export const register = createAsyncThunk(
   async (payload: RegisterPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/register`, payload);
-      // Token'ı localStorage'a kaydetme - sadece email doğrulamasından sonra kaydedilecek
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data.message);
@@ -263,7 +262,6 @@ export const verifyEmail = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/verify-email`, payload);
       
-      // Sadece doğrulama mesajını döndür, kullanıcıyı otomatik giriş yaptırma
       return {
         message: data.message
       };
@@ -952,6 +950,33 @@ export const updateUserRole = createAsyncThunk(
         config
       );
       return { id, role, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const updateUserStatus = createAsyncThunk(
+  "user/updateUserStatus",
+  async ({ id, status }: { id: string; status: string }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/auth/users/${id}/status`,
+        { status },
+        config
+      );
+      return { id, status, message: response.data.message };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message

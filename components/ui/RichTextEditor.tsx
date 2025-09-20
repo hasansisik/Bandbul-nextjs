@@ -102,11 +102,6 @@ const VideoExtension = TiptapNode.create({
   renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     const { provider, videoId, width, height, align } = HTMLAttributes;
     
-    // Debug: always log in development to see what's happening
-    console.log('VideoExtension renderHTML - HTMLAttributes:', HTMLAttributes);
-    console.log('VideoExtension renderHTML - videoId:', videoId);
-    console.log('VideoExtension renderHTML - provider:', provider);
-    
     let embedUrl = '';
     if (provider === 'youtube') {
       embedUrl = `https://www.youtube.com/embed/${videoId}`;
@@ -114,7 +109,6 @@ const VideoExtension = TiptapNode.create({
       embedUrl = `https://player.vimeo.com/video/${videoId}`;
     }
     
-    console.log('VideoExtension renderHTML - embedUrl:', embedUrl);
     
     // Convert align value to HTML attributes and inline styles
     let style = '';
@@ -381,10 +375,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editor && videoUrl) {
       const videoId = getVideoId(videoUrl, videoProvider);
       
-      console.log('insertVideo - videoUrl:', videoUrl);
-      console.log('insertVideo - videoProvider:', videoProvider);
-      console.log('insertVideo - extracted videoId:', videoId);
-      
       if (videoId) {
         const videoAttrs = {
           videoId,
@@ -392,9 +382,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           width: '100%',
           height: '400px'
         };
-        
-        console.log('insertVideo - videoAttrs:', videoAttrs);
-        
+                
         editor
           .chain()
           .focus()

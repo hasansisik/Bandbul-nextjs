@@ -67,13 +67,9 @@ export function LoginForm({
           router.push("/")
         }
       } else if (login.rejected.match(result)) {
-        // Handle email verification required case
         if (result.payload && typeof result.payload === 'object' && 'requiresVerification' in result.payload) {
           const verificationData = result.payload as { message: string; requiresVerification: boolean; email: string }
-          console.log('Verification required, redirecting to:', `/dogrulama?email=${encodeURIComponent(verificationData.email)}`)
-          // Clear any error state before redirect
           dispatch(clearError())
-          // Redirect to verification page with email parameter
           router.push(`/dogrulama?email=${encodeURIComponent(verificationData.email)}`)
         }
       }

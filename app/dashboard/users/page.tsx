@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { getAllUsers, deleteUser, updateUserRole } from "@/redux/actions/userActions";
+import { getAllUsers, deleteUser, updateUserRole, updateUserStatus } from "@/redux/actions/userActions";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,6 +135,16 @@ export default function UsersPage() {
     } catch (error) {
       console.error('Role update error:', error);
       toast.error('Rol güncellenirken bir hata oluştu');
+    }
+  };
+
+  const handleStatusChange = async (userId: string, newStatus: string) => {
+    try {
+      await dispatch(updateUserStatus({ id: userId, status: newStatus })).unwrap();
+      toast.success('Kullanıcı durumu başarıyla güncellendi');
+    } catch (error) {
+      console.error('Status update error:', error);
+      toast.error('Durum güncellenirken bir hata oluştu');
     }
   };
 
@@ -470,6 +480,26 @@ export default function UsersPage() {
                       </div>
                     )}
                     
+                    {/* Status Management - Only for Admins */}
+                    {currentUser?.role === 'admin' && (
+                      <div className="mb-3">
+                        <Select 
+                          value={user.status || 'active'} 
+                          onValueChange={(newStatus) => handleStatusChange(user._id, newStatus)}
+                          disabled={usersLoading}
+                        >
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Aktif</SelectItem>
+                            <SelectItem value="inactive">Pasif</SelectItem>
+                            <SelectItem value="banned">Yasaklı</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
                     <div className="text-xs text-muted-foreground">
                       Kayıt: {formatDate(user.createdAt)}
                     </div>
@@ -595,6 +625,29 @@ export default function UsersPage() {
                           <SelectContent>
                             <SelectItem value="user">Kullanıcı</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Status Management in Modal - Only for Admins */}
+                  {currentUser?.role === 'admin' && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Durum Yönetimi</label>
+                      <div className="mt-1">
+                        <Select 
+                          value={selectedUser.status || 'active'} 
+                          onValueChange={(newStatus) => handleStatusChange(selectedUser._id, newStatus)}
+                          disabled={usersLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Aktif</SelectItem>
+                            <SelectItem value="inactive">Pasif</SelectItem>
+                            <SelectItem value="banned">Yasaklı</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

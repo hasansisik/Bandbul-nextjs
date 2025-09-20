@@ -18,6 +18,13 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("accessToken")
+      const currentPath = window.location.pathname
+      
+      // If user is on verification page and not authenticated, allow them to stay
+      if (currentPath === "/dogrulama" && !token) {
+        setIsChecking(false)
+        return
+      }
       
       if (!token) {
         // No token, redirect immediately
@@ -61,6 +68,12 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
+  }
+
+  // If user is on verification page, allow them to stay regardless of auth status
+  const currentPath = window.location.pathname
+  if (currentPath === "/dogrulama") {
+    return <>{children}</>
   }
 
   // If not authenticated after check, don't render children

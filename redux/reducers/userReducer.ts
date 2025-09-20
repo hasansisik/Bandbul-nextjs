@@ -29,6 +29,7 @@ import {
   getAllUsers,
   deleteUser,
   updateUserRole,
+  updateUserStatus,
   getConversations,
   getMessages,
   sendMessage,
@@ -109,6 +110,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(register.fulfilled, (state) => {
       state.loading = false;
       state.isAuthenticated = false;
+      state.isVerified = false; // User needs to verify email
       state.message = null;
       state.error = null;
     })
@@ -153,7 +155,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(login.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.isVerified = true; 
+      state.isVerified = true; // Login successful means user is verified
       state.user = action.payload;
     })
     .addCase(login.rejected, (state, action) => {
@@ -180,7 +182,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(loadUser.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.isVerified = action.payload.isVerified || true; // Set verification status
+      state.isVerified = action.payload.isVerified; // Use actual verification status from backend
       state.user = action.payload;
     })
     .addCase(loadUser.rejected, (state, action) => {
@@ -209,7 +211,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(verifyEmail.fulfilled, (state, action) => {
       state.loading = false;
       state.isVerified = true;
-      state.isAuthenticated = false; 
+      state.isAuthenticated = false; // User still needs to login after verification
       state.message = action.payload.message;
     })
     .addCase(verifyEmail.rejected, (state, action) => {
@@ -542,6 +544,22 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.message = action.payload.message;
     })
     .addCase(updateUserRole.rejected, (state, action) => {
+      state.usersLoading = false;
+      state.usersError = action.payload as string;
+    })
+    // Update User Status
+    .addCase(updateUserStatus.pending, (state) => {
+      state.usersLoading = true;
+    })
+    .addCase(updateUserStatus.fulfilled, (state, action) => {
+      state.usersLoading = false;
+      const index = state.allUsers.findIndex(user => user._id === action.payload.id);
+      if (index !== -1) {
+        state.allUsers[index].status = action.payload.status;
+      }
+      state.message = action.payload.message;
+    })
+    .addCase(updateUserStatus.rejected, (state, action) => {
       state.usersLoading = false;
       state.usersError = action.payload as string;
     })
