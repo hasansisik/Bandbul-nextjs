@@ -52,11 +52,30 @@ const Footer = () => {
     ]
   };
 
+  // Function to ensure social media links are direct URLs
+  const getDirectUrl = (url: string | undefined) => {
+    if (!url || url === "#") return "#";
+    
+    // Remove trailing # if present
+    let cleanUrl = url.replace(/#$/, '');
+    
+    // If it's already a full URL, return as is
+    if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+      return cleanUrl;
+    }
+    // If it's a relative URL, keep as is for internal links
+    if (cleanUrl.startsWith("/")) {
+      return cleanUrl;
+    }
+    // If it's just a username (no protocol), assume it's a social media handle
+    return `https://${cleanUrl}`;
+  };
+
   const socialLinks = [
-    { icon: <Facebook className="h-4 w-4" />, href: settings?.footer?.social?.facebook || "#", label: "Facebook" },
-    { icon: <Twitter className="h-4 w-4" />, href: settings?.footer?.social?.twitter || "#", label: "Twitter" },
-    { icon: <Instagram className="h-4 w-4" />, href: settings?.footer?.social?.instagram || "#", label: "Instagram" },
-    { icon: <Youtube className="h-4 w-4" />, href: settings?.footer?.social?.youtube || "#", label: "YouTube" }
+    { icon: <Facebook className="h-4 w-4" />, href: getDirectUrl(settings?.footer?.social?.facebook), label: "Facebook" },
+    { icon: <Twitter className="h-4 w-4" />, href: getDirectUrl(settings?.footer?.social?.twitter), label: "Twitter" },
+    { icon: <Instagram className="h-4 w-4" />, href: getDirectUrl(settings?.footer?.social?.instagram), label: "Instagram" },
+    { icon: <Youtube className="h-4 w-4" />, href: getDirectUrl(settings?.footer?.social?.youtube), label: "YouTube" }
   ];
 
   return (
