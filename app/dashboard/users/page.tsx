@@ -51,9 +51,11 @@ export default function UsersPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [pageSize, setPageSize] = useState("20");
   const [filters, setFilters] = useState({
     role: "",
     status: "",
+    search: "",
     page: "1",
     limit: "20"
   });
@@ -93,15 +95,17 @@ export default function UsersPage() {
     }
   }, [message, usersError]);
 
-  // Update filters when local state changes (excluding searchTerm to prevent API calls on every keystroke)
+  // Update filters when local state changes
   useEffect(() => {
     setFilters(prev => ({
       ...prev,
       role: roleFilter === "all" ? "" : roleFilter,
       status: statusFilter === "all" ? "" : statusFilter,
-      page: currentPage.toString()
+      search: debouncedSearchTerm,
+      page: currentPage.toString(),
+      limit: pageSize
     }));
-  }, [roleFilter, statusFilter, currentPage]);
+  }, [roleFilter, statusFilter, debouncedSearchTerm, currentPage, pageSize]);
 
   // Reset to first page when search term changes
   useEffect(() => {
@@ -224,10 +228,11 @@ export default function UsersPage() {
     setCurrentPage(page);
   };
 
-  // Filter users based on search term, role, and status
+  // Filter users based on search term, role, and status (client-side filtering for search only)
   const filteredUsers = useMemo(() => {
     let users = allUsers || [];
 
+    // Only apply client-side filtering for search term
     if (debouncedSearchTerm) {
       const lowercaseQuery = debouncedSearchTerm.toLowerCase();
       users = users.filter(user => {
@@ -243,29 +248,18 @@ export default function UsersPage() {
       });
     }
 
-    if (roleFilter !== "all") {
-      users = users.filter(user => user?.role === roleFilter);
-    }
-
-    if (statusFilter !== "all") {
-      users = users.filter(user => user?.status === statusFilter);
-    }
-
     return users;
-  }, [debouncedSearchTerm, roleFilter, statusFilter, allUsers]);
+  }, [debouncedSearchTerm, allUsers]);
 
-  // Pagination logic - now based on filtered results
-  const totalFilteredUsers = filteredUsers.length;
-  const totalPages = Math.ceil(totalFilteredUsers / parseInt(filters.limit));
-  const startIndex = (currentPage - 1) * parseInt(filters.limit);
-  const endIndex = startIndex + parseInt(filters.limit);
-  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+  // Pagination logic - use server-side data directly
+  const totalUsers = userStats?.total || 0;
+  const totalPages = Math.ceil(totalUsers / parseInt(pageSize));
+  const currentUsers = allUsers || [];
 
   // User statistics from Redux state
   const activeUsers = userStats?.active || 0;
   const inactiveUsers = userStats?.inactive || 0;
   const bannedUsers = userStats?.banned || 0;
-  const totalUsers = userStats?.total || 0;
 
   return (
     <>
@@ -384,6 +378,17 @@ export default function UsersPage() {
                 <SelectItem value="inactive">Pasif</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={pageSize} onValueChange={setPageSize} disabled={usersLoading}>
+              <SelectTrigger className="w-[120px] h-10 border-2 border-border/60 bg-background/50 backdrop-blur hover:border-border/80 focus:border-ring focus:ring-2 focus:ring-ring/20">
+                <SelectValue placeholder="Sayfa Boyutu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 / sayfa</SelectItem>
+                <SelectItem value="20">20 / sayfa</SelectItem>
+                <SelectItem value="50">50 / sayfa</SelectItem>
+                <SelectItem value="100">100 / sayfa</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -412,11 +417,11 @@ export default function UsersPage() {
       {!usersLoading && !usersError && (
         <div className="mb-2">
 
-          {filteredUsers.length === 0 ? (
+          {currentUsers.length === 0 ? (
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {allUsers.length === 0 ? "Gösterilecek kullanıcı bulunamadı" : "Arama kriterlerinize uygun kullanıcı bulunamadı"}
+              {totalUsers === 0 ? "Gösterilecek kullanıcı bulunamadı" : "Arama kriterlerinize uygun kullanıcı bulunamadı"}
             </p>
           </div>
         ) : (
@@ -689,7 +694,7 @@ export default function UsersPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-muted-foreground">
-            {startIndex + 1}-{Math.min(endIndex, totalFilteredUsers)} / {totalFilteredUsers} kullanıcı
+            Sayfa {currentPage} / {totalPages} - Toplam {totalUsers} kullanıcı
           </div>
           <Pagination>
             <PaginationContent>
