@@ -14,6 +14,9 @@ interface ListingsGridProps {
   selectedInstruments?: string[];
   onClearFilters?: () => void;
   viewMode?: 'grid' | 'list';
+  currentPage: number;
+  itemsPerPage: number;
+  onFilteredCountChange?: (count: number) => void;
 }
 
 const ListingsGrid = ({ 
@@ -25,11 +28,21 @@ const ListingsGrid = ({
   selectedExperience = [],
   selectedInstruments = [],
   onClearFilters,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  currentPage,
+  itemsPerPage,
+  onFilteredCountChange
 }: ListingsGridProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [filteredListings, setFilteredListings] = useState<any[]>([]);
+
+  // Calculate paginated listings
+  const paginatedListings = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredListings.slice(startIndex, endIndex);
+  }, [filteredListings, currentPage, itemsPerPage]);
 
   const sortListings = useCallback((listings: any[], sortType: string) => {
     const sorted = [...listings];
@@ -119,6 +132,11 @@ const ListingsGrid = ({
     setFilteredListings(filtered);
   }, [listings, searchQuery, sortBy, selectedCategories, selectedLocations, selectedExperience, selectedInstruments, sortListings]);
 
+  // Notify parent component of filtered count changes
+  useEffect(() => {
+    onFilteredCountChange?.(filteredListings.length);
+  }, [filteredListings.length, onFilteredCountChange]);
+
 
 
 
@@ -158,7 +176,7 @@ const ListingsGrid = ({
       ) : filteredListings.length > 0 ? (
         viewMode === 'grid' ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredListings.map((listing) => (
+            {paginatedListings.map((listing) => (
               <ListingCard 
                 key={listing._id} 
                 listing={listing} 
@@ -169,7 +187,7 @@ const ListingsGrid = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredListings.map((listing) => (
+            {paginatedListings.map((listing) => (
               <ListingCard 
                 key={listing._id} 
                 listing={listing} 
