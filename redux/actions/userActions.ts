@@ -463,9 +463,11 @@ export const getAllListings = createAsyncThunk(
   "user/getAllListings",
   async (params: any = {}, thunkAPI) => {
     try {
-      // Filter out undefined values before creating URLSearchParams
+      // Filter out undefined values and remove page/limit before creating URLSearchParams
       const filteredParams = Object.fromEntries(
-        Object.entries(params).filter(([_, value]) => value !== undefined)
+        Object.entries(params).filter(([key, value]) => 
+          value !== undefined && key !== 'page' && key !== 'limit'
+        )
       ) as Record<string, string>;
       const queryString = new URLSearchParams(filteredParams).toString();
       const url = `${server}/listings${queryString ? `?${queryString}` : ''}`;
