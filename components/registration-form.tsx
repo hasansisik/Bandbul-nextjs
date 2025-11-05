@@ -117,11 +117,6 @@ export function RegistrationForm({
                 </p>
               </div>
               
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
               
               <div className="grid gap-3">
                 <Label htmlFor="firstName">Ad</Label>

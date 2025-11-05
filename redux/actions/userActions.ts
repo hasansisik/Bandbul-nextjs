@@ -159,7 +159,11 @@ export const register = createAsyncThunk(
       const { data } = await axios.post(`${server}/auth/register`, payload);
       return data.user;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      // Suppress 401 Unauthorized errors - don't show them to user
+      if (error.response?.status === 401) {
+        return thunkAPI.rejectWithValue(null); // Return null to suppress error display
+      }
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );

@@ -116,7 +116,12 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(register.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload as string;
+      // Don't show error if payload is null (401 Unauthorized suppressed)
+      if (action.payload !== null) {
+        state.error = action.payload as string;
+      } else {
+        state.error = null;
+      }
     })
     // Google Register
     .addCase(googleRegister.pending, (state) => {
