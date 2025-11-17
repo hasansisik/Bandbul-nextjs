@@ -12,7 +12,7 @@ import {
   X,
   ChevronDown
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
@@ -39,18 +39,20 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   // Load data on component mount
   useEffect(() => {
     if (allListings.length === 0) {
-      dispatch(getAllListings({}));
+      dispatch(getAllListings({ limit: '1000', status: 'active' }));
     }
     if (categories.length === 0) {
       dispatch(getAllCategories({}));
     }
   }, [dispatch, allListings.length, categories.length]);
 
-  const categoryOptions = categories.map(cat => ({
-    value: cat.name, // Use category name instead of ID for filtering
-    label: cat.name,
-    count: allListings.filter(listing => listing.categoryInfo?.name === cat.name || listing.category === cat.name).length
-  }));
+  const categoryOptions = useMemo(() => {
+    return categories.map(cat => ({
+      value: cat.name, // Use category name instead of ID for filtering
+      label: cat.name,
+      count: allListings.filter(listing => listing.categoryInfo?.name === cat.name || listing.category === cat.name).length
+    }));
+  }, [categories, allListings]);
 
   // Get unique locations from Redux state
   const locations = Array.from(new Set(allListings.map(listing => listing.location)))
@@ -132,7 +134,8 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
 
   // Handle URL parameters on component mount
   useEffect(() => {
-    const categorySlug = searchParams.get('category');
+    // Get all category parameters (can be multiple)
+    const categoryParams = searchParams.getAll('category');
     const instrumentParam = searchParams.get('instrument');
     const locationParam = searchParams.get('location');
     
@@ -142,6 +145,7 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       'muzisyen-ariyorum': 'Müzisyen Arıyorum',
       'ders-almak-istiyorum': 'Ders Almak İstiyorum',
       'ders-veriyorum': 'Ders Veriyorum',
+      'profesyonel-ders-veriyorum': 'Profesyonel Ders Veriyorum',
       'enstruman-satiyorum': 'Enstrüman Satıyorum',
       'studyo-kiraliyorum': 'Stüdyo Kiralıyorum'
     };
@@ -153,42 +157,66 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       instruments: [] as string[]
     };
     
-    // Set category filter from URL
-    if (categorySlug && categorySlugMap[categorySlug]) {
-      newFilters.categories = [categorySlugMap[categorySlug]];
+    // Set category filters from URL - handle multiple categories
+    if (categoryParams.length > 0) {
+      const decodedCategories = categoryParams.map(param => {
+        const decoded = decodeURIComponent(param);
+        // Check if it's a slug that needs mapping
+        if (categorySlugMap[decoded]) {
+          return categorySlugMap[decoded];
+        }
+        // Check if it's already a category name (direct match)
+        // Try to match with existing categories
+        const matchingCategory = categories.find(cat => 
+          cat.name === decoded || 
+          cat.name.toLowerCase().replace(/\s+/g, '-') === decoded.toLowerCase()
+        );
+        if (matchingCategory) {
+          return matchingCategory.name;
+        }
+        // Return decoded value as-is (might be a direct category name)
+        return decoded;
+      });
+      
+      // Filter out invalid categories and only keep those that exist in categoryOptions
+      const validCategories = decodedCategories.filter(catName => 
+        categoryOptions.some(opt => opt.value === catName || opt.label === catName)
+      );
+      
+      newFilters.categories = validCategories;
     }
     
     // Set location filter from URL
     if (locationParam) {
-      newFilters.locations = [locationParam];
+      newFilters.locations = [decodeURIComponent(locationParam)];
     }
     
     // Set instrument filter from URL
     if (instrumentParam) {
-      newFilters.instruments = [instrumentParam];
+      newFilters.instruments = [decodeURIComponent(instrumentParam)];
     }
     
     // Only update state if there are changes to prevent unnecessary re-renders
     setSelectedCategories(prev => {
-      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.categories);
+      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.categories.sort());
       return hasChanged ? newFilters.categories : prev;
     });
     
     setSelectedLocations(prev => {
-      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.locations);
+      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.locations.sort());
       return hasChanged ? newFilters.locations : prev;
     });
     
     setSelectedExperience(prev => {
-      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.experience);
+      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.experience.sort());
       return hasChanged ? newFilters.experience : prev;
     });
     
     setSelectedInstruments(prev => {
-      const hasChanged = JSON.stringify(prev) !== JSON.stringify(newFilters.instruments);
+      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.instruments.sort());
       return hasChanged ? newFilters.instruments : prev;
     });
-  }, [searchParams]);
+  }, [searchParams, categories, categoryOptions]);
 
   const hasActiveFilters = selectedCategories.length > 0 || selectedLocations.length > 0 || selectedExperience.length > 0 || selectedInstruments.length > 0;
 

@@ -45,7 +45,7 @@ const HeroSection = () => {
   // Load data on component mount
   useEffect(() => {
     if (allListings.length === 0) {
-      dispatch(getAllListings({}));
+      dispatch(getAllListings({ limit: '1000', status: 'active' }));
     }
     if (categories.length === 0) {
       dispatch(getAllCategories({}));

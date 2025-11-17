@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Load dashboard data when component mounts
-    dispatch(getAllListings({}))
+    dispatch(getAllListings({ limit: '1000', status: 'all' }))
     dispatch(getAllCategories({}))
     dispatch(getAllUsers({}))
     dispatch(getAllContacts({}))

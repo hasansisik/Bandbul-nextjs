@@ -49,7 +49,7 @@ export default function ListingDetailPage() {
     // Load user and listings
     dispatch(loadUser());
     if (allListings.length === 0) {
-      dispatch(getAllListings({}));
+      dispatch(getAllListings({ limit: '1000', status: 'active' }));
     }
   }, [dispatch, allListings.length]);
 

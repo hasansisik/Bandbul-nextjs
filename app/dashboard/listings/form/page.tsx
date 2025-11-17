@@ -65,7 +65,7 @@ function ListingsFormContent() {
   useEffect(() => {
     dispatch(getAllCategories({}))
     dispatch(getAllInstruments({}))
-    dispatch(getAllListings({}))
+    dispatch(getAllListings({ limit: '1000', status: 'all' }))
   }, [dispatch])
 
   // Load listing data for editing

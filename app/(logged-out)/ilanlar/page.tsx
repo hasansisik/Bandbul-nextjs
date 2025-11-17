@@ -26,7 +26,7 @@ function ListingsPageContent() {
   // Load listings on component mount
   useEffect(() => {
     if (allListings.length === 0) {
-      dispatch(getAllListings({}));
+      dispatch(getAllListings({ limit: '1000', status: 'active' }));
     }
   }, [dispatch, allListings.length]);
 
@@ -48,18 +48,18 @@ function ListingsPageContent() {
   // Handle URL parameters on page load
   useEffect(() => {
     const searchParam = searchParams.get('search');
-    const categoryParam = searchParams.get('category');
+    const categoryParams = searchParams.getAll('category');
     
     if (searchParam) {
       setSearchQuery(searchParam);
     }
     
-    if (categoryParam) {
-      // Normalize the category parameter from URL
-      const normalizedCategory = decodeURIComponent(categoryParam);
+    if (categoryParams.length > 0) {
+      // Decode all category parameters from URL
+      const decodedCategories = categoryParams.map(param => decodeURIComponent(param));
       setActiveFilters(prev => ({
         ...prev,
-        categories: [normalizedCategory]
+        categories: decodedCategories
       }));
     }
   }, [searchParams]);

@@ -60,7 +60,7 @@ export default function ListingsCategoryModal({
   useEffect(() => {
     if (isOpen) {
       dispatch(getAllCategories({}))
-      dispatch(getAllListings({}))
+      dispatch(getAllListings({ limit: '1000', status: 'all' }))
     }
   }, [dispatch, isOpen])
 

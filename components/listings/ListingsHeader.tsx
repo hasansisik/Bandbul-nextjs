@@ -28,7 +28,7 @@ const ListingsHeader = ({ onSearch, onViewModeChange, onFilterClick, viewMode = 
 
   // Fetch listings when component mounts
   useEffect(() => {
-    dispatch(getAllListings({}));
+    dispatch(getAllListings({ limit: '1000', status: 'active' }));
   }, [dispatch]);
 
   // Calculate statistics
