@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { useSearchParams } from "next/navigation"
 import { getUserListings, createListing, updateListing, deleteListing, getAllCategories, getAllInstruments, loadUser } from "@/redux/actions/userActions"
@@ -184,7 +184,7 @@ export function ProfilePage() {
   const searchParams = useSearchParams()
   
   // Function to show operation messages and auto-clear them
-  const showMessage = (type: 'success' | 'error' | 'info', text: string) => {
+  const showMessage = useCallback((type: 'success' | 'error' | 'info', text: string) => {
     setOperationMessage({ type, text })
     
     // Scroll to top when error occurs
@@ -196,7 +196,7 @@ export function ProfilePage() {
     setTimeout(() => {
       setOperationMessage(null)
     }, 5000)
-  }
+  }, [])
   
   // Get user data and listings from Redux
   const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
@@ -249,6 +249,7 @@ export function ProfilePage() {
   useEffect(() => {
     const tab = searchParams.get('tab')
     const action = searchParams.get('action')
+    const listingId = searchParams.get('listingId')
     
     if (tab === 'listings' && action === 'create') {
       setShowCreateForm(true)
@@ -257,8 +258,35 @@ export function ProfilePage() {
         setListingRulesDialogOpen(true)
       }, 700)
       setShowFormTimer(timer)
+    } else if (tab === 'listings' && action === 'edit' && listingId) {
+      // Find the listing by ID and open it in edit mode
+      const listingToEdit = userListings.find(listing => listing._id === listingId)
+      if (listingToEdit && !editingListing) {
+        setEditingListing(listingToEdit)
+        setNewListing({
+          title: listingToEdit.title,
+          description: listingToEdit.description,
+          category: listingToEdit.category,
+          location: listingToEdit.location,
+          experience: listingToEdit.experience || "Orta",
+          instrument: listingToEdit.instrument || "",
+          image: listingToEdit.image
+        })
+        setShowCreateForm(true)
+        // Set active tab to show the listing
+        if (listingToEdit.status === 'pending') {
+          setActiveTab('pending')
+        } else if (listingToEdit.status === 'archived') {
+          setActiveTab('archived')
+        } else if (listingToEdit.status === 'active') {
+          setActiveTab('active')
+        }
+      } else if (!listingToEdit && userListings.length > 0 && !listingsLoading && listingId) {
+        // Listing not found - show error message
+        showMessage('error', 'İlan bulunamadı. İlanınız onay aşamasında olabilir veya silinmiş olabilir.')
+      }
     }
-  }, [searchParams])
+  }, [searchParams, userListings, dispatch, editingListing, listingsLoading, showMessage])
 
   // Cleanup timer on component unmount
   useEffect(() => {
@@ -303,6 +331,7 @@ export function ProfilePage() {
     const url = new URL(window.location.href)
     url.searchParams.delete('tab')
     url.searchParams.delete('action')
+    url.searchParams.delete('listingId')
     window.history.replaceState({}, '', url.toString())
   }
 
@@ -374,6 +403,7 @@ export function ProfilePage() {
     const url = new URL(window.location.href)
     url.searchParams.delete('tab')
     url.searchParams.delete('action')
+    url.searchParams.delete('listingId')
     window.history.replaceState({}, '', url.toString())
   }
 

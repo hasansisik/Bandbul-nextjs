@@ -123,9 +123,19 @@ export function NotificationsPage() {
   }
 
   const handleViewListing = (notification: any) => {
+    // If notification is for pending listing, redirect to profile page to edit
+    if (notification.type === 'listing_pending' && notification.listingId) {
+      router.push(`/profil?tab=listings&action=edit&listingId=${notification.listingId}`);
+      return;
+    }
+    
+    // For other listing notifications, try to view the listing detail
     if (notification.listingInfo && notification.listingInfo.title) {
       const slug = createTitleSlug(notification.listingInfo.title);
       router.push(`/ilan-detay/${slug}`);
+    } else if (notification.listingId) {
+      // If we have listingId but no title, redirect to profile to edit
+      router.push(`/profil?tab=listings&action=edit&listingId=${notification.listingId}`);
     }
   }
 
@@ -304,7 +314,9 @@ export function NotificationsPage() {
                                 className="text-xs text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={() => handleViewListing(notification)}
                               >
-                                İlanı Görüntüle
+                                {notification.type === 'listing_pending' 
+                                  ? 'İlanı Düzenle' 
+                                  : 'İlanı Görüntüle'}
                               </Button>
                             )}
                           </div>

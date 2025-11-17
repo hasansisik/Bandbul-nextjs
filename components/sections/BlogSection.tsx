@@ -100,13 +100,16 @@ const BlogSection = () => {
     // Only start dragging if touching empty space, not on links
     if ((e.target as HTMLElement).closest('a')) return;
     setIsDragging(true);
-    setStartX(e.touches[0].pageX - (carouselRef.current?.offsetLeft || 0));
+    const touch = e.touches[0];
+    setStartX(touch.pageX - (carouselRef.current?.offsetLeft || 0));
     setScrollLeft(currentIndex * 25);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
-    const x = e.touches[0].pageX - (carouselRef.current?.offsetLeft || 0);
+    e.preventDefault(); // Prevent default scrolling behavior
+    const touch = e.touches[0];
+    const x = touch.pageX - (carouselRef.current?.offsetLeft || 0);
     const walk = (x - startX) * 2;
     const newIndex = Math.round((scrollLeft - walk) / 25);
     setCurrentIndex(Math.max(0, Math.min(newIndex, blogPosts.length - 4)));
@@ -139,24 +142,102 @@ const BlogSection = () => {
                 <div className="text-muted-foreground">Henüz blog yazısı bulunmuyor.</div>
               </div>
             ) : (
-              <div 
-                ref={carouselRef}
-                className="overflow-hidden cursor-grab active:cursor-grabbing"
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
-              <div 
-                className="flex transition-transform duration-700 ease-in-out select-none"
-                style={{ 
-                  transform: `translateX(-${currentIndex * 25}%)`,
-                  pointerEvents: isDragging ? 'none' : 'auto'
-                }}
-              >
+              <>
+                {/* Mobile: Native scroll */}
+                <div 
+                  className="md:hidden overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
+                  }}
+                >
+                  <div className="flex gap-4 px-4">
+                    {blogPosts.map((post) => (
+                      <div key={post._id} className="w-[85vw] flex-shrink-0 snap-start">
+                        <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
+                          <div className="aspect-[4/3] overflow-hidden relative">
+                            <Link href={`/${createTitleSlug(post.title)}`}>
+                              <img 
+                                src={post.image} 
+                                alt={post.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </Link>
+                            {/* Read Time - Top Right */}
+                            <div className="absolute top-3 right-3">
+                              <div className="flex items-center gap-1 text-xs text-foreground bg-background/90 px-2 py-1 rounded">
+                                <Clock className="h-3 w-3" />
+                                {post.readTime}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-6">
+                            <div className="flex items-center gap-2 mb-3">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/blog/kategori/${createCategorySlug(post.category)}`);
+                                }}
+                                className="focus:outline-none"
+                              >
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs border-border cursor-pointer hover:bg-muted"
+                                >
+                                  {post.category}
+                                </Badge>
+                              </button>
+                            </div>
+                            
+                            <Link href={`/${createTitleSlug(post.title)}`}>
+                              <h3 className="font-semibold text-lg leading-tight mb-3 line-clamp-2 text-foreground">
+                                {post.title}
+                              </h3>
+                            </Link>
+                            
+                            <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
+                              {post.excerpt}
+                            </p>
+                            
+                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>{new Date(post.publishedDate).toLocaleDateString('tr-TR', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop: Transform-based carousel */}
+                <div 
+                  ref={carouselRef}
+                  className="hidden md:block overflow-hidden cursor-grab active:cursor-grabbing"
+                  onMouseDown={handleMouseDown}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={handleMouseMove}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  style={{ touchAction: 'pan-x' }}
+                >
+                <div 
+                  className="flex transition-transform duration-700 ease-in-out select-none"
+                  style={{ 
+                    transform: `translateX(-${currentIndex * 25}%)`,
+                    pointerEvents: isDragging ? 'none' : 'auto'
+                  }}
+                >
                 {blogPosts.map((post) => (
                   <div key={post._id} className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-3">
                     <div className="h-full bg-card border border-border rounded-lg overflow-hidden">
@@ -219,8 +300,9 @@ const BlogSection = () => {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
-            </div>
+              </>
             )}
 
           </div>
