@@ -229,15 +229,30 @@ export const loadUser = createAsyncThunk(
 export const logout = createAsyncThunk("user/logout", async (_, thunkAPI) => {
   try {
     const token = localStorage.getItem("accessToken");
-    const { data } = await axios.get(`${server}/auth/logout`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    localStorage.removeItem("accessToken");
-    return data.message;
+    if (token) {
+      try {
+        const { data } = await axios.get(`${server}/auth/logout`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        localStorage.removeItem("accessToken");
+        return data.message;
+      } catch (apiError: any) {
+        // Even if API call fails, clear local storage
+        localStorage.removeItem("accessToken");
+        // Return success message to allow logout to proceed
+        return "Çıkış yapıldı";
+      }
+    } else {
+      // No token, just clear local storage
+      localStorage.removeItem("accessToken");
+      return "Çıkış yapıldı";
+    }
   } catch (error: any) {
-    return thunkAPI.rejectWithValue(error.response.data.message);
+    // Clear local storage even on error
+    localStorage.removeItem("accessToken");
+    return thunkAPI.rejectWithValue(error.response?.data?.message || "Çıkış yapılırken bir hata oluştu");
   }
 });
 

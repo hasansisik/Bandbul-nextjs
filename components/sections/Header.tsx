@@ -258,9 +258,15 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await dispatch(logout());
-      router.push("/");
+      // Clear all localStorage items
+      localStorage.removeItem("accessToken");
+      // Force page reload to clear all state
+      window.location.href = "/";
     } catch (err) {
       console.error("Logout error:", err);
+      // Even if logout fails, clear local storage and redirect
+      localStorage.removeItem("accessToken");
+      window.location.href = "/";
     }
   };
 

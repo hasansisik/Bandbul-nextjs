@@ -189,14 +189,30 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.loading = true;
     })
     .addCase(logout.fulfilled, (state, action) => {
+      // Reset to initial state on successful logout
       state.loading = false;
       state.isAuthenticated = false;
       state.user = null;
       state.message = action.payload;
+      state.error = null;
+      // Clear user-specific data
+      state.userListings = [];
+      state.conversations = [];
+      state.currentMessages = [];
+      state.currentConversation = null;
+      state.unreadCount = 0;
     })
     .addCase(logout.rejected, (state, action) => {
+      // Even if logout fails, clear authentication state
       state.loading = false;
+      state.isAuthenticated = false;
+      state.user = null;
       state.error = action.payload as string;
+      state.userListings = [];
+      state.conversations = [];
+      state.currentMessages = [];
+      state.currentConversation = null;
+      state.unreadCount = 0;
     })
     // Verify Email
     .addCase(verifyEmail.pending, (state) => {

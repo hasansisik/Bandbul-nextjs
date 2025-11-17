@@ -49,9 +49,15 @@ export function NavUser({
   const handleLogout = async () => {
     try {
       await dispatch(logout()).unwrap()
-      router.push('/giris')
+      // Clear all localStorage items
+      localStorage.removeItem("accessToken")
+      // Force page reload to clear all state
+      window.location.href = '/giris'
     } catch (error) {
       console.error('Logout failed:', error)
+      // Even if logout fails, clear local storage and redirect
+      localStorage.removeItem("accessToken")
+      window.location.href = '/giris'
     }
   }
 
