@@ -22,9 +22,6 @@ function ListingsPageContent() {
     experience: [] as string[],
     instruments: [] as string[]
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [filteredCount, setFilteredCount] = useState(0);
 
   // Load listings on component mount
   useEffect(() => {
@@ -95,26 +92,7 @@ function ListingsPageContent() {
       experience: [],
       instruments: []
     });
-    setCurrentPage(1); // Reset to first page when clearing filters
   }, []);
-
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
-
-  const handleItemsPerPageChange = useCallback((newItemsPerPage: string) => {
-    setItemsPerPage(parseInt(newItemsPerPage));
-    setCurrentPage(1); // Reset to first page when changing items per page
-  }, []);
-
-  const handleFilteredCountChange = useCallback((count: number) => {
-    setFilteredCount(count);
-  }, []);
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, activeFilters]);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -149,18 +127,9 @@ function ListingsPageContent() {
               selectedInstruments={activeFilters.instruments}
               viewMode={viewMode}
               onClearFilters={clearAllFilters}
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              onFilteredCountChange={handleFilteredCountChange}
             />
             <div className="mt-8">
-              <ListingsPagination 
-                totalListings={filteredCount}
-                currentPage={currentPage}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-                onItemsPerPageChange={handleItemsPerPageChange}
-              />
+              <ListingsPagination totalListings={allListings.length} />
             </div>
           </div>
         </div>

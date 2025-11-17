@@ -93,15 +93,12 @@ export function MessagesPage() {
     const isCurrentConversation = selectedConversation && socketMessage.conversationId === selectedConversation;
     if (!isCurrentConversation) {
       // Only refresh conversations for other conversations to update last message
-      // But only if we have conversations loaded to avoid loading states
-      if (conversations.length > 0) {
-        dispatch(getConversations());
-      }
+      dispatch(getConversations());
     }
     
     // Always refresh unread count for real-time updates
     dispatch(getUnreadCount());
-  }, [dispatch, selectedConversation, conversations.length]);
+  }, [dispatch, selectedConversation]);
 
   // Handle messages read from WebSocket
   const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
@@ -152,16 +149,13 @@ export function MessagesPage() {
 
   // Load conversations on component mount
   useEffect(() => {
-    // Only load conversations if we don't have any yet
-    if (conversations.length === 0) {
-      dispatch(getConversations())
-    }
+    dispatch(getConversations())
     dispatch(getUnreadCount())
     // Clear any previous errors when loading conversations
     if (messagesError) {
       dispatch(clearError())
     }
-  }, [dispatch, messagesError, conversations.length])
+  }, [dispatch, messagesError])
 
   // Handle URL parameters for direct conversation
   useEffect(() => {
@@ -254,10 +248,7 @@ export function MessagesPage() {
   // Load messages when conversation is selected (only once)
   useEffect(() => {
     if (selectedConversation) {
-      // Only load messages if we don't already have messages for this conversation
-      if (currentMessages.length === 0 || currentConversation?.id !== selectedConversation) {
-        dispatch(getMessages({ conversationId: selectedConversation }))
-      }
+      dispatch(getMessages({ conversationId: selectedConversation }))
       // Clear any previous errors when selecting conversation
       if (messagesError) {
         dispatch(clearError())
@@ -267,7 +258,7 @@ export function MessagesPage() {
         forceScrollToBottom();
       }, 200);
     }
-  }, [selectedConversation, dispatch, messagesError, currentMessages.length, currentConversation?.id])
+  }, [selectedConversation, dispatch, messagesError])
 
   // Remove duplicate messages by ID
   const uniqueMessages = currentMessages.filter((message, index, self) =>
@@ -330,8 +321,8 @@ export function MessagesPage() {
           content: messageContent
         }));
         
-        // Don't reload messages immediately - let WebSocket handle the update
-        // This prevents unnecessary loading states and screen refreshes
+        // Reload messages to show the new one
+        dispatch(getMessages({ conversationId: selectedConversation }));
         
         // Scroll to bottom after sending message
         setTimeout(() => {
@@ -550,7 +541,11 @@ export function MessagesPage() {
 
             {/* Conversations */}
             <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-              {filteredConversations.length === 0 ? (
+              {messagesLoading && conversations.length === 0 ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredConversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 space-y-4">
                   <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center">
                     <MessageCircle className="w-8 h-8 text-muted-foreground" />
@@ -761,7 +756,11 @@ export function MessagesPage() {
                   ref={messagesContainerRef}
                   className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
                 >
-                  {uniqueMessages.length === 0 ? (
+                  {messagesLoading && uniqueMessages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : uniqueMessages.length === 0 && !messagesLoading ? (
                     <div className="flex items-center justify-center h-full">
                       <p className="text-muted-foreground">Henüz mesaj yok. İlk mesajı siz gönderin!</p>
                     </div>

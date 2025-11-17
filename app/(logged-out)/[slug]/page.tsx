@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { getBlogBySlug, getAllBlogs } from "@/redux/actions/blogActions";
+import { getAllBlogs } from "@/redux/actions/blogActions";
 import { BlogPost } from "@/redux/actions/blogActions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,12 @@ import ShareModal from "@/components/ShareModal";
 
 export default function BlogDetailPage() {
   const dispatch = useDispatch<AppDispatch>()
-  const { blogs, currentBlog, loading, error } = useSelector((state: RootState) => state.blog)
+  const { blogs, loading, error } = useSelector((state: RootState) => state.blog)
   
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Function to create title slug for URL
@@ -57,18 +58,24 @@ export default function BlogDetailPage() {
   };
 
   useEffect(() => {
-    // Load blog by slug
-    if (slug) {
-      dispatch(getBlogBySlug(slug));
-    }
-  }, [dispatch, slug]);
-
-  useEffect(() => {
-    // Load blogs for related posts
+    // Load blogs
     if (blogs.length === 0) {
       dispatch(getAllBlogs({}));
     }
   }, [dispatch, blogs.length]);
+
+  useEffect(() => {
+    // Find blog by title slug
+    if (blogs.length > 0) {
+      const foundBlog = blogs.find(blog => {
+        const titleSlug = createTitleSlug(blog.title);
+        return titleSlug === slug;
+      });
+      if (foundBlog) {
+        setPost(foundBlog);
+      }
+    }
+  }, [slug, blogs]);
 
   const recentPosts = blogs
     .filter(p => createTitleSlug(p.title) !== slug)
@@ -89,7 +96,7 @@ export default function BlogDetailPage() {
     );
   }
 
-  if (!currentBlog) {
+  if (!post) {
     return (
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-12">
@@ -129,44 +136,44 @@ export default function BlogDetailPage() {
             <ChevronRight className="h-4 w-4" />
             <span 
               onClick={() => {
-                const categorySlug = createCategorySlug(currentBlog.category);
+                const categorySlug = createCategorySlug(post.category);
                 router.push(`/blog/kategori/${categorySlug}`)
               }} 
               className="hover:text-foreground cursor-pointer transition-colors"
             >
-              {currentBlog.category}
+              {post.category}
             </span>
             <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium truncate max-w-xs">{currentBlog.title}</span>
+            <span className="text-foreground font-medium truncate max-w-xs">{post.title}</span>
           </nav>
           {/* Article Header */}
           <article className="mb-16">
             {/* Title */}
             <h1 className="text-4xl font-bold text-foreground mb-6 leading-tight">
-              {currentBlog.title}
+              {post.title}
             </h1>
 
             {/* Meta Information */}
             <div className="flex items-center gap-6 text-sm text-muted-foreground mb-8 pb-8 border-b">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span>{currentBlog.author}</span>
+                <span>{post.author}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(currentBlog.publishedDate)}</span>
+                <span>{formatDate(post.publishedDate)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>{currentBlog.readTime}</span>
+                <span>{post.readTime}</span>
               </div>
             </div>
 
             {/* Featured Image */}
             <div className="aspect-[16/9] rounded-lg overflow-hidden mb-8">
               <img
-                src={currentBlog.image}
-                alt={currentBlog.title}
+                src={post.image}
+                alt={post.title}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -174,24 +181,24 @@ export default function BlogDetailPage() {
             {/* Excerpt */}
             <div className="mb-8">
               <p className="text-lg text-muted-foreground leading-relaxed italic border-l-4 border-primary/20 pl-6">
-                {currentBlog.excerpt}
+                {post.excerpt}
               </p>
             </div>
 
             {/* Content */}
             <div className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-2xl prose-h2:mb-4 prose-h2:mt-8 prose-h3:text-xl prose-h3:mb-3 prose-h3:mt-6 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4 prose-ul:text-muted-foreground prose-li:mb-1 dark:prose-invert">
-              <div dangerouslySetInnerHTML={{ __html: currentBlog.content }} />
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
             </div>
 
             {/* Tags */}
-            {currentBlog.tags.length > 0 && (
+            {post.tags.length > 0 && (
               <div className="mt-12 pt-8 border-t">
                 <div className="flex items-center gap-2 mb-4">
                   <Tag className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">Etiketler</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {currentBlog.tags.map((tag: string, index: number) => (
+                  {post.tags.map((tag: string, index: number) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
@@ -265,8 +272,8 @@ export default function BlogDetailPage() {
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        title={currentBlog?.title || ''}
-        description={currentBlog?.excerpt || ''}
+        title={post?.title || ''}
+        description={post?.excerpt || ''}
         url={typeof window !== 'undefined' ? window.location.href : ''}
       />
     </main>

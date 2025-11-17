@@ -29,7 +29,6 @@ import {
   getAllUsers,
   deleteUser,
   updateUserRole,
-  updateUserStatus,
   getConversations,
   getMessages,
   sendMessage,
@@ -48,7 +47,6 @@ interface UserState {
   loading: boolean;
   error: string | null;
   isAuthenticated?: boolean;
-  isVerified?: boolean;
   message?: string | null;
   listings: any[];
   allListings: any[];
@@ -110,18 +108,12 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(register.fulfilled, (state) => {
       state.loading = false;
       state.isAuthenticated = false;
-      state.isVerified = false; // User needs to verify email
       state.message = null;
       state.error = null;
     })
     .addCase(register.rejected, (state, action) => {
       state.loading = false;
-      // Don't show error if payload is null (401 Unauthorized suppressed)
-      if (action.payload !== null) {
-        state.error = action.payload as string;
-      } else {
-        state.error = null;
-      }
+      state.error = action.payload as string;
     })
     // Google Register
     .addCase(googleRegister.pending, (state) => {
@@ -136,15 +128,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleRegister.rejected, (state, action) => {
       state.loading = false;
-      // Handle inactive user case
-      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
-        state.isAuthenticated = false;
-        state.isVerified = false;
-        state.user = null;
-        state.error = (action.payload as any).message;
-      } else {
-        state.error = action.payload as string;
-      }
+      state.error = action.payload as string;
     })
     // Google Auth (Unified)
     .addCase(googleAuth.pending, (state) => {
@@ -159,15 +143,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleAuth.rejected, (state, action) => {
       state.loading = false;
-      // Handle inactive user case
-      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
-        state.isAuthenticated = false;
-        state.isVerified = false;
-        state.user = null;
-        state.error = (action.payload as any).message;
-      } else {
-        state.error = action.payload as string;
-      }
+      state.error = action.payload as string;
     })
     // Login
     .addCase(login.pending, (state) => {
@@ -176,20 +152,11 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(login.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.isVerified = true; // Login successful means user is verified
       state.user = action.payload;
     })
     .addCase(login.rejected, (state, action) => {
       state.loading = false;
-      // Handle inactive user case
-      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
-        state.isAuthenticated = false;
-        state.isVerified = false;
-        state.user = null;
-        state.error = (action.payload as any).message;
-      } else {
-        state.error = action.payload as string;
-      }
+      state.error = action.payload as string;
     })
     // Google Login
     .addCase(googleLogin.pending, (state) => {
@@ -202,15 +169,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(googleLogin.rejected, (state, action) => {
       state.loading = false;
-      // Handle inactive user case
-      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
-        state.isAuthenticated = false;
-        state.isVerified = false;
-        state.user = null;
-        state.error = (action.payload as any).message;
-      } else {
-        state.error = action.payload as string;
-      }
+      state.error = action.payload as string;
     })
     // Load User
     .addCase(loadUser.pending, (state) => {
@@ -219,20 +178,11 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(loadUser.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.isVerified = action.payload.isVerified; // Use actual verification status from backend
       state.user = action.payload;
     })
     .addCase(loadUser.rejected, (state, action) => {
       state.loading = false;
-      // Handle inactive user case - user gets kicked out
-      if (action.payload && typeof action.payload === 'object' && 'requiresLogout' in action.payload) {
-        state.isAuthenticated = false;
-        state.isVerified = false;
-        state.user = null;
-        state.error = (action.payload as any).message;
-      } else {
-        state.error = action.payload as string;
-      }
+      state.error = action.payload as string;
     })
     // Logout
     .addCase(logout.pending, (state) => {
@@ -241,7 +191,6 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(logout.fulfilled, (state, action) => {
       state.loading = false;
       state.isAuthenticated = false;
-      state.isVerified = false;
       state.user = null;
       state.message = action.payload;
     })
@@ -255,9 +204,7 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(verifyEmail.fulfilled, (state, action) => {
       state.loading = false;
-      state.isVerified = true;
-      state.isAuthenticated = false; // User still needs to login after verification
-      state.message = action.payload.message;
+      state.message = action.payload;
     })
     .addCase(verifyEmail.rejected, (state, action) => {
       state.loading = false;
@@ -589,22 +536,6 @@ export const userReducer = createReducer(initialState, (builder) => {
       state.message = action.payload.message;
     })
     .addCase(updateUserRole.rejected, (state, action) => {
-      state.usersLoading = false;
-      state.usersError = action.payload as string;
-    })
-    // Update User Status
-    .addCase(updateUserStatus.pending, (state) => {
-      state.usersLoading = true;
-    })
-    .addCase(updateUserStatus.fulfilled, (state, action) => {
-      state.usersLoading = false;
-      const index = state.allUsers.findIndex(user => user._id === action.payload.id);
-      if (index !== -1) {
-        state.allUsers[index].status = action.payload.status;
-      }
-      state.message = action.payload.message;
-    })
-    .addCase(updateUserStatus.rejected, (state, action) => {
       state.usersLoading = false;
       state.usersError = action.payload as string;
     })

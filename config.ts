@@ -1,1 +1,1 @@
-export const server: string ="https://bandbul-server-12d8fc4aef8f.herokuapp.com/v1";
+export const server: string ="https://bandbul-server.vercel.app/v1";

@@ -3,16 +3,17 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
 
 interface ListingsPaginationProps {
   totalListings: number;
-  currentPage: number;
-  itemsPerPage: number;
-  onPageChange: (page: number) => void;
-  onItemsPerPageChange: (itemsPerPage: string) => void;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
-const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageChange, onItemsPerPageChange }: ListingsPaginationProps) => {
+const ListingsPagination = ({ totalListings, currentPage = 1, onPageChange }: ListingsPaginationProps) => {
+  const [page, setPage] = useState(currentPage);
+  const itemsPerPage = 12;
   const totalPages = Math.ceil(totalListings / itemsPerPage);
 
   const getPageNumbers = () => {
@@ -52,7 +53,8 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
 
   const handlePageChange = (newPage: number | string) => {
     if (typeof newPage === 'number') {
-      onPageChange(newPage);
+      setPage(newPage);
+      onPageChange?.(newPage);
     }
   };
 
@@ -65,7 +67,7 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
     <div className="flex items-center justify-between bg-card rounded-xl p-6 shadow-sm border border-border">
       {/* Page Info */}
       <div className="text-sm text-muted-foreground hidden md:block">
-        Sayfa <span className="font-semibold text-card-foreground">{currentPage}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">{totalListings.toLocaleString()}</span> ilan
+        Sayfa <span className="font-semibold text-card-foreground">{page}</span> / <span className="font-semibold text-card-foreground">{totalPages}</span> - Toplam <span className="font-semibold text-card-foreground">{totalListings.toLocaleString()}</span> ilan
       </div>
 
       {/* Pagination Controls */}
@@ -74,8 +76,8 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
+          onClick={() => handlePageChange(Math.max(1, page - 1))}
+          disabled={page === 1}
           className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -91,10 +93,10 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
                 </div>
               ) : (
                 <Button
-                  variant={currentPage === pageNum ? "default" : "outline"}
+                  variant={page === pageNum ? "default" : "outline"}
                   size="sm"
                   onClick={() => handlePageChange(pageNum as number)}
-                  className={`h-9 w-9 p-0 ${currentPage === pageNum ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border hover:bg-accent'}`}
+                  className={`h-9 w-9 p-0 ${page === pageNum ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-border hover:bg-accent'}`}
                 >
                   {pageNum}
                 </Button>
@@ -107,8 +109,8 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
+          onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
           className="h-9 w-9 p-0 border-border hover:bg-accent"
         >
           <ChevronRight className="h-4 w-4" />
@@ -118,7 +120,7 @@ const ListingsPagination = ({ totalListings, currentPage, itemsPerPage, onPageCh
       {/* Items Per Page */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground hidden md:inline">Sayfa başına:</span>
-        <Select value={itemsPerPage.toString()} onValueChange={onItemsPerPageChange}>
+        <Select defaultValue="12">
           <SelectTrigger className="w-[80px] border-border">
             <SelectValue />
           </SelectTrigger>

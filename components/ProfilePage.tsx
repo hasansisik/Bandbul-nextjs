@@ -513,34 +513,14 @@ export function ProfilePage() {
     }
   }
 
-  const getCategoryName = (categoryData: any) => {
-    // If categoryData is already a populated object with name property
-    if (categoryData && typeof categoryData === 'object' && categoryData.name) {
-      return categoryData.name
-    }
-    
-    // If categoryData is just an ID string, look it up in the categories array
-    if (typeof categoryData === 'string') {
-      const category = categories.find(cat => cat._id === categoryData)
-      return category ? category.name : "Bilinmeyen Kategori"
-    }
-    
-    return "Bilinmeyen Kategori"
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat._id === categoryId)
+    return category ? category.name : "Bilinmeyen Kategori"
   }
 
-  const getInstrumentName = (instrumentData: any) => {
-    // If instrumentData is already a populated object with name property
-    if (instrumentData && typeof instrumentData === 'object' && instrumentData.name) {
-      return instrumentData.name
-    }
-    
-    // If instrumentData is just an ID string, look it up in the instruments array
-    if (typeof instrumentData === 'string') {
-      const instrument = instruments.find(inst => inst._id === instrumentData)
-      return instrument ? instrument.name : "Bilinmeyen Enstrüman"
-    }
-    
-    return "Bilinmeyen Enstrüman"
+  const getInstrumentName = (instrumentId: string) => {
+    const instrument = instruments.find(inst => inst._id === instrumentId)
+    return instrument ? instrument.name : "Bilinmeyen Enstrüman"
   }
 
   const getStatusBadge = (listing: any) => {
@@ -1280,7 +1260,7 @@ export function ProfilePage() {
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200"></div>
                       </div>
-                      <div className="p-5 pb-6">
+                      <div className="p-5">
                         <h3 className="font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-muted-foreground transition-colors">
                           {listing.title}
                         </h3>
@@ -1292,8 +1272,8 @@ export function ProfilePage() {
                           {listing.description}
                         </p>
                         
-                        <div className="flex flex-col gap-3 mb-4">
-                          <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
                               {listing.experience}
                             </Badge>
@@ -1304,14 +1284,12 @@ export function ProfilePage() {
                             )}
                           </div>
                           <div className="flex items-center text-xs text-muted-foreground">
-                            <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
-                            <span className="truncate">
-                              {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('tr-TR') : 'Yeni'}
-                            </span>
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {listing.createdAt ? new Date(listing.createdAt).toLocaleDateString('tr-TR') : 'Yeni'}
                           </div>
                         </div>
 
-                        <div className="flex space-x-2 mt-4">
+                        <div className="flex space-x-2">
                           {/* Arşivle butonu - sadece aktif ve onay bekleyen ilanlar için */}
                           {(listing.status === 'active' || listing.status === 'pending') && (
                             <AlertDialog>

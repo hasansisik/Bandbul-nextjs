@@ -105,23 +105,21 @@ const Header = () => {
     onNotificationStatsUpdate: handleNotificationStatsUpdate
   });
 
-  // Fetch settings and categories on component mount (only once)
+  // Fetch settings, categories and user data on component mount
   useEffect(() => {
     dispatch(getSettings());
     dispatch(getAllCategories({}));
     
     // Preload notification sound for better performance
     preloadNotificationSound();
-  }, [dispatch]); // Only run once on mount
-
-  // Load user data when authentication state changes
-  useEffect(() => {
+    
+    // Always try to load user data if token exists
     const token = localStorage.getItem("accessToken");
     
-    if (token && !isAuthenticated) {
+    if (token && (!isAuthenticated || !user)) {
       dispatch(loadUser());
     }
-  }, [dispatch, isAuthenticated]); // Only run when auth state changes
+  }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
 
   // Track previous counts for sound notifications
   const prevMessageCountRef = useRef<number | undefined>(undefined);

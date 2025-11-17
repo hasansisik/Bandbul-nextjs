@@ -5,35 +5,29 @@ import { useAppDispatch, useAppSelector } from "@/redux/hook"
 import { loadUser, clearError } from "@/redux/actions/userActions"
 import { usePathname } from "next/navigation"
 
-// Pages that should not trigger user loading or redirects
-const LOGGED_OUT_PAGES = [
-  "/giris",
-  "/kayitol",
-  "/sifremi-unuttum",
-  "/yeni-sifre",
-  "/dogrulama",
-]
-
 export function UserLoader() {
   const dispatch = useAppDispatch()
   const pathname = usePathname()
   const { isAuthenticated, loading, user } = useAppSelector((state) => state.user)
 
   useEffect(() => {
-    // Don't load user on logged-out pages
-    if (LOGGED_OUT_PAGES.includes(pathname)) {
+    
+    // Clear any existing error when on login page
+    if (pathname === "/giris") {
       dispatch(clearError())
       return
     }
 
-    // Only try to load user if token exists and user is not already authenticated
+    // Always try to load user if token exists
     const token = localStorage.getItem("accessToken")
     
-    if (token && !isAuthenticated) {
-      // Only load user if not already authenticated
-      dispatch(loadUser())
+    if (token) {
+      // Force load user every time if not authenticated or no user data
+      if (!isAuthenticated || !user) {
+        dispatch(loadUser())
+      }
     }
-  }, [dispatch, pathname, isAuthenticated]) // Removed user dependency to prevent unnecessary calls
+  }, [dispatch, pathname, isAuthenticated, user]) // Add dependencies back but keep pathname as primary trigger
 
   // This component doesn't render anything
   return null

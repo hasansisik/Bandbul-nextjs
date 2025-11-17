@@ -12,19 +12,12 @@ interface AuthMiddlewareProps {
 export function AuthMiddleware({ children }: AuthMiddlewareProps) {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { isAuthenticated, isVerified, loading } = useAppSelector((state) => state.user)
+  const { isAuthenticated, loading } = useAppSelector((state) => state.user)
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("accessToken")
-      const currentPath = window.location.pathname
-      
-      // If user is on verification page and not authenticated, allow them to stay
-      if (currentPath === "/dogrulama" && !token) {
-        setIsChecking(false)
-        return
-      }
       
       if (!token) {
         // No token, redirect immediately
@@ -47,19 +40,11 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
         }
       }
       
-      // Check if user is verified after authentication
-      if (isAuthenticated && isVerified === false) {
-        // User is authenticated but not verified, redirect to verification page
-        const userEmail = localStorage.getItem("userEmail") || ""
-        router.push(`/dogrulama?email=${encodeURIComponent(userEmail)}`)
-        return
-      }
-      
       setIsChecking(false)
     }
 
     checkAuth()
-  }, [dispatch, isAuthenticated, isVerified, router])
+  }, [dispatch, isAuthenticated, router])
 
   // Show loading while checking authentication
   if (isChecking || loading) {
@@ -70,22 +55,11 @@ export function AuthMiddleware({ children }: AuthMiddlewareProps) {
     )
   }
 
-  // If user is on verification page, allow them to stay regardless of auth status
-  const currentPath = window.location.pathname
-  if (currentPath === "/dogrulama") {
-    return <>{children}</>
-  }
-
   // If not authenticated after check, don't render children
   if (!isAuthenticated) {
     return null
   }
 
-  // If user is not verified, don't render children (will be redirected)
-  if (isVerified === false) {
-    return null
-  }
-
-  // User is authenticated and verified, render children
+  // User is authenticated, render children
   return <>{children}</>
 }

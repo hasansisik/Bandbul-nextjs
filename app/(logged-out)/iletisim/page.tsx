@@ -32,12 +32,10 @@ export default function ContactPage() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Fetch settings on component mount (only if not already loaded)
+  // Fetch settings on component mount
   useEffect(() => {
-    if (!settings && !settingsLoading) {
-      dispatch(getSettings());
-    }
-  }, [dispatch, settings, settingsLoading]);
+    dispatch(getSettings());
+  }, [dispatch]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
