@@ -314,12 +314,14 @@ function ListingsFormContent() {
             </CardHeader>
             <CardContent className="space-y-4">
               {formData.image ? (
-                <div className="relative">
-                  <img 
-                    src={formData.image} 
-                    alt="İlan görseli" 
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
+                <div className="relative w-full">
+                  <div className="w-full h-96 overflow-hidden rounded-lg border border-border">
+                    <img 
+                      src={formData.image} 
+                      alt="İlan görseli" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <Button
                     variant="destructive"
                     size="sm"
