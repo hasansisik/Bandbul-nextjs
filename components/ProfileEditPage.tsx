@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, X, Plus, Upload, User, Loader2, MapPin } from "lucide-react"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
+import { toast } from "sonner"
 
 const turkishCities = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
@@ -83,11 +84,23 @@ export function ProfileEditPage() {
   const handleSave = async () => {
     if (!user) return
     
+    // Validation: Ad ve soyad zorunlu
+    if (!userData.firstName.trim()) {
+      toast.error('Ad alanı zorunludur.')
+      return
+    }
+    
+    if (!userData.lastName.trim()) {
+      toast.error('Soyad alanı zorunludur.')
+      return
+    }
+    
     setIsLoading(true)
     
     try {
       const result = await dispatch(editProfile({
-        name: userData.firstName,
+        name: userData.firstName.trim(),
+        surname: userData.lastName.trim(),
         email: userData.email,
         password: "", // Not changing password
         address: {
@@ -261,19 +274,25 @@ export function ProfileEditPage() {
             <h2 className="text-xl font-semibold text-card-foreground mb-6">Kişisel Bilgiler</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-sm font-medium text-card-foreground">Ad</Label>
+                <Label htmlFor="firstName" className="text-sm font-medium text-card-foreground">
+                  Ad <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="firstName"
                   value={userData.firstName}
                   onChange={(e) => setUserData({...userData, firstName: e.target.value})}
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-sm font-medium text-card-foreground">Soyad</Label>
+                <Label htmlFor="lastName" className="text-sm font-medium text-card-foreground">
+                  Soyad <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="lastName"
                   value={userData.lastName}
                   onChange={(e) => setUserData({...userData, lastName: e.target.value})}
+                  required
                 />
               </div>
               <div className="space-y-2">
