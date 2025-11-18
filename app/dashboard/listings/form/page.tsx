@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../../../../components/ui/badge"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../../../../components/ui/breadcrumb"
 import { SidebarTrigger } from "../../../../components/ui/sidebar"
-import { Save, Trash2, Image as ImageIcon, X, Plus, MapPin, Music, User } from "lucide-react"
+import { Save, Trash2, Image as ImageIcon, X, Plus, MapPin, Music, User, CheckCircle, XCircle, Archive, Clock } from "lucide-react"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -46,8 +46,9 @@ function ListingsFormContent() {
   const editId = searchParams.get('id')
   const isEditing = !!editId
   
-  const { categories, categoriesLoading, instruments, instrumentsLoading, allListings, listingsLoading, listingsError } = useAppSelector((state) => state.user)
+  const { categories, categoriesLoading, instruments, instrumentsLoading, allListings, listingsLoading, listingsError, user } = useAppSelector((state) => state.user)
   const { experienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel)
+  const isAdmin = user?.role === 'admin'
   
   const [formData, setFormData] = useState({
     title: "",
@@ -56,7 +57,9 @@ function ListingsFormContent() {
     location: "",
     image: "",
     experience: "",
-    instrument: ""
+    instrument: "",
+    status: "pending" as string,
+    rejectionReason: ""
   })
 
   const [loading, setLoading] = useState(false)
@@ -84,7 +87,9 @@ function ListingsFormContent() {
           location: foundListing.location,
           image: foundListing.image,
           experience: foundListing.experience || "",
-          instrument: foundListing.instrument || ""
+          instrument: foundListing.instrument || "",
+          status: foundListing.status || "pending",
+          rejectionReason: foundListing.rejectionReason || ""
         })
       }
     }
@@ -137,7 +142,7 @@ function ListingsFormContent() {
     
     setLoading(true)
     
-    const listingData = {
+    const listingData: any = {
       title: formData.title.trim(),
       description: formData.description.trim(),
       category: formData.category,
@@ -145,6 +150,14 @@ function ListingsFormContent() {
       image: formData.image,
       experience: formData.experience,
       instrument: formData.instrument
+    }
+    
+    // Only include status and rejectionReason if admin is editing
+    if (isEditing && isAdmin) {
+      listingData.status = formData.status
+      if (formData.status === 'rejected' && formData.rejectionReason) {
+        listingData.rejectionReason = formData.rejectionReason.trim()
+      }
     }
     
     try {
@@ -494,6 +507,53 @@ function ListingsFormContent() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* İlan Durumu - Sadece admin ve edit modunda */}
+              {isEditing && isAdmin && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">İlan Durumu</Label>
+                    <Select value={formData.status} onValueChange={(value) => {
+                      handleChange("status", value)
+                      if (value !== 'rejected') {
+                        handleChange("rejectionReason", "")
+                      }
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Durum seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">
+                          Aktif
+                        </SelectItem>
+                        <SelectItem value="pending">
+                          Onay Bekliyor
+                        </SelectItem>
+                        <SelectItem value="archived">
+                          Arşivlenen
+                        </SelectItem>
+                        <SelectItem value="rejected">
+                          Reddedilen
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Reddedilme Nedeni - Sadece rejected seçildiğinde */}
+                  {formData.status === 'rejected' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="rejectionReason">Reddedilme Nedeni</Label>
+                      <Textarea
+                        id="rejectionReason"
+                        value={formData.rejectionReason}
+                        onChange={(e) => handleChange("rejectionReason", e.target.value)}
+                        placeholder="İlanın neden reddedildiğini açıklayın..."
+                        rows={3}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

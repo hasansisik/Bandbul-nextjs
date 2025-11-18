@@ -72,6 +72,7 @@ export interface UpdateListingPayload {
   instrument?: string;
   type?: string;
   status?: string;
+  rejectionReason?: string;
 }
 
 export interface CreateCategoryPayload {
