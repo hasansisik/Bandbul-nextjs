@@ -35,6 +35,7 @@ import {
 } from "../../../components/ui/alert-dialog"
 import ListingsCategoryModal from "../../../components/ListingsCategoryModal"
 import InstrumentManagementModal from "../../../components/InstrumentManagementModal"
+import ExperienceLevelManagementModal from "../../../components/ExperienceLevelManagementModal"
 import { ListingStatusModal } from "../../../components/ListingStatusModal"
 import { DataTable } from "../../../components/ui/data-table"
 import { ColumnDef } from "@tanstack/react-table"
@@ -360,6 +361,8 @@ export default function ListingsPage() {
           />
           
           <InstrumentManagementModal />
+          
+          <ExperienceLevelManagementModal />
           
           <Link href="/dashboard/listings/form">
             <Button className="flex items-center gap-2">

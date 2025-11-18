@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useAppSelector, useAppDispatch } from "@/redux/hook"
 import { useSearchParams } from "next/navigation"
 import { getUserListings, createListing, updateListing, deleteListing, getAllCategories, getAllInstruments, loadUser } from "@/redux/actions/userActions"
+import { getAllExperienceLevels } from "@/redux/actions/experienceLevelActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 
@@ -145,12 +146,7 @@ const ListingsGridSkeleton = () => (
 )
 
 
-const experienceLevels = [
-  "Başlangıç",
-  "Orta", 
-  "İleri",
-  "Profesyonel"
-]
+// Experience levels will be loaded from Redux
 
 const turkishCities = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
@@ -200,6 +196,7 @@ export function ProfilePage() {
   
   // Get user data and listings from Redux
   const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
+  const { experienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel)
   
   // Transform Redux user data to component format
   const userData = user && user.name ? {
@@ -227,6 +224,13 @@ export function ProfilePage() {
     instrument: "",
     image: ""
   })
+
+  // Load experience levels on component mount
+  useEffect(() => {
+    if (experienceLevels.length === 0) {
+      dispatch(getAllExperienceLevels({ active: true }))
+    }
+  }, [dispatch, experienceLevels.length])
 
   // Load user data, listings, categories and instruments on component mount
   useEffect(() => {
@@ -1058,9 +1062,12 @@ export function ProfilePage() {
                               <SelectValue placeholder="Deneyim seviyesi seçin" />
                             </SelectTrigger>
                             <SelectContent>
-                              {experienceLevels.map((level) => (
-                                <SelectItem key={level} value={level}>
-                                  {level}
+                              {experienceLevels
+                                .filter(level => level.active)
+                                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                                .map((level) => (
+                                <SelectItem key={level._id} value={level.name}>
+                                  {level.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1151,9 +1158,12 @@ export function ProfilePage() {
                               <SelectValue placeholder="Deneyim seviyesi seçin" />
                             </SelectTrigger>
                             <SelectContent>
-                              {experienceLevels.map((level) => (
-                                <SelectItem key={level} value={level}>
-                                  {level}
+                              {experienceLevels
+                                .filter(level => level.active)
+                                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                                .map((level) => (
+                                <SelectItem key={level._id} value={level.name}>
+                                  {level.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>

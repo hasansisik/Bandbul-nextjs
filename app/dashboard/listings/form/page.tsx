@@ -11,6 +11,7 @@ import {
   getAllInstruments,
   getAllListings
 } from "@/redux/actions/userActions"
+import { getAllExperienceLevels } from "@/redux/actions/experienceLevelActions"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
 import { toast } from "sonner"
 import { Button } from "../../../../components/ui/button"
@@ -46,6 +47,7 @@ function ListingsFormContent() {
   const isEditing = !!editId
   
   const { categories, categoriesLoading, instruments, instrumentsLoading, allListings, listingsLoading, listingsError } = useAppSelector((state) => state.user)
+  const { experienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel)
   
   const [formData, setFormData] = useState({
     title: "",
@@ -61,10 +63,11 @@ function ListingsFormContent() {
   const [uploading, setUploading] = useState(false)
   const [listing, setListing] = useState<any>(null)
 
-  // Load categories, instruments and listings on component mount
+  // Load categories, instruments, experience levels and listings on component mount
   useEffect(() => {
     dispatch(getAllCategories({}))
     dispatch(getAllInstruments({}))
+    dispatch(getAllExperienceLevels({ active: true }))
     dispatch(getAllListings({ limit: '1000', status: 'all' }))
   }, [dispatch])
 
@@ -197,7 +200,7 @@ function ListingsFormContent() {
     }))
   }
 
-  const experienceLevels = ["Başlangıç", "Orta", "İleri", "Profesyonel"]
+  // Experience levels will be loaded from Redux
   
   const turkishCities = [
     "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
@@ -460,9 +463,12 @@ function ListingsFormContent() {
                     <SelectValue placeholder="Deneyim seviyesi seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {experienceLevels.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
+                    {experienceLevels
+                      .filter(level => level.active)
+                      .sort((a, b) => (a.order || 0) - (b.order || 0))
+                      .map((level) => (
+                      <SelectItem key={level._id} value={level.name}>
+                        {level.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

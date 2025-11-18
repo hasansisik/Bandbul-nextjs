@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
+import { getAllExperienceLevels } from "@/redux/actions/experienceLevelActions";
 
 interface ListingsFilterProps {
   onFiltersChange?: (filters: {
@@ -30,6 +31,7 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const { allListings, categories } = useAppSelector((state) => state.user);
+  const { experienceLevels: reduxExperienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel);
   
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -44,7 +46,10 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     if (categories.length === 0) {
       dispatch(getAllCategories({}));
     }
-  }, [dispatch, allListings.length, categories.length]);
+    if (reduxExperienceLevels.length === 0) {
+      dispatch(getAllExperienceLevels({ active: true }));
+    }
+  }, [dispatch, allListings.length, categories.length, reduxExperienceLevels.length]);
 
   const categoryOptions = useMemo(() => {
     return categories.map(cat => ({
@@ -76,12 +81,16 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       ).length
     }));
 
-  const experienceLevels = [
-    { id: "Başlangıç", name: "Başlangıç", count: allListings.filter(l => l.experience === "Başlangıç").length },
-    { id: "Orta", name: "Orta", count: allListings.filter(l => l.experience === "Orta").length },
-    { id: "İleri", name: "İleri", count: allListings.filter(l => l.experience === "İleri").length },
-    { id: "Profesyonel", name: "Profesyonel", count: allListings.filter(l => l.experience === "Profesyonel").length }
-  ];
+  const experienceLevels = useMemo(() => {
+    return reduxExperienceLevels
+      .filter(level => level.active)
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(level => ({
+        id: level.name,
+        name: level.name,
+        count: allListings.filter(l => l.experience === level.name).length
+      }))
+  }, [reduxExperienceLevels, allListings])
 
   const handleCategoryToggle = useCallback((categoryId: string) => {
     setSelectedCategories(prev => 
