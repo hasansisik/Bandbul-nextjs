@@ -38,6 +38,7 @@ interface UserData {
   bio: string
   skills: string[]
   avatar: string | null
+  birthDate: string
 }
 
 export function ProfileEditPage() {
@@ -57,12 +58,20 @@ export function ProfileEditPage() {
     location: "",
     bio: "",
     skills: [],
-    avatar: null
+    avatar: null,
+    birthDate: ""
   })
   
   // Initialize userData when user data is available
   useEffect(() => {
     if (user) {
+      // Format birthDate for input (YYYY-MM-DD)
+      let formattedBirthDate = ""
+      if (user.birthDate) {
+        const date = new Date(user.birthDate)
+        formattedBirthDate = date.toISOString().split('T')[0]
+      }
+      
       setUserData({
         firstName: user.name || "",
         lastName: user.surname || "",
@@ -71,7 +80,8 @@ export function ProfileEditPage() {
         location: user.address?.city || "Türkiye",
         bio: user.profile?.bio || "",
         skills: user.profile?.skills || [],
-        avatar: user.profile?.picture || null
+        avatar: user.profile?.picture || null,
+        birthDate: formattedBirthDate
       })
     }
   }, [user])
@@ -113,7 +123,8 @@ export function ProfileEditPage() {
         phoneNumber: userData.phone,
         picture: userData.avatar || undefined,
         bio: userData.bio,
-        skills: userData.skills
+        skills: userData.skills,
+        birthDate: userData.birthDate || undefined
       }))
       
       if (editProfile.fulfilled.match(result)) {
@@ -310,6 +321,16 @@ export function ProfileEditPage() {
                   id="phone"
                   value={userData.phone}
                   onChange={(e) => setUserData({...userData, phone: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="birthDate" className="text-sm font-medium text-card-foreground">Doğum Tarihi</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  value={userData.birthDate}
+                  onChange={(e) => setUserData({...userData, birthDate: e.target.value})}
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
               <div className="space-y-2 md:col-span-2">

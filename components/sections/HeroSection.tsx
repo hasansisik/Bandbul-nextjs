@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter } from "lucide-react";
+import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter, HelpCircle, X } from "lucide-react";
 import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories, getAllInstruments } from "@/redux/actions/userActions";
@@ -36,6 +36,7 @@ const HeroSection = () => {
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [instrumentSearchTerm, setInstrumentSearchTerm] = useState("");
   const [locationSearchTerm, setLocationSearchTerm] = useState("");
+  const [showCategoryInfo, setShowCategoryInfo] = useState(false);
 
   // Refs for dropdown containers
   const categoryRef = useRef<HTMLDivElement>(null);
@@ -60,6 +61,7 @@ const HeroSection = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
         setShowCategoryDropdown(false);
+        setShowCategoryInfo(false);
       }
       if (instrumentRef.current && !instrumentRef.current.contains(event.target as Node)) {
         setShowInstrumentDropdown(false);
@@ -227,6 +229,7 @@ const HeroSection = () => {
                     <div
                       onClick={() => {
                         setShowCategoryDropdown(!showCategoryDropdown);
+                        setShowCategoryInfo(false); // Close info popup when opening dropdown
                         if (!showCategoryDropdown) {
                           setCategorySearchTerm("");
                         }
@@ -239,11 +242,64 @@ const HeroSection = () => {
                           {selectedCategory || "NE ARIYORSUN"}
                         </div>
                       </div>
-                      <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowCategoryInfo(!showCategoryInfo);
+                          }}
+                          className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                          title="Kategori açıklaması"
+                        >
+                          <HelpCircle className="w-4 h-4 text-gray-500" />
+                        </button>
+                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
                     </div>
                     
+                    {/* Category Info Popup */}
+                    {showCategoryInfo && (
+                      <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[10000] p-4 min-w-[280px] max-w-[320px]">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-semibold text-gray-900">Kategori Açıklamaları</h3>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowCategoryInfo(false);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <X className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">●</span>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Grup</p>
+                              <p className="text-xs text-gray-600">Müzisyen arıyan grupların ilanlarını filtreler</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">●</span>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Müzisyen</p>
+                              <p className="text-xs text-gray-600">Grup arıyan müzisyenlerin ilanlarını filtreler</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">●</span>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Ders</p>
+                              <p className="text-xs text-gray-600">Ders almak isteyenlerin ve ders vermek isteyenlerin ilanlarını filtreler</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Category Dropdown */}
                     {showCategoryDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">

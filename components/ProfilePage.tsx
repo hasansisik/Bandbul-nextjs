@@ -805,6 +805,13 @@ export function ProfilePage() {
             <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Hakkımda</h2>
               <p className="text-muted-foreground leading-relaxed">{userData.bio}</p>
+              {user?.age && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-card-foreground">Yaş:</span> {user.age}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Listings Section */}

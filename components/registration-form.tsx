@@ -21,6 +21,7 @@ export function RegistrationForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [birthDate, setBirthDate] = useState("")
   const [kvkkAccepted, setKvkkAccepted] = useState(false)
   const [passwordError, setPasswordError] = useState("")
   const dispatch = useAppDispatch()
@@ -92,6 +93,7 @@ export function RegistrationForm({
         surname: lastName,
         email,
         password,
+        birthDate: birthDate || undefined,
       }))
       
       if (register.fulfilled.match(result)) {
@@ -187,6 +189,17 @@ export function RegistrationForm({
                   value={confirmPassword}
                   onChange={handleInputChange(setConfirmPassword)}
                   required 
+                />
+              </div>
+              
+              <div className="grid gap-3">
+                <Label htmlFor="birthDate">Doğum Tarihi</Label>
+                <Input 
+                  id="birthDate" 
+                  type="date" 
+                  value={birthDate}
+                  onChange={handleInputChange(setBirthDate)}
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
               

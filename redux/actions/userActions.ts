@@ -7,6 +7,7 @@ export interface RegisterPayload {
   surname: string;
   email: string;
   password: string;
+  birthDate?: string;
 }
 
 export interface LoginPayload {
@@ -19,6 +20,7 @@ export interface GoogleLoginPayload {
   name: string;
   surname: string;
   googleId: string;
+  birthDate?: string;
 }
 
 export interface VerifyEmailPayload {
@@ -49,6 +51,7 @@ export interface EditProfilePayload {
   bio?: string;
   skills?: string[];
   theme?: string;
+  birthDate?: string;
 }
 
 export interface CreateListingPayload {
