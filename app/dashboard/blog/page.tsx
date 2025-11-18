@@ -37,6 +37,7 @@ export default function BlogPage() {
   useEffect(() => {
     dispatch(getAllBlogs({}))
     dispatch(getAllBlogCategories({}))
+    document.title = "Admin-Blog";
   }, [dispatch])
 
   const handleDelete = async (id: string) => {

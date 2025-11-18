@@ -1,6 +1,11 @@
 import { LoginForm } from "@/components/login-form"
+import { Metadata } from "next";
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Bandbul- Giriş" };
+}
 
 export default function LoginPage() {
   return (

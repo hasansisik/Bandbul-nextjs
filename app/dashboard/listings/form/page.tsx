@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../../../../components/ui/badge"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../../../../components/ui/breadcrumb"
 import { SidebarTrigger } from "../../../../components/ui/sidebar"
-import { Save, Trash2, Image as ImageIcon, X, Plus, MapPin, Music, User, CheckCircle, XCircle, Archive, Clock } from "lucide-react"
+import { Save, Trash2, Image as ImageIcon, X, Plus, MapPin, Music, User, CheckCircle, XCircle, Archive, Clock, Settings } from "lucide-react"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -38,6 +38,9 @@ import {
   AlertDialogTrigger,
 } from "../../../../components/ui/alert-dialog"
 import ListingsCategoryModal from "../../../../components/ListingsCategoryModal"
+import InstrumentManagementModal from "../../../../components/InstrumentManagementModal"
+import ExperienceLevelManagementModal from "../../../../components/ExperienceLevelManagementModal"
+import { turkishCities } from "@/utils/constants/turkishCities"
 
 function ListingsFormContent() {
   const searchParams = useSearchParams()
@@ -73,6 +76,9 @@ function ListingsFormContent() {
     dispatch(getAllExperienceLevels({ active: true }))
     dispatch(getAllListings({ limit: '1000', status: 'all' }))
   }, [dispatch])
+
+  useEffect(() => {
+  }, [categories, instruments, experienceLevels])
 
   // Load listing data for editing
   useEffect(() => {
@@ -212,22 +218,6 @@ function ListingsFormContent() {
       [field]: value
     }))
   }
-
-  // Experience levels will be loaded from Redux
-  
-  const turkishCities = [
-    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
-    "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
-    "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
-    "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
-    "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-    "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
-    "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
-    "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
-    "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
-    "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
-    "Düzce"
-  ]
 
   return (
     <div className="space-y-6">
@@ -421,7 +411,20 @@ function ListingsFormContent() {
             <CardContent className="space-y-4">
               {/* Kategori */}
               <div className="space-y-2">
-                <Label htmlFor="category">Kategori *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="category">Kategori *</Label>
+                  <ListingsCategoryModal
+                    categories={categories.map(cat => cat.name)}
+                    onCategoriesChange={() => {
+                      dispatch(getAllCategories({}))
+                    }}
+                    triggerButton={
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Kategori Yönetimi">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
                 {categoriesLoading ? (
                   <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
                 ) : (
@@ -440,14 +443,22 @@ function ListingsFormContent() {
                           ))}
                       </SelectContent>
                     </Select>
-                    
                   </div>
                 )}
               </div>
 
               {/* Enstrüman */}
               <div className="space-y-2">
-                <Label htmlFor="instrument">Enstrüman</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="instrument">Enstrüman</Label>
+                  <InstrumentManagementModal
+                    triggerButton={
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Enstrüman Yönetimi">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
                 {instrumentsLoading ? (
                   <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
                 ) : (
@@ -470,22 +481,35 @@ function ListingsFormContent() {
 
               {/* Deneyim Seviyesi */}
               <div className="space-y-2">
-                <Label htmlFor="experience">Deneyim Seviyesi</Label>
-                <Select value={formData.experience} onValueChange={(value) => handleChange("experience", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Deneyim seviyesi seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {experienceLevels
-                      .filter(level => level.active)
-                      .sort((a, b) => (a.order || 0) - (b.order || 0))
-                      .map((level) => (
-                      <SelectItem key={level._id} value={level.name}>
-                        {level.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                  <ExperienceLevelManagementModal
+                    triggerButton={
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Deneyim Seviyesi Yönetimi">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
+                {experienceLevelsLoading ? (
+                  <div className="text-sm text-muted-foreground">Deneyim seviyeleri yükleniyor...</div>
+                ) : (
+                  <Select value={formData.experience} onValueChange={(value) => handleChange("experience", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Deneyim seviyesi seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {experienceLevels
+                        .filter(level => level.active)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((level) => (
+                        <SelectItem key={level._id} value={level.name}>
+                          {level.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Şehir */}

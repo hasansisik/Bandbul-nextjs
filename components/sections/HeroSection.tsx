@@ -8,24 +8,11 @@ import { Search, Music, Users, Briefcase, Clipboard, MapPin, Filter, HelpCircle,
 import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories, getAllInstruments } from "@/redux/actions/userActions";
+import { turkishCities } from "@/utils/constants/turkishCities";
 
 const HeroSection = () => {
   const dispatch = useAppDispatch();
   const { allListings, categories, instruments } = useAppSelector((state) => state.user);
-  
-  const turkishCities = [
-    "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
-    "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
-    "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
-    "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
-    "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-    "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
-    "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
-    "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
-    "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
-    "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
-    "Düzce"
-  ];
   
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedInstrument, setSelectedInstrument] = useState("");
@@ -83,6 +70,7 @@ const HeroSection = () => {
     label: cat.name,
     count: allListings.filter(listing => listing.category === cat._id).length
   }));
+
   
   // Get active instruments from Redux state
   const instrumentOptions = instruments
@@ -122,44 +110,6 @@ const HeroSection = () => {
     return locationNormalized.includes(searchTerm);
   });
 
-  const searchOptions = [
-    {
-      id: "find-talent",
-      label: "Müzisyen Bul",
-      icon: <Music className="h-4 w-4" />,
-      active: true
-    },
-    {
-      id: "browse-jobs",
-      label: "İlanları Görüntüle",
-      icon: <Users className="h-4 w-4" />,
-      active: false
-    }
-  ];
-
-  const filterOptions = [
-    {
-      id: "search-type",
-      label: "NE ARIYORSUN",
-      icon: <Briefcase className="h-4 w-4 text-gray-600" />,
-      placeholder: selectedCategory || "NE ARIYORSUN",
-      onClick: () => setShowCategoryDropdown(!showCategoryDropdown)
-    },
-    {
-      id: "instrument",
-      label: "ENSTRÜMAN",
-      icon: <Clipboard className="h-4 w-4 text-gray-600" />,
-      placeholder: selectedInstrument || "ENSTRÜMAN",
-      onClick: () => setShowInstrumentDropdown(!showInstrumentDropdown)
-    },
-    {
-      id: "city",
-      label: "Şehir",
-      icon: <MapPin className="h-4 w-4 text-gray-600" />,
-      placeholder: selectedLocation || "Hepsi",
-      onClick: () => setShowLocationDropdown(!showLocationDropdown)
-    }
-  ];
 
   const handleFilter = () => {
     const params = new URLSearchParams();
@@ -299,7 +249,7 @@ const HeroSection = () => {
                         </div>
                       </div>
                     )}
-
+                    
                     {/* Category Dropdown */}
                     {showCategoryDropdown && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">

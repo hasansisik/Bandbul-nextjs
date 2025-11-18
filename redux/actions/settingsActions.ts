@@ -107,6 +107,13 @@ export const getSettings = createAsyncThunk(
   "settings/getSettings",
   async (_, thunkAPI) => {
     try {
+      // Check if settings already exist in the state
+      const state = thunkAPI.getState() as any;
+      if (state.settings?.settings && !state.settings?.loading) {
+        // Return existing settings without making API call
+        return { settings: state.settings.settings };
+      }
+
       const response = await axios.get(`${server}/settings/public`);
       return response.data;
     } catch (error: any) {

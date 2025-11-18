@@ -179,6 +179,7 @@ export default function SettingsPage() {
     dispatch(getSettingsAdmin());
     dispatch(getAllCategories({}));
     dispatch(getSettingsStats());
+    document.title = "Admin-Ayarlar";
   }, [dispatch]);
 
   // Handle success and error messages with Sonner

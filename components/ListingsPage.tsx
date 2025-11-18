@@ -79,7 +79,8 @@ function ListingsPageContent() {
     setShowFilters(!showFilters);
   }, [showFilters]);
 
-  const handleFiltersChange = useCallback((filters: {
+  const handleFiltersChange = useCallback(
+    (filters: {
     categories: string[];
     locations: string[];
     experience: string[];

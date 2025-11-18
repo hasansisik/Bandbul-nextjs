@@ -90,6 +90,30 @@ export default function RootLayout({
     <html lang="tr" suppressHydrationWarning>
       <head>
         {/* Dynamic favicon will be handled by generateMetadata */}
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZL805T1RRH"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-ZL805T1RRH');
+            `,
+          }}
+        />
+        {/* Google Ads tag (AW-528310148) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-528310148"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-528310148');
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -11,9 +11,10 @@ import { safeJWTDecode } from "@/lib/jwtUtils"
 interface GoogleAuthButtonProps {
   mode: 'login' | 'register'
   className?: string
+  onError?: (error: string) => void
 }
 
-export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ mode, className, onError }: GoogleAuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false)
   const dispatch = useAppDispatch()
@@ -36,26 +37,12 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         verified_email: payload.email_verified,
       }
 
-      // Extract birthDate from Google profile if available
-      // Google provides birthday in format: "YYYY-MM-DD" or "0000-MM-DD" (year hidden)
-      let birthDate = undefined;
-      if (payload.birthday) {
-        // If year is 0000, we can't use it, but we can store the month/day if needed
-        if (payload.birthday.startsWith('0000-')) {
-          // Year is hidden, skip it
-          birthDate = undefined;
-        } else {
-          birthDate = payload.birthday;
-        }
-      }
-
       // Prepare payload for Redux action
       const payload_data = {
         email: googleUser.email,
         name: googleUser.given_name || googleUser.name.split(' ')[0] || 'Google',
         surname: googleUser.family_name || googleUser.name.split(' ').slice(1).join(' ') || 'User',
         googleId: googleUser.id,
-        birthDate: birthDate,
       }
 
       const result = await dispatch(googleAuth(payload_data))
@@ -77,6 +64,22 @@ export function GoogleAuthButton({ mode, className }: GoogleAuthButtonProps) {
         }
       } else {
         console.error('Authentication failed:', result)
+        // Handle inactive user case
+        if (result.payload && typeof result.payload === 'object' && 'requiresLogout' in result.payload) {
+          const errorMessage = (result.payload as any).message || 'Hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin.'
+          if (onError) {
+            onError(errorMessage)
+          } else {
+            alert(errorMessage)
+          }
+        } else {
+          const errorMessage = typeof result.payload === 'string' ? result.payload : 'Google ile giriş yapılırken hata oluştu'
+          if (onError) {
+            onError(errorMessage)
+          } else {
+            alert(errorMessage)
+          }
+        }
       }
     } catch (error) {
       console.error('Google authentication error:', error)

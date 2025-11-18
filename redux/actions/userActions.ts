@@ -2,6 +2,20 @@ import axios from "axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { server } from "@/config";
 
+// Add axios interceptor to suppress 404 errors in console
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Suppress 404 errors from /auth/me endpoint in console
+    if (error.response?.status === 404 && error.config?.url?.includes('/auth/me')) {
+      // Don't log 404 errors for /auth/me endpoint
+      return Promise.reject(error);
+    }
+    // Log other errors normally
+    return Promise.reject(error);
+  }
+);
+
 export interface RegisterPayload {
   name: string;
   surname: string;
@@ -39,6 +53,7 @@ export interface EditProfilePayload {
   surname: string;
   email: string;
   password: string;
+  birthDate?: string;
   address?: {
     street?: string;
     city?: string;
@@ -51,7 +66,6 @@ export interface EditProfilePayload {
   bio?: string;
   skills?: string[];
   theme?: string;
-  birthDate?: string;
 }
 
 export interface CreateListingPayload {
@@ -148,7 +162,6 @@ export const register = createAsyncThunk(
   async (payload: RegisterPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/register`, payload);
-      localStorage.setItem("accessToken", data.user.token);
       return data.user;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data.message);
@@ -164,6 +177,13 @@ export const googleRegister = createAsyncThunk(
       localStorage.setItem("accessToken", data.user.token);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -175,9 +195,26 @@ export const login = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/login`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data.message);
+      // Handle email verification required case
+      if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
+        // Don't set this as an error, it's handled by redirect
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresVerification: true,
+          email: error.response.data.email
+        });
+      }
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -188,8 +225,16 @@ export const googleAuth = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/google-auth`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -201,8 +246,16 @@ export const googleLogin = createAsyncThunk(
     try {
       const { data } = await axios.post(`${server}/auth/google-login`, payload);
       localStorage.setItem("accessToken", data.user.token);
+      localStorage.setItem("userEmail", data.user.email);
       return data.user;
     } catch (error: any) {
+      // Handle inactive user case
+      if (error.response?.status === 401 && error.response?.data?.message?.includes('pasif durumda')) {
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response.data.message);
     }
   }
@@ -223,8 +276,30 @@ export const loadUser = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      // Store user email for potential verification redirects
+      if (data.user.email) {
+        localStorage.setItem("userEmail", data.user.email);
+      }
       return data.user;
     } catch (error: any) {
+      // Handle 404 errors silently (user not found or invalid token)
+      if (error.response?.status === 404) {
+        // Clear invalid token and return silent error
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
+        return thunkAPI.rejectWithValue("User not found");
+      }
+      
+      // Handle inactive user case - user gets kicked out
+      if (error.response?.status === 401 && error.response?.data?.requiresLogout) {
+        // Clear local storage and return special error
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
+        return thunkAPI.rejectWithValue({
+          message: error.response.data.message,
+          requiresLogout: true
+        });
+      }
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -241,21 +316,25 @@ export const logout = createAsyncThunk("user/logout", async (_, thunkAPI) => {
           },
         });
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
         return data.message;
       } catch (apiError: any) {
         // Even if API call fails, clear local storage
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("userEmail");
         // Return success message to allow logout to proceed
         return "Çıkış yapıldı";
       }
     } else {
       // No token, just clear local storage
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("userEmail");
       return "Çıkış yapıldı";
     }
   } catch (error: any) {
     // Clear local storage even on error
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("userEmail");
     return thunkAPI.rejectWithValue(error.response?.data?.message || "Çıkış yapılırken bir hata oluştu");
   }
 });
@@ -265,7 +344,10 @@ export const verifyEmail = createAsyncThunk(
   async (payload: VerifyEmailPayload, thunkAPI) => {
     try {
       const { data } = await axios.post(`${server}/auth/verify-email`, payload);
-      return data.message;
+      
+      return {
+        message: data.message
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message
@@ -951,6 +1033,33 @@ export const updateUserRole = createAsyncThunk(
         config
       );
       return { id, role, message: response.data.message };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message
+      );
+    }
+  }
+);
+
+export const updateUserStatus = createAsyncThunk(
+  "user/updateUserStatus",
+  async ({ id, status }: { id: string; status: string }, thunkAPI) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.patch(
+        `${server}/auth/users/${id}/status`,
+        { status },
+        config
+      );
+      return { id, status, message: response.data.message };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response && error.response.data.message

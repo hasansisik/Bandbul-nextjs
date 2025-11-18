@@ -50,7 +50,7 @@ export default function ListingsPage() {
 
   // Load listings, categories and instruments on component mount
   useEffect(() => {
-    dispatch(getAllListings({ status: statusFilter }))
+    dispatch(getAllListings({ limit: '1000', status: statusFilter }))
     dispatch(getAllCategories({}))
     dispatch(getAllInstruments({}))
   }, [dispatch, statusFilter])
@@ -81,7 +81,7 @@ export default function ListingsPage() {
       toast.success(statusMessages[status as keyof typeof statusMessages] || "İlan durumu güncellendi.")
       
       // Refresh listings
-      dispatch(getAllListings({ status: statusFilter }))
+      dispatch(getAllListings({ limit: '1000', status: statusFilter }))
     } catch (err) {
       console.error("Status change error:", err)
       toast.error("Durum değiştirilirken bir hata oluştu.")
@@ -92,7 +92,7 @@ export default function ListingsPage() {
     try {
       await dispatch(deleteListing(id))
       // Refresh listings after deletion
-      dispatch(getAllListings({ status: statusFilter }))
+      dispatch(getAllListings({ limit: '1000', status: statusFilter }))
       toast.success("İlan başarıyla silindi.")
     } catch (err) {
       console.error("Delete listing error:", err)

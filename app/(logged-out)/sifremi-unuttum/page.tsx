@@ -1,5 +1,9 @@
 import { ForgotPasswordForm } from "@/components/forgot-password-form"
+import { Metadata } from "next";
 
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Bandbul- Şifremi Unuttum" };
+}
 export default function ForgotPasswordPage() {
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10">

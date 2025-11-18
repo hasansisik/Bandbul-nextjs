@@ -16,15 +16,20 @@ export function EmailVerificationForm({
 }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const [verificationCode, setVerificationCode] = useState("")
+  const [resendLoading, setResendLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useAppDispatch()
   const { loading, message, error, isAuthenticated } = useAppSelector((state) => state.user)
 
-  // Clear messages when component mounts
+  // Clear messages when component mounts and set email from URL
   useEffect(() => {
     dispatch(clearError())
-  }, [dispatch])
+    const emailFromUrl = searchParams.get("email")
+    if (emailFromUrl) {
+      setEmail(emailFromUrl)
+    }
+  }, [dispatch, searchParams])
 
   const handleVerifyEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,11 +55,18 @@ export function EmailVerificationForm({
 
   const handleResendCode = async () => {
     try {
+      setResendLoading(true)
       // Ensure email is always available from URL params
       const emailToUse = searchParams.get("email") || email
+      if (!emailToUse) {
+        console.error("No email available for resend")
+        return
+      }
       await dispatch(againEmail(emailToUse))
     } catch (err) {
       console.error("Resend error:", err)
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -108,10 +120,10 @@ export function EmailVerificationForm({
                   type="button"
                   variant="outline"
                   onClick={handleResendCode}
-                  disabled={loading || !email}
+                  disabled={loading || resendLoading || !email}
                   className="text-sm"
                 >
-                  Kod Tekrar Gönder
+                  {resendLoading ? "Gönderiliyor..." : "Kod Tekrar Gönder"}
                 </Button>
               </div>
 

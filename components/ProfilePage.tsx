@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { RejectionReasonModal } from "@/components/RejectionReasonModal"
 import { ListingRulesDialog } from "@/components/ListingRulesDialog"
+import { turkishCities } from "@/utils/constants/turkishCities"
 
 // Skeleton components for loading states
 const ProfileHeaderSkeleton = () => (
@@ -146,23 +147,6 @@ const ListingsGridSkeleton = () => (
 )
 
 
-// Experience levels will be loaded from Redux
-
-const turkishCities = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
-  "Aydın", "Balıkesir", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa",
-  "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan",
-  "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkâri", "Hatay", "Isparta",
-  "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla",
-  "Muş", "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt",
-  "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Şanlıurfa", "Uşak",
-  "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman",
-  "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye",
-  "Düzce"
-]
-
-
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -180,19 +164,25 @@ export function ProfilePage() {
   const searchParams = useSearchParams()
   
   // Function to show operation messages and auto-clear them
-  const showMessage = useCallback((type: 'success' | 'error' | 'info', text: string) => {
-    setOperationMessage({ type, text })
-    
+  const showMessage = (
+    type: 'success' | 'error' | 'info',
+    text: string | string[]
+  ) => {
+    // Array geldiyse newline ile birleştir
+    const finalText = Array.isArray(text) ? text.join("\n") : text;
+
+    setOperationMessage({ type, text: finalText })
+
     // Scroll to top when error occurs
     if (type === 'error') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    
-    // Auto-clear message after 5 seconds
+
+    // Auto-clear message after 8 seconds
     setTimeout(() => {
       setOperationMessage(null)
-    }, 5000)
-  }, [])
+    }, 8000)
+  }
   
   // Get user data and listings from Redux
   const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
@@ -234,6 +224,7 @@ export function ProfilePage() {
 
   // Load user data, listings, categories and instruments on component mount
   useEffect(() => {
+   
     // First, try to load user data if not already loaded
     const token = localStorage.getItem("accessToken")
     if (token && !user) {
@@ -245,6 +236,7 @@ export function ProfilePage() {
       dispatch(getUserListings())
       dispatch(getAllCategories({}))
       dispatch(getAllInstruments({}))
+      
     }
   }, [dispatch, user])
 
@@ -300,6 +292,10 @@ export function ProfilePage() {
       }
     }
   }, [showFormTimer])
+
+  useEffect(() => {
+    document.title = "Bandbul - Profil";
+}, []);
 
   const handleEditProfile = () => {
     // Navigate to profile editing page
@@ -496,9 +492,33 @@ export function ProfilePage() {
   }
 
   const handleCreateListing = async () => {
-    if (!newListing.title || !newListing.description || !newListing.category) {
-      showMessage('error', "Lütfen tüm gerekli alanları doldurun.")
-      return
+    // if (!newListing.title || !newListing.description || !newListing.category) {
+    //   showMessage('error', "Lütfen tüm gerekli alanları doldurun.")
+    //   return
+    // }
+    let errors = [];
+    if (!newListing.title.trim()) {
+      errors.push("İlan başlığı gereklidir")
+    }
+    if (!newListing.description.trim()) {
+      errors.push("İlan açıklaması gereklidir")
+    }
+    if (!newListing.category) {
+      errors.push("Kategori seçimi gereklidir")
+    }
+    if (!newListing.location.trim()) {
+      errors.push("Konum bilgisi gereklidir")
+    }
+    if (!newListing.experience) {
+      errors.push("Deneyim seviyesi seçimi gereklidir")
+    }
+    if (!newListing.instrument) {
+      errors.push("Enstrüman seçimi gereklidir")
+    }
+
+    if (errors.length > 0) {
+      showMessage('error', errors);
+      return;
     }
 
     try {
@@ -722,7 +742,7 @@ export function ProfilePage() {
 
       {/* Operation Messages Display */}
       {operationMessage && (
-        <div className="container mx-auto px-4 max-w-7xl mt-6 mb-4">
+        <div className="container mx-auto px-4 max-w-7xl mt-6 mb-4" style={{ whiteSpace: "pre-line" }}>
           <div className={`p-4 rounded-lg border ${
             operationMessage.type === 'success' 
               ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'

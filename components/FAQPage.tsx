@@ -21,6 +21,10 @@ export default function FAQPage() {
     window.location.href = "/iletisim";
   };
 
+  const handleEmailContact = () => {
+    window.location.href = "mailto:destek@bandbul.com";
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <div className="container mx-auto px-4 py-12">
@@ -77,6 +81,13 @@ export default function FAQPage() {
                 className="bg-primary hover:bg-primary/90 px-6 py-2 text-sm rounded-md"
               >
                 İletişim Sayfasına Git
+              </Button>
+              <Button 
+                onClick={handleEmailContact}
+                variant="outline" 
+                className="border-border hover:bg-accent px-6 py-2 text-sm rounded-md"
+              >
+                E-posta Gönder
               </Button>
             </div>
           </div>
