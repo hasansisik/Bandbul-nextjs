@@ -245,7 +245,7 @@ export default function BlogPage() {
                       {/* Read Time - Top Right */}
                       {postReadTime && (
                         <div className="absolute top-3 right-3">
-                          <Badge className="flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm px-2 py-1 border-0 shadow-sm">
+                          <Badge className="flex items-center gap-1 text-xs bg-background/90 backdrop-blur-sm px-2 py-1 border-0 shadow-sm text-black">
                             <Clock className="h-3 w-3" />
                             {postReadTime}
                           </Badge>

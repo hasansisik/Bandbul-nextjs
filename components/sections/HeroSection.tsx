@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories, getAllInstruments } from "@/redux/actions/userActions";
 import { turkishCities } from "@/utils/constants/turkishCities";
+import { categorySlugMap } from "@/utils/constants/categorySlugMap";
 
 const HeroSection = () => {
   const dispatch = useAppDispatch();
@@ -97,6 +98,32 @@ const HeroSection = () => {
       .replace(/ç/g, 'c');
   };
 
+  // Helper function to convert category name to slug
+  const categoryNameToSlug = (categoryName: string): string => {
+    // First, try to find in reverse mapping of categorySlugMap
+    const reverseMap: Record<string, string> = {};
+    Object.entries(categorySlugMap).forEach(([slug, name]) => {
+      reverseMap[name] = slug;
+    });
+    
+    // If found in reverse map, return it
+    if (reverseMap[categoryName]) {
+      return reverseMap[categoryName];
+    }
+    
+    // Otherwise, create slug from category name
+    return normalizeText(categoryName)
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  };
+
+  // Helper function to convert text to slug (for instrument and location)
+  const textToSlug = (text: string): string => {
+    return normalizeText(text)
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  };
+
   // Filter options based on search terms (case insensitive with Turkish character normalization)
   const filteredCategoryOptions = categoryOptions.filter(category =>
     normalizeText(category.label).includes(normalizeText(categorySearchTerm))
@@ -115,23 +142,21 @@ const HeroSection = () => {
     const params = new URLSearchParams();
     
     if (selectedCategory) {
-      // Find category ID by name
-      const category = categories.find(cat => cat.name === selectedCategory);
-      if (category) {
-        params.set('category', category._id);
-      }
+      // Convert category name to slug
+      const categorySlug = categoryNameToSlug(selectedCategory);
+      params.set('category', categorySlug);
     }
     
     if (selectedInstrument) {
-      // Find instrument ID by name
-      const instrument = instruments.find(inst => inst.name === selectedInstrument);
-      if (instrument) {
-        params.set('instrument', instrument._id);
-      }
+      // Convert instrument name to slug
+      const instrumentSlug = textToSlug(selectedInstrument);
+      params.set('instrument', instrumentSlug);
     }
     
     if (selectedLocation && selectedLocation !== "Hepsi") {
-      params.set('location', selectedLocation);
+      // Convert location name to slug
+      const locationSlug = textToSlug(selectedLocation);
+      params.set('location', locationSlug);
     }
     
     // Navigate to listings page with filters

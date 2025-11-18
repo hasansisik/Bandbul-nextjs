@@ -12,11 +12,12 @@ import {
   X,
   ChevronDown
 } from "lucide-react";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/redux/hook";
 import { getAllListings, getAllCategories } from "@/redux/actions/userActions";
 import { getAllExperienceLevels } from "@/redux/actions/experienceLevelActions";
+import { categorySlugMap } from "@/utils/constants/categorySlugMap";
 
 interface ListingsFilterProps {
   onFiltersChange?: (filters: {
@@ -29,6 +30,8 @@ interface ListingsFilterProps {
 
 const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { allListings, categories } = useAppSelector((state) => state.user);
   const { experienceLevels: reduxExperienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel);
@@ -37,6 +40,10 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
+  
+  // Track if we're loading from URL to prevent infinite loop
+  const isInitialLoadRef = useRef(true);
+  const isUpdatingURLRef = useRef(false);
 
   // Load data on component mount
   useEffect(() => {
@@ -124,40 +131,143 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     );
   }, []);
 
+  // Helper function to normalize Turkish characters for slug comparison
+  const normalizeText = (text: string) => {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  };
+
+  // Helper function to convert name to slug
+  const nameToSlug = useCallback((name: string, type: 'category' | 'instrument' | 'location'): string => {
+    if (type === 'category') {
+      // First, try to find in reverse mapping of categorySlugMap
+      const reverseMap: Record<string, string> = {};
+      Object.entries(categorySlugMap).forEach(([slug, catName]) => {
+        reverseMap[catName] = slug;
+      });
+      
+      // If found in reverse map, return it
+      if (reverseMap[name]) {
+        return reverseMap[name];
+      }
+    }
+    
+    // Otherwise, create slug from name
+    return normalizeText(name);
+  }, []);
+
+  // Helper function to convert slug to name by matching with available options
+  const slugToName = (slug: string, options: Array<{ id: string; name: string }>): string | null => {
+    const decoded = decodeURIComponent(slug);
+    // First try direct match
+    const directMatch = options.find(opt => opt.name === decoded || opt.id === decoded);
+    if (directMatch) {
+      return directMatch.name;
+    }
+    // Then try slug match
+    const slugMatch = options.find(opt => normalizeText(opt.name) === normalizeText(decoded));
+    if (slugMatch) {
+      return slugMatch.name;
+    }
+    return null;
+  };
+
+  // Function to update URL with current filters
+  const updateURL = useCallback((filters: {
+    categories: string[];
+    locations: string[];
+    experience: string[];
+    instruments: string[];
+  }) => {
+    isUpdatingURLRef.current = true;
+    
+    const params = new URLSearchParams();
+    
+    // Add categories to URL
+    filters.categories.forEach(category => {
+      const slug = nameToSlug(category, 'category');
+      params.append('category', slug);
+    });
+    
+    // Add locations to URL
+    filters.locations.forEach(location => {
+      const slug = nameToSlug(location, 'location');
+      params.set('location', slug);
+    });
+    
+    // Add instruments to URL
+    filters.instruments.forEach(instrument => {
+      const slug = nameToSlug(instrument, 'instrument');
+      params.set('instrument', slug);
+    });
+    
+    // Update URL without page reload
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    router.replace(newUrl, { scroll: false });
+    
+    // Reset flag after a short delay to allow URL update to complete
+    setTimeout(() => {
+      isUpdatingURLRef.current = false;
+    }, 100);
+  }, [pathname, router, nameToSlug]);
+
   const clearFilters = useCallback(() => {
+    isUpdatingURLRef.current = true;
     setSelectedCategories([]);
     setSelectedLocations([]);
     setSelectedExperience([]);
     setSelectedInstruments([]);
-  }, []);
+    // Clear URL parameters
+    router.replace(pathname, { scroll: false });
+    setTimeout(() => {
+      isUpdatingURLRef.current = false;
+    }, 100);
+  }, [router, pathname]);
 
-  // Notify parent component when filters change
+  // Notify parent component when filters change and update URL
   useEffect(() => {
-    onFiltersChange?.({
+    const filters = {
       categories: selectedCategories,
       locations: selectedLocations,
       experience: selectedExperience,
       instruments: selectedInstruments
-    });
-  }, [selectedCategories, selectedLocations, selectedExperience, selectedInstruments, onFiltersChange]);
+    };
+    
+    onFiltersChange?.(filters);
+    
+    // Update URL when filters change (but not on initial load from URL)
+    if (!isInitialLoadRef.current) {
+      updateURL(filters);
+    }
+  }, [selectedCategories, selectedLocations, selectedExperience, selectedInstruments, onFiltersChange, updateURL]);
 
-  // Handle URL parameters on component mount
+  // Handle URL parameters on component mount and when URL changes
   useEffect(() => {
+    // Skip if we're currently updating the URL ourselves
+    if (isUpdatingURLRef.current) {
+      return;
+    }
+    
+    // Wait for data to be loaded
+    if (categories.length === 0 || allListings.length === 0) {
+      return;
+    }
+    
     // Get all category parameters (can be multiple)
     const categoryParams = searchParams.getAll('category');
     const instrumentParam = searchParams.get('instrument');
     const locationParam = searchParams.get('location');
-    
-    // Mapping between URL slugs and Turkish category names
-    const categorySlugMap: Record<string, string> = {
-      'grup-ariyorum': 'Grup Arıyorum',
-      'muzisyen-ariyorum': 'Müzisyen Arıyorum',
-      'ders-almak-istiyorum': 'Ders Almak İstiyorum',
-      'ders-veriyorum': 'Ders Veriyorum',
-      'profesyonel-ders-veriyorum': 'Profesyonel Ders Veriyorum',
-      'enstruman-satiyorum': 'Enstrüman Satıyorum',
-      'studyo-kiraliyorum': 'Stüdyo Kiralıyorum'
-    };
     
     const newFilters = {
       categories: [] as string[],
@@ -195,37 +305,62 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       newFilters.categories = validCategories;
     }
     
-    // Set location filter from URL
+    // Set location filter from URL - convert slug to name
     if (locationParam) {
-      newFilters.locations = [decodeURIComponent(locationParam)];
+      const locationName = slugToName(locationParam, locations);
+      if (locationName) {
+        newFilters.locations = [locationName];
+      } else {
+        // Fallback to decoded value
+        newFilters.locations = [decodeURIComponent(locationParam)];
+      }
     }
     
-    // Set instrument filter from URL
+    // Set instrument filter from URL - convert slug to name
     if (instrumentParam) {
-      newFilters.instruments = [decodeURIComponent(instrumentParam)];
+      const instrumentName = slugToName(instrumentParam, instruments);
+      if (instrumentName) {
+        newFilters.instruments = [instrumentName];
+      } else {
+        // Fallback to decoded value
+        newFilters.instruments = [decodeURIComponent(instrumentParam)];
+      }
     }
     
-    // Only update state if there are changes to prevent unnecessary re-renders
+    // Only update state if there are actual changes to prevent unnecessary re-renders
     setSelectedCategories(prev => {
-      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.categories.sort());
+      const prevSorted = [...prev].sort();
+      const newSorted = [...newFilters.categories].sort();
+      const hasChanged = JSON.stringify(prevSorted) !== JSON.stringify(newSorted);
       return hasChanged ? newFilters.categories : prev;
     });
     
     setSelectedLocations(prev => {
-      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.locations.sort());
+      const prevSorted = [...prev].sort();
+      const newSorted = [...newFilters.locations].sort();
+      const hasChanged = JSON.stringify(prevSorted) !== JSON.stringify(newSorted);
       return hasChanged ? newFilters.locations : prev;
     });
     
     setSelectedExperience(prev => {
-      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.experience.sort());
+      const prevSorted = [...prev].sort();
+      const newSorted = [...newFilters.experience].sort();
+      const hasChanged = JSON.stringify(prevSorted) !== JSON.stringify(newSorted);
       return hasChanged ? newFilters.experience : prev;
     });
     
     setSelectedInstruments(prev => {
-      const hasChanged = JSON.stringify(prev.sort()) !== JSON.stringify(newFilters.instruments.sort());
+      const prevSorted = [...prev].sort();
+      const newSorted = [...newFilters.instruments].sort();
+      const hasChanged = JSON.stringify(prevSorted) !== JSON.stringify(newSorted);
       return hasChanged ? newFilters.instruments : prev;
     });
-  }, [searchParams, categories, categoryOptions]);
+    
+    // Mark initial load as complete after setting filters from URL
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+    }
+  }, [searchParams, categories, categoryOptions, locations, instruments, allListings.length]);
 
   const hasActiveFilters = selectedCategories.length > 0 || selectedLocations.length > 0 || selectedExperience.length > 0 || selectedInstruments.length > 0;
 
