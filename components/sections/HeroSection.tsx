@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,14 @@ import { getAllListings, getAllCategories, getAllInstruments } from "@/redux/act
 import { turkishCities } from "@/utils/constants/turkishCities";
 import { categorySlugMap } from "@/utils/constants/categorySlugMap";
 
+const CATEGORY_DISPLAY_ORDER = ["Grup", "Müzisyen", "Ders"];
+
 const HeroSection = () => {
   const dispatch = useAppDispatch();
   const { allListings, categories, instruments } = useAppSelector((state) => state.user);
   
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategoryLabel, setSelectedCategoryLabel] = useState("");
+  const [selectedCategorySlugs, setSelectedCategorySlugs] = useState<string[]>([]);
   const [selectedInstrument, setSelectedInstrument] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -65,26 +68,7 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Get filter options from Redux state
-  const categoryOptions = categories.map(cat => ({
-    value: cat._id,
-    label: cat.name,
-    count: allListings.filter(listing => listing.category === cat._id).length
-  }));
-
-  
-  // Get active instruments from Redux state
-  const instrumentOptions = instruments
-    .filter(inst => inst.active)
-    .map(inst => ({
-      value: inst._id,
-      label: inst.name,
-      count: allListings.filter(listing => listing.instrument === inst._id).length
-    }));
-  
-  const locations = ["Hepsi", ...turkishCities];
-
-  // Helper function to normalize Turkish characters for search
+  // Helper function to normalize Turkish characters for search/slug
   const normalizeText = (text: string) => {
     return text
       .normalize('NFD') // Decompose characters (İ becomes I + combining dot)
@@ -124,6 +108,75 @@ const HeroSection = () => {
       .replace(/[^a-z0-9-]/g, '');
   };
 
+  const getCategoryDisplayLabel = (categoryName: string) => {
+    const normalized = normalizeText(categoryName).trim();
+    if (normalized === "muzisyen ariyorum") {
+      return "Grup";
+    }
+    if (normalized === "grup ariyorum") {
+      return "Müzisyen";
+    }
+    if (
+      normalized === "ders almak istiyorum" ||
+      normalized === "profesyonel ders veriyorum" ||
+      normalized === "profosyonel ders veriyorum"
+    ) {
+      return "Ders";
+    }
+    return categoryName;
+  };
+
+  type CategoryOption = {
+    label: string;
+    slugs: string[];
+    count: number;
+  };
+
+  // Get filter options from Redux state with custom display labels
+  const categoryOptions = useMemo(() => {
+    const optionMap: Record<string, CategoryOption> = {};
+
+    categories.forEach(cat => {
+      const label = getCategoryDisplayLabel(cat.name);
+      if (!optionMap[label]) {
+        optionMap[label] = { label, slugs: [], count: 0 };
+      }
+
+      const slug = categoryNameToSlug(cat.name);
+      if (!optionMap[label].slugs.includes(slug)) {
+        optionMap[label].slugs.push(slug);
+      }
+
+      const listingCount = allListings.filter(listing => listing.category === cat._id).length;
+      optionMap[label].count += listingCount;
+    });
+
+    return Object.values(optionMap).sort((a, b) => {
+      const orderA = CATEGORY_DISPLAY_ORDER.indexOf(a.label);
+      const orderB = CATEGORY_DISPLAY_ORDER.indexOf(b.label);
+
+      const normalizedOrderA = orderA === -1 ? CATEGORY_DISPLAY_ORDER.length : orderA;
+      const normalizedOrderB = orderB === -1 ? CATEGORY_DISPLAY_ORDER.length : orderB;
+
+      if (normalizedOrderA === normalizedOrderB) {
+        return a.label.localeCompare(b.label);
+      }
+      return normalizedOrderA - normalizedOrderB;
+    });
+  }, [categories, allListings]);
+
+  
+  // Get active instruments from Redux state
+  const instrumentOptions = instruments
+    .filter(inst => inst.active)
+    .map(inst => ({
+      value: inst._id,
+      label: inst.name,
+      count: allListings.filter(listing => listing.instrument === inst._id).length
+    }));
+  
+  const locations = ["Hepsi", ...turkishCities];
+
   // Filter options based on search terms (case insensitive with Turkish character normalization)
   const filteredCategoryOptions = categoryOptions.filter(category =>
     normalizeText(category.label).includes(normalizeText(categorySearchTerm))
@@ -141,10 +194,10 @@ const HeroSection = () => {
   const handleFilter = () => {
     const params = new URLSearchParams();
     
-    if (selectedCategory) {
-      // Convert category name to slug
-      const categorySlug = categoryNameToSlug(selectedCategory);
-      params.set('category', categorySlug);
+    if (selectedCategorySlugs.length > 0) {
+      selectedCategorySlugs.forEach((slug) => {
+        params.append('category', slug);
+      });
     }
     
     if (selectedInstrument) {
@@ -214,7 +267,7 @@ const HeroSection = () => {
                       <div className="flex items-center gap-2 md:gap-3">
                         <Briefcase className="h-4 w-4 text-gray-600" />
                         <div className="text-xs md:text-sm text-gray-900 font-medium">
-                          {selectedCategory || "NE ARIYORSUN"}
+                          {selectedCategoryLabel || "NE ARIYORSUN"}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -296,9 +349,10 @@ const HeroSection = () => {
                           {filteredCategoryOptions.length > 0 ? (
                             filteredCategoryOptions.map((category) => (
                               <div
-                                key={category.value}
+                                key={category.label}
                                 onClick={() => {
-                                  setSelectedCategory(category.label);
+                                  setSelectedCategoryLabel(category.label);
+                                  setSelectedCategorySlugs(category.slugs);
                                   setShowCategoryDropdown(false);
                                   setCategorySearchTerm("");
                                 }}

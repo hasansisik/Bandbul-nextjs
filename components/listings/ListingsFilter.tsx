@@ -59,11 +59,24 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
   }, [dispatch, allListings.length, categories.length, reduxExperienceLevels.length]);
 
   const categoryOptions = useMemo(() => {
-    return categories.map(cat => ({
-      value: cat.name, // Use category name instead of ID for filtering
-      label: cat.name,
-      count: allListings.filter(listing => listing.categoryInfo?.name === cat.name || listing.category === cat.name).length
-    }));
+    return categories.map(cat => {
+      const count = allListings.filter(listing => {
+        const listingCategoryId = listing.categoryInfo?._id || listing.category;
+        const listingCategoryName = listing.categoryInfo?.name;
+        return listingCategoryId === cat._id || listingCategoryName === cat.name;
+      }).length;
+
+      const slugFromData = (cat as any).slug as string | undefined;
+      const slugFromMap = Object.entries(categorySlugMap).find(([, name]) => name === cat.name)?.[0];
+
+      return {
+        id: cat._id,
+        value: cat._id,
+        label: cat.name,
+        slug: slugFromData || slugFromMap || normalizeText(cat.name),
+        count
+      };
+    });
   }, [categories, allListings]);
 
   // Get unique locations from Redux state
@@ -147,23 +160,22 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
       .replace(/[^a-z0-9-]/g, '');
   };
 
-  // Helper function to convert name to slug
-  const nameToSlug = useCallback((name: string, type: 'category' | 'instrument' | 'location'): string => {
-    if (type === 'category') {
-      // First, try to find in reverse mapping of categorySlugMap
-      const reverseMap: Record<string, string> = {};
-      Object.entries(categorySlugMap).forEach(([slug, catName]) => {
-        reverseMap[catName] = slug;
-      });
-      
-      // If found in reverse map, return it
-      if (reverseMap[name]) {
-        return reverseMap[name];
-      }
-    }
-    
-    // Otherwise, create slug from name
-    return normalizeText(name);
+  const categoryIdToSlug = useCallback((categoryId: string) => {
+    const category = categories.find(cat => cat._id === categoryId);
+    if (!category) return categoryId;
+
+    const slugFromData = (category as any).slug as string | undefined;
+    if (slugFromData) return slugFromData;
+
+    const mapEntry = Object.entries(categorySlugMap).find(([, name]) => name === category.name);
+    if (mapEntry) return mapEntry[0];
+
+    return normalizeText(category.name);
+  }, [categories]);
+
+  // Helper function to convert name/id to slug (locations & instruments)
+  const valueToSlug = useCallback((value: string) => {
+    return normalizeText(value);
   }, []);
 
   // Helper function to convert slug to name by matching with available options
@@ -195,20 +207,20 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     
     // Add categories to URL
     filters.categories.forEach(category => {
-      const slug = nameToSlug(category, 'category');
+      const slug = categoryIdToSlug(category);
       params.append('category', slug);
     });
     
     // Add locations to URL
     filters.locations.forEach(location => {
-      const slug = nameToSlug(location, 'location');
-      params.set('location', slug);
+      const slug = valueToSlug(location);
+      params.append('location', slug);
     });
     
     // Add instruments to URL
     filters.instruments.forEach(instrument => {
-      const slug = nameToSlug(instrument, 'instrument');
-      params.set('instrument', slug);
+      const slug = valueToSlug(instrument);
+      params.append('instrument', slug);
     });
     
     // Update URL without page reload
@@ -220,7 +232,7 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     setTimeout(() => {
       isUpdatingURLRef.current = false;
     }, 100);
-  }, [pathname, router, nameToSlug]);
+  }, [pathname, router, categoryIdToSlug, valueToSlug]);
 
   const clearFilters = useCallback(() => {
     isUpdatingURLRef.current = true;
@@ -266,8 +278,8 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     
     // Get all category parameters (can be multiple)
     const categoryParams = searchParams.getAll('category');
-    const instrumentParam = searchParams.get('instrument');
-    const locationParam = searchParams.get('location');
+    const instrumentParams = searchParams.getAll('instrument');
+    const locationParams = searchParams.getAll('location');
     
     const newFilters = {
       categories: [] as string[],
@@ -280,51 +292,49 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
     if (categoryParams.length > 0) {
       const decodedCategories = categoryParams.map(param => {
         const decoded = decodeURIComponent(param);
-        // Check if it's a slug that needs mapping
-        if (categorySlugMap[decoded]) {
-          return categorySlugMap[decoded];
+        const slugMatch = categoryOptions.find(opt => opt.slug === decoded);
+        if (slugMatch) return slugMatch.value;
+
+        const mapName = categorySlugMap[decoded];
+        if (mapName) {
+          const matchByName = categoryOptions.find(opt => opt.label === mapName);
+          if (matchByName) return matchByName.value;
         }
-        // Check if it's already a category name (direct match)
-        // Try to match with existing categories
-        const matchingCategory = categories.find(cat => 
-          cat.name === decoded || 
-          cat.name.toLowerCase().replace(/\s+/g, '-') === decoded.toLowerCase()
-        );
-        if (matchingCategory) {
-          return matchingCategory.name;
-        }
-        // Return decoded value as-is (might be a direct category name)
-        return decoded;
-      });
+
+        const normalizedDecoded = normalizeText(decoded);
+        const normalizedMatch = categoryOptions.find(opt => normalizeText(opt.slug) === normalizedDecoded || normalizeText(opt.label) === normalizedDecoded);
+        if (normalizedMatch) return normalizedMatch.value;
+
+        const matchById = categoryOptions.find(opt => opt.value === decoded);
+        if (matchById) return matchById.value;
+
+        return null;
+      }).filter((value): value is string => Boolean(value));
       
       // Filter out invalid categories and only keep those that exist in categoryOptions
-      const validCategories = decodedCategories.filter(catName => 
-        categoryOptions.some(opt => opt.value === catName || opt.label === catName)
+      const validCategories = decodedCategories.filter(catId => 
+        categoryOptions.some(opt => opt.value === catId)
       );
       
       newFilters.categories = validCategories;
     }
     
     // Set location filter from URL - convert slug to name
-    if (locationParam) {
-      const locationName = slugToName(locationParam, locations);
-      if (locationName) {
-        newFilters.locations = [locationName];
-      } else {
-        // Fallback to decoded value
-        newFilters.locations = [decodeURIComponent(locationParam)];
-      }
+    if (locationParams.length > 0) {
+      const decodedLocations = locationParams.map(param => {
+        const locationName = slugToName(param, locations);
+        return locationName || decodeURIComponent(param);
+      });
+      newFilters.locations = decodedLocations;
     }
     
     // Set instrument filter from URL - convert slug to name
-    if (instrumentParam) {
-      const instrumentName = slugToName(instrumentParam, instruments);
-      if (instrumentName) {
-        newFilters.instruments = [instrumentName];
-      } else {
-        // Fallback to decoded value
-        newFilters.instruments = [decodeURIComponent(instrumentParam)];
-      }
+    if (instrumentParams.length > 0) {
+      const decodedInstruments = instrumentParams.map(param => {
+        const instrumentName = slugToName(param, instruments);
+        return instrumentName || decodeURIComponent(param);
+      });
+      newFilters.instruments = decodedInstruments;
     }
     
     // Only update state if there are actual changes to prevent unnecessary re-renders
@@ -400,12 +410,12 @@ const ListingsFilter = ({ onFiltersChange }: ListingsFilterProps) => {
             <div key={category.value} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id={category.value}
+                  id={`category-${category.value}`}
                   checked={selectedCategories.includes(category.value)}
                   onCheckedChange={() => handleCategoryToggle(category.value)}
                 />
                 <label
-                  htmlFor={category.value}
+                  htmlFor={`category-${category.value}`}
                   className="text-sm text-card-foreground cursor-pointer"
                 >
                   {category.label}

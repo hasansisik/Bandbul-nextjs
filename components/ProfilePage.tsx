@@ -164,7 +164,7 @@ export function ProfilePage() {
   const searchParams = useSearchParams()
   
   // Function to show operation messages and auto-clear them
-  const showMessage = (
+  const showMessage = useCallback((
     type: 'success' | 'error' | 'info',
     text: string | string[]
   ) => {
@@ -182,7 +182,7 @@ export function ProfilePage() {
     setTimeout(() => {
       setOperationMessage(null)
     }, 8000)
-  }
+  }, [])
   
   // Get user data and listings from Redux
   const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
@@ -242,11 +242,11 @@ export function ProfilePage() {
 
 
   // Check URL parameters for tab and action
+  const tab = searchParams.get('tab')
+  const action = searchParams.get('action')
+  const listingId = searchParams.get('listingId')
+
   useEffect(() => {
-    const tab = searchParams.get('tab')
-    const action = searchParams.get('action')
-    const listingId = searchParams.get('listingId')
-    
     if (tab === 'listings' && action === 'create') {
       setShowCreateForm(true)
       // Start timer to show modal after 700ms (same as handleCreateListingClick)
@@ -282,7 +282,7 @@ export function ProfilePage() {
         showMessage('error', 'İlan bulunamadı. İlanınız onay aşamasında olabilir veya silinmiş olabilir.')
       }
     }
-  }, [searchParams, userListings, dispatch, editingListing, listingsLoading, showMessage])
+  }, [tab, action, listingId, userListings, editingListing, listingsLoading, showMessage])
 
   // Cleanup timer on component unmount
   useEffect(() => {

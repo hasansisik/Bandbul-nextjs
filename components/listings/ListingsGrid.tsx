@@ -83,20 +83,58 @@ const ListingsGrid = ({
       });
     }
 
+    const isLikelyObjectId = (value: string | undefined) => {
+      if (!value) return false;
+      return /^[a-fA-F0-9]{24}$/.test(value);
+    };
+
+    const normalizeText = (text: string) => {
+      return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '');
+    };
+
     // Apply category filters
     if (selectedCategories.length > 0) {
-      // Mapping between URL slugs and Turkish category names
-      
       filtered = filtered.filter(listing => {
-        const listingCategory = listing.categoryInfo?.name || listing.category;
+        const listingCategoryId = isLikelyObjectId(listing.categoryInfo?._id)
+          ? listing.categoryInfo?._id
+          : isLikelyObjectId(listing.category) ? listing.category : undefined;
+        const listingCategoryName = listing.categoryInfo?.name || (!isLikelyObjectId(listing.category) ? listing.category : undefined);
+        const listingCategorySlug = listing.categoryInfo?.slug || (listingCategoryName ? normalizeText(listingCategoryName) : undefined);
+
         return selectedCategories.some(selectedCategory => {
+          if (listingCategoryId && selectedCategory === listingCategoryId) {
+            return true;
+          }
+
           // Check if it's a slug (contains hyphens) and convert to Turkish name
           if (selectedCategory.includes('-')) {
             const turkishName = categorySlugMap[selectedCategory];
-            return turkishName && listingCategory === turkishName;
+            if (turkishName && listingCategoryName === turkishName) {
+              return true;
+            }
+
+            if (listingCategorySlug && selectedCategory === listingCategorySlug) {
+              return true;
+            }
           }
+
           // If it's already a Turkish name, compare directly
-          return listingCategory === selectedCategory;
+          if (listingCategoryName && listingCategoryName === selectedCategory) {
+            return true;
+          }
+
+          return false;
         });
       });
     }
