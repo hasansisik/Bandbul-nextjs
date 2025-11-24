@@ -623,7 +623,10 @@ export const userReducer = createReducer(initialState, (builder) => {
     .addCase(getMessages.fulfilled, (state, action) => {
       state.messagesLoading = false;
       state.currentMessages = action.payload.messages;
-      state.currentConversation = action.payload.conversation;
+      state.currentConversation = {
+        ...action.payload.conversation,
+        id: action.payload.conversation.id || action.payload.conversation._id
+      };
       state.messagesError = null; // Clear any previous errors
     })
     .addCase(getMessages.rejected, (state, action) => {
@@ -636,12 +639,28 @@ export const userReducer = createReducer(initialState, (builder) => {
     })
     .addCase(sendMessage.fulfilled, (state, action) => {
       state.messagesLoading = false;
-      // Don't push message here to prevent duplicates
-      // Messages will be loaded via getMessages or WebSocket
+      const conversationId = action.payload.conversation._id
+      const incomingMessage = action.payload.message
+      const currentConversationId = state.currentConversation?.id || state.currentConversation?._id
+
+      if (currentConversationId === conversationId && incomingMessage) {
+        const normalizedMessage = {
+          ...incomingMessage,
+          id: incomingMessage.id || incomingMessage._id
+        }
+        const alreadyExists = state.currentMessages.some(
+          (message) =>
+            message.id === normalizedMessage.id ||
+            message._id === normalizedMessage.id
+        )
+        if (!alreadyExists) {
+          state.currentMessages.push(normalizedMessage)
+        }
+      }
       
       // Update conversation in conversations list
       const conversationIndex = state.conversations.findIndex(
-        conv => conv.id === action.payload.conversation._id
+        conv => conv.id === conversationId
       );
       if (conversationIndex !== -1) {
         state.conversations[conversationIndex].lastMessage = action.payload.message.content;

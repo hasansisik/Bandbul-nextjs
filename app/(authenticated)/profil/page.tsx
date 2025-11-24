@@ -2,11 +2,15 @@ import { ProfilePage } from "@/components/ProfilePage"
 import { AuthMiddleware } from "@/components/AuthMiddleware"
 import { Metadata } from "next";
 
-export async function generateMetadata({ params, searchParams }: any): Promise<Metadata> {
-  let title = "Profil";
-  if (searchParams && Object.keys(searchParams).length > 0) {
-    title = "İlan Ver";
-  }
+type GenerateMetadataProps = {
+  params: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export async function generateMetadata({ searchParams }: GenerateMetadataProps): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams
+  const hasQueryParams = resolvedSearchParams && Object.keys(resolvedSearchParams).length > 0
+  const title = hasQueryParams ? "İlan Ver" : "Profil"
 
   return { title: `Bandbul-  ${title}` };
 }

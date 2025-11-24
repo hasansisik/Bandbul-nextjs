@@ -7,35 +7,26 @@ import { getUserListings, createListing, updateListing, deleteListing, getAllCat
 import { getAllExperienceLevels } from "@/redux/actions/experienceLevelActions"
 import { toast } from "sonner"
 import { uploadImageToCloudinary } from "@/utils/cloudinary"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { 
-  Edit, 
-  Plus, 
-  Trash2, 
-  Eye, 
-  MapPin, 
-  Calendar, 
-  Phone, 
-  Mail, 
-  Upload, 
-  Users,
-  Award,
-  Clock,
+import {
+  Edit,
+  Plus,
+  Trash2,
+  Eye,
+  MapPin,
+  Calendar,
+  Upload,
   MessageCircle,
   Settings,
-  User,
   Briefcase,
-  Share2,
   Bell,
   Music,
   ImageIcon,
@@ -147,6 +138,22 @@ const ListingsGridSkeleton = () => (
 )
 
 
+const calculateAge = (birthDate?: string) => {
+  if (!birthDate) return null
+  const parsedDate = new Date(birthDate)
+  if (isNaN(parsedDate.getTime())) return null
+
+  const today = new Date()
+  let age = today.getFullYear() - parsedDate.getFullYear()
+  const monthDiff = today.getMonth() - parsedDate.getMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < parsedDate.getDate())) {
+    age--
+  }
+
+  return age
+}
+
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -159,10 +166,10 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState('all')
   const [showFormTimer, setShowFormTimer] = useState<NodeJS.Timeout | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const dispatch = useAppDispatch()
   const searchParams = useSearchParams()
-  
+
   // Function to show operation messages and auto-clear them
   const showMessage = useCallback((
     type: 'success' | 'error' | 'info',
@@ -183,12 +190,21 @@ export function ProfilePage() {
       setOperationMessage(null)
     }, 8000)
   }, [])
-  
+
   // Get user data and listings from Redux
   const { user, userListings, listingsLoading, categories, categoriesLoading, instruments, instrumentsLoading, loading } = useAppSelector((state) => state.user)
   const { experienceLevels, loading: experienceLevelsLoading } = useAppSelector((state) => state.experienceLevel)
-  
+
   // Transform Redux user data to component format
+  const resolvedBio = user?.profile?.bio?.trim()
+    ? user.profile.bio
+    : user?.bio?.trim()
+      ? user.bio
+      : ""
+  const resolvedAge = typeof user?.age === 'number' && user.age > 0
+    ? user.age
+    : calculateAge(user?.birthDate)
+
   const userData = user && user.name ? {
     firstName: user.name || "",
     lastName: user.surname || "",
@@ -197,13 +213,13 @@ export function ProfilePage() {
     joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : "",
     location: user.address?.city || "Türkiye",
     avatar: user.profile?.picture || null,
-    bio: user.profile?.bio || "Henüz bir biyografi eklenmemiş.",
+    bio: resolvedBio || "Henüz bir biyografi eklenmemiş.",
     totalReviews: 0, // Will come from API later
     totalListings: userListings.length,
     skills: user.profile?.skills || ["Müzik"],
     isOnline: true
   } : null
-  
+
   // New listing form state
   const [newListing, setNewListing] = useState({
     title: "",
@@ -224,19 +240,19 @@ export function ProfilePage() {
 
   // Load user data, listings, categories and instruments on component mount
   useEffect(() => {
-   
+
     // First, try to load user data if not already loaded
     const token = localStorage.getItem("accessToken")
     if (token && !user) {
       dispatch(loadUser())
     }
-    
+
     // Then load other data if user is available
     if (user) {
       dispatch(getUserListings())
       dispatch(getAllCategories({}))
       dispatch(getAllInstruments({}))
-      
+
     }
   }, [dispatch, user])
 
@@ -295,7 +311,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     document.title = "Bandbul - Profil";
-}, []);
+  }, []);
 
   const handleEditProfile = () => {
     // Navigate to profile editing page
@@ -326,7 +342,7 @@ export function ProfilePage() {
       clearTimeout(showFormTimer)
       setShowFormTimer(null)
     }
-    
+
     // Clear URL parameters when modal is closed
     const url = new URL(window.location.href)
     url.searchParams.delete('tab')
@@ -376,7 +392,7 @@ export function ProfilePage() {
       setRejectionModalOpen(true)
       return
     }
-    
+
     // Navigate to listing detail page using title slug
     window.location.href = `/ilan-detay/${createTitleSlug(listing.title)}`
   }
@@ -398,7 +414,7 @@ export function ProfilePage() {
       image: ""
     })
     setShowCreateForm(false)
-    
+
     // Clear URL parameters when form is closed
     const url = new URL(window.location.href)
     url.searchParams.delete('tab')
@@ -539,7 +555,7 @@ export function ProfilePage() {
           id: editingListing._id,
           formData: listingData
         }))
-        
+
         if (updateListing.fulfilled.match(result)) {
           showMessage('success', "İlan başarıyla güncellendi ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
@@ -551,7 +567,7 @@ export function ProfilePage() {
       } else {
         // Create new listing
         const result = await dispatch(createListing(listingData))
-        
+
         if (createListing.fulfilled.match(result)) {
           showMessage('success', "İlan başarıyla oluşturuldu ve onay bekliyor durumuna alındı!")
           handleCancelEdit()
@@ -676,9 +692,9 @@ export function ProfilePage() {
               <div className="relative">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                   {userData.avatar ? (
-                    <img 
-                      src={userData.avatar} 
-                      alt="Profile" 
+                    <img
+                      src={userData.avatar}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -701,13 +717,13 @@ export function ProfilePage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Action Buttons - Responsive */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <div className="flex gap-2 sm:gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="border-border hover:bg-accent flex-1 sm:flex-none text-xs sm:text-sm"
                   onClick={() => window.location.href = '/mesajlar'}
                 >
@@ -715,9 +731,9 @@ export function ProfilePage() {
                   <span className="hidden sm:inline">Mesajlar</span>
                   <span className="sm:hidden">Mesaj</span>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="border-border hover:bg-accent flex-1 sm:flex-none text-xs sm:text-sm"
                   onClick={() => window.location.href = '/bildirimler'}
                 >
@@ -726,8 +742,8 @@ export function ProfilePage() {
                   <span className="sm:hidden">Bildirim</span>
                 </Button>
               </div>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm"
                 onClick={handleEditProfile}
               >
@@ -743,13 +759,12 @@ export function ProfilePage() {
       {/* Operation Messages Display */}
       {operationMessage && (
         <div className="container mx-auto px-4 max-w-7xl mt-6 mb-4" style={{ whiteSpace: "pre-line" }}>
-          <div className={`p-4 rounded-lg border ${
-            operationMessage.type === 'success' 
+          <div className={`p-4 rounded-lg border ${operationMessage.type === 'success'
               ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
               : operationMessage.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
-              : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200'
-          }`}>
+                ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+                : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200'
+            }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {operationMessage.type === 'success' && (
@@ -825,10 +840,10 @@ export function ProfilePage() {
             <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">Hakkımda</h2>
               <p className="text-muted-foreground leading-relaxed">{userData.bio}</p>
-              {user?.age && (
+              {resolvedAge !== null && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-card-foreground">Yaş:</span> {user.age}
+                    <span className="font-medium text-card-foreground">Yaş:</span> {resolvedAge}
                   </p>
                 </div>
               )}
@@ -852,47 +867,43 @@ export function ProfilePage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setActiveTab('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'all'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'all'
                         ? 'bg-foreground text-background'
                         : 'bg-background text-foreground border border-border hover:bg-accent'
-                    }`}
+                      }`}
                   >
                     Tümü ({getTabCounts().all})
                   </button>
                   <button
                     onClick={() => setActiveTab('active')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'active'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'active'
                         ? 'bg-foreground text-background'
                         : 'bg-background text-foreground border border-border hover:bg-accent'
-                    }`}
+                      }`}
                   >
                     Yayında ({getTabCounts().active})
                   </button>
                   <button
                     onClick={() => setActiveTab('pending')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'pending'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'pending'
                         ? 'bg-foreground text-background'
                         : 'bg-background text-foreground border border-border hover:bg-accent'
-                    }`}
+                      }`}
                   >
                     Beklemede ({getTabCounts().pending})
                   </button>
                   <button
                     onClick={() => setActiveTab('archived')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'archived'
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'archived'
                         ? 'bg-foreground text-background'
                         : 'bg-background text-foreground border border-border hover:bg-accent'
-                    }`}
+                      }`}
                   >
                     Arşiv ({getTabCounts().archived})
                   </button>
                 </div>
               )}
-              
+
               {/* Create Listing Form - Shows when form is open */}
               {showCreateForm && (
                 <div className="space-y-6">
@@ -901,65 +912,65 @@ export function ProfilePage() {
                     <h3 className="text-lg font-semibold text-foreground">
                       {editingListing ? "İlanı Düzenle" : "Yeni İlan Oluştur"}
                     </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={handleCancelEdit}
                       className="h-8 w-8 p-0"
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Ana İçerik Alanı - Sol Taraf */}
                     <div className="lg:col-span-2 space-y-6">
-                    {/* Başlık */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Music className="h-5 w-5" />
-                          İlan Başlığı
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Input
-                          placeholder="İlan başlığı..."
-                          value={newListing.title}
-                          onChange={(e) => setNewListing({...newListing, title: e.target.value})}
-                          className="text-xl font-medium"
-                          required
-                        />
-                      </CardContent>
-                    </Card>
+                      {/* Başlık */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Music className="h-5 w-5" />
+                            İlan Başlığı
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <Input
+                            placeholder="İlan başlığı..."
+                            value={newListing.title}
+                            onChange={(e) => setNewListing({ ...newListing, title: e.target.value })}
+                            className="text-xl font-medium"
+                            required
+                          />
+                        </CardContent>
+                      </Card>
 
-                    {/* Görsel Alanı */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ImageIcon className="h-5 w-5" />
-                          Görsel
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {newListing.image ? (
-                          <div className="relative">
-                            <img 
-                              src={newListing.image} 
-                              alt="İlan görseli" 
-                              className="w-full h-64 object-cover rounded-lg"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => setNewListing({...newListing, image: ""})}
-                              className="absolute top-2 right-2"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                                                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      {/* Görsel Alanı */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <ImageIcon className="h-5 w-5" />
+                            Görsel
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {newListing.image ? (
+                            <div className="relative">
+                              <img
+                                src={newListing.image}
+                                alt="İlan görseli"
+                                className="w-full h-64 object-cover rounded-lg"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setNewListing({ ...newListing, image: "" })}
+                                className="absolute top-2 right-2"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                               <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                               <p className="text-gray-600 mb-2">Görsel yüklemek için tıklayın</p>
                               <p className="text-sm text-gray-500 mb-4">PNG, JPG, GIF (max 5MB)</p>
@@ -988,256 +999,256 @@ export function ProfilePage() {
                                 )}
                               </Button>
                             </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                          )}
+                        </CardContent>
+                      </Card>
 
-                    {/* Açıklama */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Açıklama</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Textarea
-                          placeholder="İlan detaylarını yazın..."
-                          value={newListing.description}
-                          onChange={(e) => setNewListing({...newListing, description: e.target.value})}
-                          rows={6}
-                          required
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
+                      {/* Açıklama */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Açıklama</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <Textarea
+                            placeholder="İlan detaylarını yazın..."
+                            value={newListing.description}
+                            onChange={(e) => setNewListing({ ...newListing, description: e.target.value })}
+                            rows={6}
+                            required
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
 
-                  {/* Sağ Sidebar - Desktop Order */}
-                  <div className="hidden lg:block space-y-6">
-                    {/* Yayınla/Kaydet */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex gap-2">
-                          <Button onClick={handleCreateListing} className="flex-1">
-                            <Save className="h-4 w-4 mr-2" />
-                            {editingListing ? "Güncelle" : "İlan Oluştur"}
-                          </Button>
-                          <Button variant="outline" onClick={handleCancelEdit}>
-                            İptal
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {/* Sağ Sidebar - Desktop Order */}
+                    <div className="hidden lg:block space-y-6">
+                      {/* Yayınla/Kaydet */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex gap-2">
+                            <Button onClick={handleCreateListing} className="flex-1">
+                              <Save className="h-4 w-4 mr-2" />
+                              {editingListing ? "Güncelle" : "İlan Oluştur"}
+                            </Button>
+                            <Button variant="outline" onClick={handleCancelEdit}>
+                              İptal
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Genel Ayarlar */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Genel Ayarlar</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Kategori */}
-                        <div className="space-y-2">
-                          <Label htmlFor="category">Kategori *</Label>
-                          {categoriesLoading ? (
-                            <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
-                          ) : (
-                            <Select value={newListing.category} onValueChange={(value) => setNewListing({...newListing, category: value})}>
+                      {/* Genel Ayarlar */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Genel Ayarlar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Kategori */}
+                          <div className="space-y-2">
+                            <Label htmlFor="category">Kategori *</Label>
+                            {categoriesLoading ? (
+                              <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
+                            ) : (
+                              <Select value={newListing.category} onValueChange={(value) => setNewListing({ ...newListing, category: value })}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Kategori seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories
+                                    .filter(cat => cat.active)
+                                    .map((category) => (
+                                      <SelectItem key={category._id} value={category._id}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          {/* Enstrüman */}
+                          <div className="space-y-2">
+                            <Label htmlFor="instrument">Enstrüman</Label>
+                            {instrumentsLoading ? (
+                              <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
+                            ) : (
+                              <Select value={newListing.instrument} onValueChange={(value) => setNewListing({ ...newListing, instrument: value })}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Enstrüman seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {instruments
+                                    .filter(inst => inst.active)
+                                    .map((instrument) => (
+                                      <SelectItem key={instrument._id} value={instrument._id}>
+                                        {instrument.name}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          {/* Deneyim Seviyesi */}
+                          <div className="space-y-2">
+                            <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                            <Select value={newListing.experience} onValueChange={(value) => setNewListing({ ...newListing, experience: value })}>
                               <SelectTrigger>
-                                <SelectValue placeholder="Kategori seçin" />
+                                <SelectValue placeholder="Deneyim seviyesi seçin" />
                               </SelectTrigger>
                               <SelectContent>
-                                {categories
-                                  .filter(cat => cat.active)
-                                  .map((category) => (
-                                    <SelectItem key={category._id} value={category._id}>
-                                      {category.name}
+                                {experienceLevels
+                                  .filter(level => level.active)
+                                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                                  .map((level) => (
+                                    <SelectItem key={level._id} value={level.name}>
+                                      {level.name}
                                     </SelectItem>
                                   ))}
                               </SelectContent>
                             </Select>
-                          )}
-                        </div>
+                          </div>
 
-                        {/* Enstrüman */}
-                        <div className="space-y-2">
-                          <Label htmlFor="instrument">Enstrüman</Label>
-                          {instrumentsLoading ? (
-                            <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
-                          ) : (
-                            <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
+                          {/* Şehir */}
+                          <div className="space-y-2">
+                            <Label htmlFor="location" className="flex items-center gap-2">
+                              Şehir
+                            </Label>
+                            <Select value={newListing.location} onValueChange={(value) => setNewListing({ ...newListing, location: value })}>
                               <SelectTrigger>
-                                <SelectValue placeholder="Enstrüman seçin" />
+                                <SelectValue placeholder="Şehir seçin" />
                               </SelectTrigger>
                               <SelectContent>
-                                {instruments
-                                  .filter(inst => inst.active)
-                                  .map((instrument) => (
-                                    <SelectItem key={instrument._id} value={instrument._id}>
-                                      {instrument.name}
+                                {turkishCities.map((city) => (
+                                  <SelectItem key={city} value={city}>
+                                    {city}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Mobile Order - Genel Ayarlar first, then Yayınla */}
+                    <div className="lg:hidden space-y-6">
+                      {/* Genel Ayarlar - Mobile First */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Genel Ayarlar</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Kategori */}
+                          <div className="space-y-2">
+                            <Label htmlFor="category">Kategori *</Label>
+                            {categoriesLoading ? (
+                              <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
+                            ) : (
+                              <Select value={newListing.category} onValueChange={(value) => setNewListing({ ...newListing, category: value })}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Kategori seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories
+                                    .filter(cat => cat.active)
+                                    .map((category) => (
+                                      <SelectItem key={category._id} value={category._id}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          {/* Enstrüman */}
+                          <div className="space-y-2">
+                            <Label htmlFor="instrument">Enstrüman</Label>
+                            {instrumentsLoading ? (
+                              <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
+                            ) : (
+                              <Select value={newListing.instrument} onValueChange={(value) => setNewListing({ ...newListing, instrument: value })}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Enstrüman seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {instruments
+                                    .filter(inst => inst.active)
+                                    .map((instrument) => (
+                                      <SelectItem key={instrument._id} value={instrument._id}>
+                                        {instrument.name}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          {/* Deneyim Seviyesi */}
+                          <div className="space-y-2">
+                            <Label htmlFor="experience">Deneyim Seviyesi</Label>
+                            <Select value={newListing.experience} onValueChange={(value) => setNewListing({ ...newListing, experience: value })}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Deneyim seviyesi seçin" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {experienceLevels
+                                  .filter(level => level.active)
+                                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                                  .map((level) => (
+                                    <SelectItem key={level._id} value={level.name}>
+                                      {level.name}
                                     </SelectItem>
                                   ))}
                               </SelectContent>
                             </Select>
-                          )}
-                        </div>
+                          </div>
 
-                        {/* Deneyim Seviyesi */}
-                        <div className="space-y-2">
-                          <Label htmlFor="experience">Deneyim Seviyesi</Label>
-                          <Select value={newListing.experience} onValueChange={(value) => setNewListing({...newListing, experience: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Deneyim seviyesi seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {experienceLevels
-                                .filter(level => level.active)
-                                .sort((a, b) => (a.order || 0) - (b.order || 0))
-                                .map((level) => (
-                                <SelectItem key={level._id} value={level.name}>
-                                  {level.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Şehir */}
-                        <div className="space-y-2">
-                          <Label htmlFor="location" className="flex items-center gap-2">
-                            Şehir
-                          </Label>
-                          <Select value={newListing.location} onValueChange={(value) => setNewListing({...newListing, location: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Şehir seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {turkishCities.map((city) => (
-                                <SelectItem key={city} value={city}>
-                                  {city}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Mobile Order - Genel Ayarlar first, then Yayınla */}
-                  <div className="lg:hidden space-y-6">
-                    {/* Genel Ayarlar - Mobile First */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Genel Ayarlar</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Kategori */}
-                        <div className="space-y-2">
-                          <Label htmlFor="category">Kategori *</Label>
-                          {categoriesLoading ? (
-                            <div className="text-sm text-muted-foreground">Kategoriler yükleniyor...</div>
-                          ) : (
-                            <Select value={newListing.category} onValueChange={(value) => setNewListing({...newListing, category: value})}>
+                          {/* Şehir */}
+                          <div className="space-y-2">
+                            <Label htmlFor="location" className="flex items-center gap-2">
+                              Şehir
+                            </Label>
+                            <Select value={newListing.location} onValueChange={(value) => setNewListing({ ...newListing, location: value })}>
                               <SelectTrigger>
-                                <SelectValue placeholder="Kategori seçin" />
+                                <SelectValue placeholder="Şehir seçin" />
                               </SelectTrigger>
                               <SelectContent>
-                                {categories
-                                  .filter(cat => cat.active)
-                                  .map((category) => (
-                                    <SelectItem key={category._id} value={category._id}>
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
+                                {turkishCities.map((city) => (
+                                  <SelectItem key={city} value={city}>
+                                    {city}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                          )}
-                        </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                        {/* Enstrüman */}
-                        <div className="space-y-2">
-                          <Label htmlFor="instrument">Enstrüman</Label>
-                          {instrumentsLoading ? (
-                            <div className="text-sm text-muted-foreground">Enstrümanlar yükleniyor...</div>
-                          ) : (
-                            <Select value={newListing.instrument} onValueChange={(value) => setNewListing({...newListing, instrument: value})}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Enstrüman seçin" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {instruments
-                                  .filter(inst => inst.active)
-                                  .map((instrument) => (
-                                    <SelectItem key={instrument._id} value={instrument._id}>
-                                      {instrument.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
-
-                        {/* Deneyim Seviyesi */}
-                        <div className="space-y-2">
-                          <Label htmlFor="experience">Deneyim Seviyesi</Label>
-                          <Select value={newListing.experience} onValueChange={(value) => setNewListing({...newListing, experience: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Deneyim seviyesi seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {experienceLevels
-                                .filter(level => level.active)
-                                .sort((a, b) => (a.order || 0) - (b.order || 0))
-                                .map((level) => (
-                                <SelectItem key={level._id} value={level.name}>
-                                  {level.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Şehir */}
-                        <div className="space-y-2">
-                          <Label htmlFor="location" className="flex items-center gap-2">
-                            Şehir
-                          </Label>
-                          <Select value={newListing.location} onValueChange={(value) => setNewListing({...newListing, location: value})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Şehir seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {turkishCities.map((city) => (
-                                <SelectItem key={city} value={city}>
-                                  {city}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Yayınla/Kaydet - Mobile Second */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="flex gap-2">
-                          <Button onClick={handleCreateListing} className="flex-1">
-                            <Save className="h-4 w-4 mr-2" />
-                            {editingListing ? "Güncelle" : "İlan Oluştur"}
-                          </Button>
-                          <Button variant="outline" onClick={handleCancelEdit}>
-                            İptal
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      {/* Yayınla/Kaydet - Mobile Second */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>{editingListing ? "Kaydet" : "Yayınla"}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex gap-2">
+                            <Button onClick={handleCreateListing} className="flex-1">
+                              <Save className="h-4 w-4 mr-2" />
+                              {editingListing ? "Güncelle" : "İlan Oluştur"}
+                            </Button>
+                            <Button variant="outline" onClick={handleCancelEdit}>
+                              İptal
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 </div>
-              </div>
               )}
 
               {/* Separator between form and listings */}
@@ -1252,48 +1263,44 @@ export function ProfilePage() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setActiveTab('all')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeTab === 'all'
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'all'
                           ? 'bg-foreground text-background'
                           : 'bg-background text-foreground border border-border hover:bg-accent'
-                      }`}
+                        }`}
                     >
                       Tümü ({getTabCounts().all})
                     </button>
                     <button
                       onClick={() => setActiveTab('active')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeTab === 'active'
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'active'
                           ? 'bg-foreground text-background'
                           : 'bg-background text-foreground border border-border hover:bg-accent'
-                      }`}
+                        }`}
                     >
                       Yayında ({getTabCounts().active})
                     </button>
                     <button
                       onClick={() => setActiveTab('pending')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeTab === 'pending'
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'pending'
                           ? 'bg-foreground text-background'
                           : 'bg-background text-foreground border border-border hover:bg-accent'
-                      }`}
+                        }`}
                     >
                       Beklemede ({getTabCounts().pending})
                     </button>
                     <button
                       onClick={() => setActiveTab('archived')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        activeTab === 'archived'
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'archived'
                           ? 'bg-foreground text-background'
                           : 'bg-background text-foreground border border-border hover:bg-accent'
-                      }`}
+                        }`}
                     >
                       Arşiv ({getTabCounts().archived})
                     </button>
                   </div>
                 </div>
               )}
-              
+
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {listingsLoading ? (
@@ -1305,8 +1312,8 @@ export function ProfilePage() {
                   getFilteredListings().map((listing) => (
                     <div key={listing._id} className={`bg-card rounded-xl border-2 ${getStatusBorderColor(listing)} shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group`}>
                       <div className="relative">
-                        <img 
-                          src={listing.image} 
+                        <img
+                          src={listing.image}
                           alt={listing.title}
                           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
                         />
@@ -1338,7 +1345,7 @@ export function ProfilePage() {
                         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                           {listing.description}
                         </p>
-                        
+
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
@@ -1361,9 +1368,9 @@ export function ProfilePage() {
                           {(listing.status === 'active' || listing.status === 'pending') && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="flex-1"
                                 >
                                   <Archive className="w-4 h-4 mr-1" />
@@ -1389,14 +1396,14 @@ export function ProfilePage() {
                               </AlertDialogContent>
                             </AlertDialog>
                           )}
-                          
+
                           {/* Onay Bekliyora Al butonu - sadece arşivlenen ilanlar için */}
                           {listing.status === 'archived' && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="flex-1"
                                 >
                                   <Clock3 className="w-4 h-4 mr-1" />
@@ -1422,15 +1429,15 @@ export function ProfilePage() {
                               </AlertDialogContent>
                             </AlertDialog>
                           )}
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleEditListing(listing)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleViewListing(listing)}
                             className={listing.status === 'rejected' ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : ''}
@@ -1443,8 +1450,8 @@ export function ProfilePage() {
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 className="hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
                               >
@@ -1479,13 +1486,13 @@ export function ProfilePage() {
                       <Briefcase className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-semibold text-card-foreground mb-2">
-                      {userListings.length === 0 
-                        ? "Henüz hiç ilanınız yok" 
+                      {userListings.length === 0
+                        ? "Henüz hiç ilanınız yok"
                         : `Bu kategoride ilan bulunmuyor`
                       }
                     </h3>
                     <p className="text-muted-foreground mb-6">
-                      {userListings.length === 0 
+                      {userListings.length === 0
                         ? "İlk ilanınızı oluşturarak başlayın ve müşterilerinizle buluşun."
                         : "Farklı bir kategori seçin veya yeni ilan oluşturun."
                       }
