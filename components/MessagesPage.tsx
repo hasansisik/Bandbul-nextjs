@@ -133,12 +133,22 @@ export function MessagesPage() {
     if (conv.conversationKey) {
       return index === self.findIndex(c => c.conversationKey === conv.conversationKey)
     }
-    // Fallback: deduplicate by participants and listing
-    return index === self.findIndex(c => 
-      c.otherParticipant._id === conv.otherParticipant._id && 
-      c.listing && conv.listing && 
-      c.listing._id === conv.listing._id
-    )
+    // Fallback: deduplicate by participants and listing (handle null listings)
+    return index === self.findIndex(c => {
+      const sameParticipant = c.otherParticipant?._id === conv.otherParticipant?._id;
+      if (!sameParticipant) return false;
+      
+      // If both have listings, compare by listing ID
+      if (c.listing && conv.listing) {
+        return c.listing._id === conv.listing._id;
+      }
+      // If both don't have listings, they're duplicates
+      if (!c.listing && !conv.listing) {
+        return true;
+      }
+      // If one has listing and other doesn't, they're different
+      return false;
+    })
   }).sort((a, b) => {
     // Sort by lastMessageAt to show most recent conversations first
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()

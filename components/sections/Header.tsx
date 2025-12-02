@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Menu, User, Search, Bell, MessageCircle, ChevronRight, X } from "lucide-react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Image from "next/image";
 import Link from "next/link";
@@ -94,8 +94,13 @@ const Header = () => {
     });
   }, [dispatch]);
 
+  // Get token - memoize to prevent unnecessary WebSocket reconnections
+  // Only update when authentication state changes
+  const token = useMemo(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  }, [isAuthenticated]); // Update when auth state changes (login/logout)
+
   // WebSocket connection for real-time updates
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const { isConnected } = useSocket({ 
     token, 
     userId: user?._id,
@@ -105,21 +110,23 @@ const Header = () => {
     onNotificationStatsUpdate: handleNotificationStatsUpdate
   });
 
-  // Fetch settings, categories and user data on component mount
+  // Fetch settings and categories only once on mount
   useEffect(() => {
     dispatch(getSettings());
     dispatch(getAllCategories({}));
     
     // Preload notification sound for better performance
     preloadNotificationSound();
+  }, [dispatch]); // Only run once on mount
+
+  // Load user data separately - only when needed
+  useEffect(() => {
+    const storedToken = localStorage.getItem("accessToken");
     
-    // Always try to load user data if token exists
-    const token = localStorage.getItem("accessToken");
-    
-    if (token && (!isAuthenticated || !user)) {
+    if (storedToken && !isAuthenticated && !userLoading && !user) {
       dispatch(loadUser());
     }
-  }, [dispatch, pathname, isAuthenticated, user]); // Trigger on every pathname change
+  }, [dispatch, isAuthenticated, userLoading, user]); // Only check auth status, not pathname
 
   // Track previous counts for sound notifications
   const prevMessageCountRef = useRef<number | undefined>(undefined);
@@ -212,10 +219,10 @@ const Header = () => {
     }
   }, [notificationStats?.unread, isAuthenticated, playNotificationSoundDebounced]);
 
-  const mainMenuItems = settings?.header?.mainMenu || [];
+  const mainMenuItems = useMemo(() => settings?.header?.mainMenu || [], [settings?.header?.mainMenu]);
 
-  // Function to create category slug for URL
-  const createCategorySlug = (categoryName: string) => {
+  // Function to create category slug for URL - memoized
+  const createCategorySlug = useCallback((categoryName: string) => {
     return categoryName
       .toLowerCase()
       .normalize('NFD')
@@ -227,22 +234,12 @@ const Header = () => {
       .replace(/ö/g, 'o')
       .replace(/ç/g, 'c')
       .replace(/\s+/g, '-');
-  };
+  }, []);
 
-  const categoryItems = settings?.header?.categories?.map((categoryId: string) => {
-    // Find category from fetched categories
-    const category = categories.find(cat => cat._id === categoryId || cat.slug === categoryId);
+  // Memoize category items to prevent recalculation on every render
+  const categoryItems = useMemo(() => {
+    if (!settings?.header?.categories) return [];
     
-    if (category) {
-      // Use the category name to generate a proper slug
-      const categorySlug = createCategorySlug(category.name);
-      return {
-        name: category.name,
-        href: `/ilanlar?category=${categorySlug}`
-      };
-    }
-    
-    // Fallback to static mapping if category not found
     const categoryMap: { [key: string]: { name: string; href: string } } = {
       "grup-ariyorum": { name: "Grup Arıyorum", href: "/ilanlar?category=grup-ariyorum" },
       "muzisyen-ariyorum": { name: "Müzisyen Arıyorum", href: "/ilanlar?category=muzisyen-ariyorum" },
@@ -251,9 +248,24 @@ const Header = () => {
       "enstruman-satiyorum": { name: "Enstrüman Satıyorum", href: "/ilanlar?category=enstruman-satiyorum" },
       "studyo-kiraliyorum": { name: "Stüdyo Kiralıyorum", href: "/ilanlar?category=studyo-kiraliyorum" }
     };
-    
-    return categoryMap[categoryId] || { name: "Kategori", href: "/ilanlar" };
-  }) || [];
+
+    return settings.header.categories.map((categoryId: string) => {
+      // Find category from fetched categories
+      const category = categories.find(cat => cat._id === categoryId || cat.slug === categoryId);
+      
+      if (category) {
+        // Use the category name to generate a proper slug
+        const categorySlug = createCategorySlug(category.name);
+        return {
+          name: category.name,
+          href: `/ilanlar?category=${categorySlug}`
+        };
+      }
+      
+      // Fallback to static mapping if category not found
+      return categoryMap[categoryId] || { name: "Kategori", href: "/ilanlar" };
+    });
+  }, [settings?.header?.categories, categories, createCategorySlug]);
 
   const handleLogout = async () => {
     try {
@@ -291,13 +303,13 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
-  // Function to refresh counters
-  const refreshCounters = () => {
+  // Function to refresh counters - memoized to prevent unnecessary re-renders
+  const refreshCounters = useCallback(() => {
     if (isAuthenticated) {
       dispatch(getNotificationStats());
       dispatch(getUnreadCount());
     }
-  };
+  }, [dispatch, isAuthenticated]);
 
 
   // Get unread counts for display
