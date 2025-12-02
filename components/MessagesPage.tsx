@@ -456,8 +456,21 @@ export function MessagesPage() {
   }, [uniqueMessages, user?._id])
 
   const formatTimestamp = (timestamp: string) => {
+    if (!timestamp) return ''
+    
     const date = new Date(timestamp)
+    
+    // Invalid date kontrolü
+    if (isNaN(date.getTime())) {
+      return ''
+    }
+    
     const now = new Date()
+    const timezoneOptions = { 
+      timeZone: 'Europe/Istanbul', // GMT+3
+      hour12: false // 24 saatlik format
+    }
+    
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
     const diffInDays = Math.floor(diffInHours / 24)
     
@@ -469,20 +482,36 @@ export function MessagesPage() {
       }
       return `${diffInMinutes} dk önce`
     } else if (diffInHours < 24) {
-      // Bugün
-      return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+      // Bugün - 24 saatlik format (GMT+3)
+      return date.toLocaleTimeString('tr-TR', { 
+        ...timezoneOptions,
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
     } else if (diffInDays === 1) {
       // Dün
       return 'Dün'
     } else if (diffInDays < 7) {
       // Bu hafta
-      return date.toLocaleDateString('tr-TR', { weekday: 'long' })
+      return date.toLocaleDateString('tr-TR', { 
+        ...timezoneOptions,
+        weekday: 'long' 
+      })
     } else if (diffInDays < 30) {
       // Bu ay
-      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
+      return date.toLocaleDateString('tr-TR', { 
+        ...timezoneOptions,
+        day: 'numeric', 
+        month: 'short' 
+      })
     } else {
       // Daha eski
-      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: '2-digit' })
+      return date.toLocaleDateString('tr-TR', { 
+        ...timezoneOptions,
+        day: 'numeric', 
+        month: 'short', 
+        year: '2-digit' 
+      })
     }
   }
 
@@ -816,7 +845,7 @@ export function MessagesPage() {
                               <p className="text-sm">{message.content}</p>
                               <div className="flex items-center justify-end mt-1 space-x-1">
                                 <span className="text-xs opacity-70">
-                                  {message.timestamp}
+                                  {formatTimestamp(message.timestamp || message.createdAt || '')}
                                 </span>
                                 {message.senderId === user?._id && (
                                   <div className="flex items-center">
