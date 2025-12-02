@@ -62,8 +62,6 @@ export function MessagesPage() {
   // WebSocket connection
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
 
-
-  // Function to create title slug for URL (same as in listing detail page)
   const createTitleSlug = useCallback((title: string) => {
     return title.toLowerCase()
       .replace(/ğ/g, 'g')
@@ -72,9 +70,9 @@ export function MessagesPage() {
       .replace(/ı/g, 'i')
       .replace(/ö/g, 'o')
       .replace(/ç/g, 'c')
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
       .trim();
   }, [])
   // Handle new message from WebSocket
@@ -88,26 +86,18 @@ export function MessagesPage() {
       }, 100);
     }
     
-    // Only refresh conversations if it's a new conversation or if we need to update last message
-    // This prevents unnecessary refreshes that cause duplicate display
     const isCurrentConversation = selectedConversation && socketMessage.conversationId === selectedConversation;
     if (!isCurrentConversation) {
-      // Only refresh conversations for other conversations to update last message
-      // But only if we have conversations loaded to avoid loading states
       if (conversations.length > 0) {
         dispatch(getConversations());
       }
     }
     
-    // Always refresh unread count for real-time updates
     dispatch(getUnreadCount());
   }, [dispatch, selectedConversation, conversations.length]);
 
-  // Handle messages read from WebSocket
   const handleMessagesRead = useCallback((data: { conversationId: string; readBy: string; readAt: string }) => {
-    // If it's for the current conversation and not from current user
     if (selectedConversation && data.conversationId === selectedConversation && data.readBy !== user?._id) {
-      // Mark current user's messages as read
       dispatch(markUserMessagesAsRead(data.conversationId));
     }
   }, [dispatch, selectedConversation, user?._id]);
@@ -127,53 +117,41 @@ export function MessagesPage() {
     onMessagesRead: handleMessagesRead
   })
 
-  // Filter conversations by search query and remove duplicates by conversationKey
   const uniqueConversations = conversations.filter((conv, index, self) => {
-    // If conversation has conversationKey, use it for deduplication
     if (conv.conversationKey) {
       return index === self.findIndex(c => c.conversationKey === conv.conversationKey)
     }
-    // Fallback: deduplicate by participants and listing (handle null listings)
     return index === self.findIndex(c => {
       const sameParticipant = c.otherParticipant?._id === conv.otherParticipant?._id;
       if (!sameParticipant) return false;
       
-      // If both have listings, compare by listing ID
       if (c.listing && conv.listing) {
         return c.listing._id === conv.listing._id;
       }
-      // If both don't have listings, they're duplicates
       if (!c.listing && !conv.listing) {
         return true;
       }
-      // If one has listing and other doesn't, they're different
       return false;
     })
   }).sort((a, b) => {
-    // Sort by lastMessageAt to show most recent conversations first
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   })
-
 
   const filteredConversations = uniqueConversations.filter(conv =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (conv.listing && conv.listing.title.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
-  // Load conversations on component mount
   useEffect(() => {
-    // Only load conversations if we don't have any yet
     if (conversations.length === 0) {
       dispatch(getConversations())
     }
     dispatch(getUnreadCount())
-    // Clear any previous errors when loading conversations
     if (messagesError) {
       dispatch(clearError())
     }
   }, [dispatch, messagesError, conversations.length])
 
-  // Handle URL parameters for direct conversation
   useEffect(() => {
     if (hasProcessedUrlParams) return;
     
@@ -184,14 +162,11 @@ export function MessagesPage() {
     const listingTitle = searchParams.get('listingTitle')
     
     if (conversationId && !isStartingConversation) {
-      // Direct conversation ID provided
       setSelectedConversation(conversationId)
       setHasProcessedUrlParams(true)
     } else if (recipientId && recipientName && !isStartingConversation) {
-      // Set flag to indicate we're navigating from a listing
       setIsNavigatingFromListing(true)
       
-      // Check if conversation already exists for this specific listing
       const existingConversation = conversations.find(conv => 
         conv.otherParticipant._id === recipientId && 
         conv.listing && 
@@ -199,12 +174,10 @@ export function MessagesPage() {
       )
       
       if (existingConversation) {
-        // Select existing conversation
         setSelectedConversation(existingConversation.id)
         setHasProcessedUrlParams(true)
         setIsNavigatingFromListing(false)
       } else {
-        // Start new conversation - don't wait for conversations to load
         setIsStartingConversation(true)
         setHasProcessedUrlParams(true)
         dispatch(startConversation({ 
@@ -215,12 +188,9 @@ export function MessagesPage() {
           .then((result) => {
             setIsStartingConversation(false)
             setIsNavigatingFromListing(false)
-            // Set the conversation immediately after creation
             if (result && result.id) {
               setSelectedConversation(result.id)
             }
-            // Don't refresh conversations immediately to prevent duplicate display
-            // The conversation will be added to the list via Redux state update
           })
           .catch((error) => {
             setIsStartingConversation(false)
@@ -455,12 +425,15 @@ export function MessagesPage() {
     prevMessageCount.current = currentMessageCount;
   }, [uniqueMessages, user?._id])
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp: string | Date) => {
     if (!timestamp) return ''
     
-    const date = new Date(timestamp)
+    if (typeof timestamp === 'string' && /^\d{1,2}:\d{2}$/.test(timestamp)) {
+      return timestamp
+    }
     
-    // Invalid date kontrolü
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp)
+    
     if (isNaN(date.getTime())) {
       return ''
     }
