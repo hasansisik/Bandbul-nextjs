@@ -733,9 +733,7 @@ export function MessagesPage() {
                         <h3 className="font-semibold text-card-foreground">
                           {selectedConversationDetails?.name || 'Konuşma'}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedConversationDetails?.otherParticipant?._id && isUserOnline(selectedConversationDetails.otherParticipant._id) ? 'Çevrimiçi' : 'Son görülme: ' + formatTimestamp(selectedConversationDetails?.timestamp || '')}
-                        </p>
+                        
                       </div>
                     </div>
                   </div>
