@@ -15,6 +15,9 @@ import { uploadImageToCloudinary } from "@/utils/cloudinary"
 import { toast } from "sonner"
 import { turkishCities } from "@/utils/constants/turkishCities"
 
+// Bio character limit (matches backend validation)
+const BIO_MAX_LENGTH = 500
+
 // User data interface for editing
 interface UserData {
   firstName: string
@@ -89,6 +92,12 @@ export function ProfileEditPage() {
     
     if (!userData.lastName.trim()) {
       toast.error('Soyad alanı zorunludur.')
+      return
+    }
+    
+    // Validation: Bio character limit
+    if (userData.bio.length > BIO_MAX_LENGTH) {
+      toast.error(`Biyografi en fazla ${BIO_MAX_LENGTH} karakter olabilir.`)
       return
     }
     
@@ -349,10 +358,34 @@ export function ProfileEditPage() {
               <Textarea
                 id="bio"
                 value={userData.bio}
-                onChange={(e) => setUserData({...userData, bio: e.target.value})}
+                onChange={(e) => {
+                  const newBio = e.target.value
+                  // Limit input to max length
+                  if (newBio.length <= BIO_MAX_LENGTH) {
+                    setUserData({...userData, bio: newBio})
+                  }
+                }}
                 rows={4}
                 placeholder="Deneyimlerinizi, uzmanlık alanlarınızı ve müzik geçmişinizi anlatın..."
+                className={userData.bio.length > BIO_MAX_LENGTH ? "border-destructive" : ""}
               />
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Maksimum {BIO_MAX_LENGTH} karakter
+                </p>
+                <p className={`text-xs font-medium ${
+                  userData.bio.length > BIO_MAX_LENGTH
+                    ? "text-destructive"
+                    : userData.bio.length > BIO_MAX_LENGTH * 0.9
+                    ? "text-yellow-600 dark:text-yellow-500"
+                    : "text-muted-foreground"
+                }`}>
+                  {userData.bio.length} / {BIO_MAX_LENGTH}
+                  {userData.bio.length > BIO_MAX_LENGTH && (
+                    <span className="ml-1">(Limit aşıldı)</span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
 
